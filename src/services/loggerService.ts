@@ -1,5 +1,6 @@
 // Live Telemetry & Activity Logger for Eve Virtual Assistant
 // Captures real-time audio states, wake word triggers, AI thinking, and execution logs
+// Modeled on Relay PWA meeting logging engine with localStorage persistence
 
 export type LogLevel = 'info' | 'success' | 'warn' | 'error';
 
@@ -14,13 +15,48 @@ export interface LogEntry {
 
 type LogListener = (entry: LogEntry) => void;
 
+const LOG_STORAGE_KEY = 'assistant_gui_logs';
+const MAX_LOGS = 300;
+
+function loadStoredLogs(): LogEntry[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(LOG_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.slice(0, MAX_LOGS) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredLogs(entries: LogEntry[]): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(entries.slice(0, MAX_LOGS)));
+  } catch {}
+}
+
 class LoggerService {
   private entries: LogEntry[] = [];
   private listeners: Set<LogListener> = new Set();
-  private maxLogs = 200;
 
   constructor() {
-    this.log('info', 'system', 'Eve Assistant Core Telemetry Logger initialized.');
+    this.entries = loadStoredLogs();
+    this.log('info', 'system', 'Eve Assistant Core Telemetry Engine initialized (Relay architecture sync active).');
+
+    // Global uncaught error listener
+    if (typeof window !== 'undefined') {
+      window.addEventListener('error', (event) => {
+        this.log('error', 'system', `Uncaught runtime error: ${event.message}`, {
+          filename: event.filename,
+          lineno: event.lineno
+        });
+      });
+      window.addEventListener('unhandledrejection', (event) => {
+        this.log('error', 'system', `Unhandled Promise Rejection: ${event.reason?.message || event.reason}`);
+      });
+    }
   }
 
   public log(level: LogLevel, category: LogEntry['category'], msg: string, details?: any): void {
@@ -34,23 +70,24 @@ class LoggerService {
     };
 
     this.entries.unshift(entry);
-    if (this.entries.length > this.maxLogs) {
+    if (this.entries.length > MAX_LOGS) {
       this.entries.pop();
     }
+    saveStoredLogs(this.entries);
 
-    // Output to browser dev console
+    // Dev console mirroring
     const prefix = `[${category.toUpperCase()}]`;
     if (level === 'error') console.error(prefix, msg, details || '');
     else if (level === 'warn') console.warn(prefix, msg, details || '');
     else if (level === 'success') console.log(`%c${prefix} ${msg}`, 'color: #10b981; font-weight: bold;', details || '');
     else console.log(prefix, msg, details || '');
 
-    // Notify UI listeners
+    // Notify UI subscribers
     this.listeners.forEach(listener => {
       try {
         listener(entry);
       } catch (err) {
-        console.error('Log listener error:', err);
+        console.error('Log listener callback error:', err);
       }
     });
   }
@@ -68,8 +105,10 @@ class LoggerService {
 
   public clear(): void {
     this.entries = [];
+    saveStoredLogs([]);
     this.log('info', 'system', 'Activity log cleared.');
   }
 }
 
 export const logger = new LoggerService();
+
