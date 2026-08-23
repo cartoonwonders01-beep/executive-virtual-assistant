@@ -11,6 +11,8 @@ import { generateICSString, generateFullCalendarICS } from './calendarService';
 import { executeSingleBacklogStep, runAllBacklogTasks, getAutonomousStatus } from './autonomousWorker';
 import { getSwarmStatus, triggerSwarmCycle } from './agentSwarm';
 import { InboxEmail, ChatMessage, CallLog } from '../src/types';
+import { skillRegistry } from './skillRegistry';
+import { dialogueEngine } from './dialogueEngine';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -519,9 +521,48 @@ app.put('/api/wiki/:id', (req, res) => {
   res.json(updated);
 });
 
-app.delete('/api/wiki/:id', (req, res) => {
-  const deleted = db.deleteWikiArticle(req.params.id);
+// Skills CRUD & Execution
+app.get('/api/skills', (req, res) => {
+  res.json(skillRegistry.getSkills());
+});
+
+app.post('/api/skills', (req, res) => {
+  const created = skillRegistry.createSkill(req.body);
+  res.status(201).json(created);
+});
+
+app.put('/api/skills/:id', (req, res) => {
+  const updated = skillRegistry.updateSkill(req.params.id, req.body);
+  if (!updated) return res.status(404).json({ error: 'Skill not found' });
+  res.json(updated);
+});
+
+app.delete('/api/skills/:id', (req, res) => {
+  const deleted = skillRegistry.deleteSkill(req.params.id);
   res.json({ success: deleted });
+});
+
+app.post('/api/skills/:id/execute', async (req, res) => {
+  const skill = skillRegistry.getSkillById(req.params.id);
+  if (!skill) return res.status(404).json({ error: 'Skill not found' });
+  skillRegistry.incrementExecutionCount(skill.id);
+  res.json({
+    success: true,
+    skill,
+    message: `Executed ${skill.name} successfully.`,
+    executedAt: new Date().toISOString()
+  });
+});
+
+// Interactive Multi-Turn Dialogue Turn Endpoint
+app.post('/api/dialogue/turn', (req, res) => {
+  const speech = req.body?.speech as string || '';
+  const result = dialogueEngine.processTurn(speech);
+  res.json(result);
+});
+
+app.get('/api/dialogue/session', (req, res) => {
+  res.json(dialogueEngine.getSession());
 });
 
 app.listen(PORT, () => {

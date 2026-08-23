@@ -330,5 +330,54 @@ export const api = {
       method: 'DELETE',
     });
     return res.json();
+  },
+
+  // =========================================================================
+  // DYNAMIC SKILLS & CONVERSATIONAL DIALOGUE
+  // =========================================================================
+  async getSkills(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/skills`);
+    return res.json();
+  },
+
+  async createSkill(skill: any): Promise<any> {
+    const res = await fetch(`${API_BASE}/skills`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(skill),
+    });
+    return res.json();
+  },
+
+  async updateSkill(id: string, updates: any): Promise<any> {
+    const res = await fetch(`${API_BASE}/skills/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+    return res.json();
+  },
+
+  async deleteSkill(id: string): Promise<{ success: boolean }> {
+    const res = await fetch(`${API_BASE}/skills/${id}`, {
+      method: 'DELETE',
+    });
+    return res.json();
+  },
+
+  async executeSkill(id: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/skills/${id}/execute`, {
+      method: 'POST'
+    });
+    return res.json();
+  },
+
+  async processDialogueTurn(speech: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/dialogue/turn`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ speech })
+    });
+    return res.json();
   }
 };

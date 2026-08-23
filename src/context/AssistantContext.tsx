@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { 
   TaskItem, 
   VoiceMemo, 
@@ -10,14 +10,20 @@ import {
   TaskStatus, 
   WikiArticle,
   InboxEmail,
+  EmailDraft,
   ContactPerson,
   ChatMessage,
   CallLog,
   AutonomousJob,
-  AppView
+  AppView,
+  DialogueTurn,
+  CustomSkill,
+  SkillStep
 } from '../types';
 import { api } from '../services/api';
 import { audioRecorder } from '../services/audioRecorder';
+import { wakeWordService } from '../services/wakeWordService';
+import { dialogueManager } from '../services/dialogueManager';
 import { speakResponse, stopSpeaking } from '../services/speechSynthesis';
 import { processSpeechWithGemini } from '../services/geminiService';
 import { playChime } from '../services/soundEffects';
@@ -52,6 +58,19 @@ interface AssistantContextType {
   stopVoiceListening: () => void;
   submitVoiceTranscript: (text: string) => Promise<void>;
   uploadAudioFile: (file: File) => Promise<void>;
+
+  // Dialogue & Conversational Assistant
+  dialogueTurns: DialogueTurn[];
+  customSkills: CustomSkill[];
+  isWakeWordActive: boolean;
+  setIsWakeWordActive: (active: boolean) => void;
+  toggleWakeWordListener: () => void;
+  continuousConversation: boolean;
+  setContinuousConversation: (val: boolean) => void;
+  createCustomSkill: (skill: Partial<CustomSkill>) => Promise<CustomSkill>;
+  deleteCustomSkill: (id: string) => Promise<void>;
+  toggleCustomSkill: (id: string) => Promise<void>;
+  executeCustomSkill: (id: string) => Promise<any>;
 
   // Selection & Modals
   selectedTaskForBlueprint: TaskItem | null;
@@ -131,6 +150,10 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
   const [autonomousJobs, setAutonomousJobs] = useState<AutonomousJob[]>([]);
   const [wikiArticles, setWikiArticles] = useState<WikiArticle[]>([]);
+  const [customSkills, setCustomSkills] = useState<CustomSkill[]>([]);
+  const [dialogueTurns, setDialogueTurns] = useState<DialogueTurn[]>([]);
+  const [isWakeWordActive, setIsWakeWordActive] = useState<boolean>(true);
+  const [continuousConversation, setContinuousConversation] = useState<boolean>(true);
   const [kpi, setKpi] = useState<KPISummary | null>(null);
   const [activeView, setActiveView] = useState<AppView>('voice_hud');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -194,7 +217,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const refreshAll = useCallback(async () => {
     try {
-      const [t, m, ac, apt, emails, cont, msgs, calls, jobs, k, w] = await Promise.all([
+      const [t, m, ac, apt, emails, cont, msgs, calls, jobs, k, w, sk] = await Promise.all([
         api.getTasks(),
         api.getMemos(),
         api.getActionCards(),
@@ -205,7 +228,8 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         api.getCallLogs(),
         api.getAutonomousStatus().then(res => res.jobs).catch(() => []),
         api.getKPI(),
-        api.getWikiArticles()
+        api.getWikiArticles(),
+        api.getSkills().catch(() => [])
       ]);
       setTasks(Array.isArray(t) ? t : []);
       setMemos(Array.isArray(m) ? m : []);
@@ -218,6 +242,38 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setAutonomousJobs(Array.isArray(jobs) ? jobs : []);
       setKpi(k && typeof k === 'object' && 'totalHoursWonBack' in k ? k : null);
       setWikiArticles(Array.isArray(w) ? w : []);
+      
+      const defaultSkills: CustomSkill[] = [
+        {
+          id: 'skill-morning-briefing',
+          name: 'Morning Executive Briefing',
+          triggerPhrase: 'morning briefing',
+          description: 'Triages VIP inbox, checks calendar, and lists top tasks.',
+          actionSteps: [
+            { id: 's1', order: 1, actionType: 'triage_inbox', label: 'Triage VIP Inbox' },
+            { id: 's2', order: 2, actionType: 'check_calendar', label: 'Check Schedule' },
+            { id: 's3', order: 3, actionType: 'list_tasks', label: 'List Top Priorities' }
+          ],
+          learnedAt: '2026-08-20T08:00:00Z',
+          executionCount: 14,
+          isEnabled: true,
+          source: 'builtin'
+        },
+        {
+          id: 'skill-wife-love',
+          name: 'Wife Check-in & Love Dispatch',
+          triggerPhrase: 'wife check-in',
+          description: 'Sends an affectionate check-in email to Emily Baxter.',
+          actionSteps: [
+            { id: 's1', order: 1, actionType: 'send_email', label: 'Draft Love Note to Emily', target: 'emily.baxter@personal.com' }
+          ],
+          learnedAt: '2026-08-21T10:00:00Z',
+          executionCount: 8,
+          isEnabled: true,
+          source: 'voice_learned'
+        }
+      ];
+      setCustomSkills(Array.isArray(sk) && sk.length > 0 ? sk : defaultSkills);
     } catch (err) {
       console.error('Failed to load assistant data:', err);
     } finally {
@@ -269,6 +325,135 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setIsTourOpen(true);
   };
 
+  // Custom Skill Management
+  const createCustomSkill = async (skillData: Partial<CustomSkill>): Promise<CustomSkill> => {
+    const newSkill: CustomSkill = {
+      id: 'skill-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5),
+      name: skillData.name || 'Custom Routine',
+      triggerPhrase: (skillData.triggerPhrase || '').toLowerCase().trim(),
+      description: skillData.description || 'Custom autonomous routine',
+      actionSteps: skillData.actionSteps || [],
+      learnedAt: new Date().toISOString(),
+      executionCount: 0,
+      isEnabled: true,
+      source: skillData.source || 'user_configured'
+    };
+
+    setCustomSkills(prev => [newSkill, ...prev]);
+    try {
+      await api.createSkill(newSkill);
+    } catch {}
+    return newSkill;
+  };
+
+  const deleteCustomSkill = async (id: string) => {
+    setCustomSkills(prev => prev.filter(s => s.id !== id));
+    try {
+      await api.deleteSkill(id);
+    } catch {}
+  };
+
+  const toggleCustomSkill = async (id: string) => {
+    setCustomSkills(prev => prev.map(s => {
+      if (s.id === id) {
+        const isEnabled = !s.isEnabled;
+        api.updateSkill(id, { isEnabled }).catch(() => {});
+        return { ...s, isEnabled };
+      }
+      return s;
+    }));
+  };
+
+  const executeCustomSkill = async (id: string): Promise<any> => {
+    const skill = customSkills.find(s => s.id === id);
+    if (!skill) return;
+
+    setCustomSkills(prev => prev.map(s => s.id === id ? { ...s, executionCount: s.executionCount + 1 } : s));
+
+    const turnUser: DialogueTurn = {
+      id: 'turn-u-' + Date.now().toString(36),
+      speaker: 'user',
+      text: skill.triggerPhrase,
+      timestamp: new Date().toISOString()
+    };
+
+    let responseSummary = `Executing ${skill.name}: `;
+    const executionResults: string[] = [];
+
+    for (const step of skill.actionSteps) {
+      if (step.actionType === 'triage_inbox') {
+        const triageRes = await triageInbox();
+        executionResults.push(`Triaged VIP inbox`);
+      } else if (step.actionType === 'check_calendar') {
+        executionResults.push(`Verified ${appointments.length} calendar appointments`);
+      } else if (step.actionType === 'list_tasks') {
+        executionResults.push(`Triaged top 3 priority tasks`);
+      } else if (step.actionType === 'send_email') {
+        await sendDirectEmail({
+          toName: 'Emily Baxter (Wife)',
+          toEmail: 'emily.baxter@personal.com',
+          subject: 'Thinking of you ❤️',
+          body: 'Hi Emily,\n\nJust wanted to send you a quick note to say I love you!\n\nLove,\nAndrew',
+          tone: 'friendly'
+        });
+        executionResults.push(`Sent email to ${step.target || 'Emily'}`);
+      } else if (step.actionType === 'run_autonomous') {
+        await runAutonomousStep();
+        executionResults.push(`Ran autonomous worker cycle`);
+      }
+    }
+
+    const spokenResp = `Executed ${skill.name}. Completed ${executionResults.length} automated steps.`;
+    const turnAssistant: DialogueTurn = {
+      id: 'turn-a-' + Date.now().toString(36),
+      speaker: 'assistant',
+      text: spokenResp,
+      spokenResponse: spokenResp,
+      timestamp: new Date().toISOString()
+    };
+
+    setDialogueTurns(prev => [turnAssistant, turnUser, ...prev]);
+
+    if (voiceFeedbackEnabled) {
+      speakResponse(spokenResp);
+    }
+
+    try {
+      await api.executeSkill(id);
+    } catch {}
+  };
+
+  // Passive Wake-Word Listener Effect ("Hey Google" / "Hey Assistant")
+  useEffect(() => {
+    if (!isWakeWordActive) {
+      wakeWordService.stopPassiveListening();
+      return;
+    }
+
+    wakeWordService.startPassiveListening({
+      onWakeWordDetected: (wakeWord, trailingCommand) => {
+        try {
+          wakeWordService.playGoogleAssistantChime();
+        } catch {}
+
+        if (trailingCommand && trailingCommand.trim().length > 1) {
+          submitVoiceTranscript(trailingCommand.trim());
+        } else {
+          // Wake word triggered without command, start voice recording
+          startVoiceListening();
+        }
+      }
+    });
+
+    return () => {
+      wakeWordService.stopPassiveListening();
+    };
+  }, [isWakeWordActive]);
+
+  const toggleWakeWordListener = () => {
+    setIsWakeWordActive(prev => !prev);
+  };
+
   // Submit speech transcript to AI backend & Local Engine
   const submitVoiceTranscript = async (text: string) => {
     if (!text.trim()) return;
@@ -277,13 +462,181 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const cardId = 'ac-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5);
     const nowStr = new Date().toISOString();
 
+    // 0. Register User Dialogue Turn
+    const userTurn: DialogueTurn = {
+      id: 'turn-u-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5),
+      speaker: 'user',
+      text: text,
+      timestamp: nowStr
+    };
+
     try {
       let actionCard: ActionCard | null = null;
       let createdTasks: TaskItem[] = [];
-      let memoSummary = text;
+      let spokenResponseText = '';
 
-      // 1. Check Gemini Ultra Provider if configured
-      if (aiBrainProvider === 'gemini_ultra' && geminiApiKey) {
+      // A. Check for Voice Skill Learning ("When I say [Trigger]...", "Learn a skill...")
+      if (/^(when\s+i\s+say|teach\s+skill|learn\s+skill|create\s+routine)/i.test(textLower)) {
+        const triggerMatch = text.match(/(?:when\s+i\s+say|trigger|called)\s+['"]?([^,'"]+)['"]?/i);
+        const trigger = triggerMatch ? triggerMatch[1].trim() : 'custom action';
+        
+        const steps: SkillStep[] = [];
+        if (/inbox|email|mail/i.test(textLower)) {
+          steps.push({ id: 's1', order: 1, actionType: 'triage_inbox', label: 'Triage VIP Inbox' });
+        }
+        if (/calendar|schedule|agenda/i.test(textLower)) {
+          steps.push({ id: 's2', order: steps.length + 1, actionType: 'check_calendar', label: 'Check Schedule' });
+        }
+        if (/task|priority|priorities/i.test(textLower)) {
+          steps.push({ id: 's3', order: steps.length + 1, actionType: 'list_tasks', label: 'List Top Priorities' });
+        }
+        if (/wife|emily|love/i.test(textLower)) {
+          steps.push({ id: 's4', order: steps.length + 1, actionType: 'send_email', label: 'Draft Love Note to Emily', target: 'emily.baxter@personal.com' });
+        }
+        if (steps.length === 0) {
+          steps.push({ id: 's1', order: 1, actionType: 'triage_inbox', label: 'Triage VIP Inbox' });
+          steps.push({ id: 's2', order: 2, actionType: 'check_calendar', label: 'Check Schedule' });
+        }
+
+        const learnedSkill = await createCustomSkill({
+          name: `${trigger.charAt(0).toUpperCase() + trigger.slice(1)} Routine`,
+          triggerPhrase: trigger.toLowerCase(),
+          description: `Voice-learned routine with ${steps.length} sequential steps.`,
+          actionSteps: steps,
+          source: 'voice_learned'
+        });
+
+        spokenResponseText = `I've learned a new skill! Whenever you say "${trigger}", I will execute ${steps.map(s => s.label).join(' and ')}.`;
+        actionCard = {
+          id: cardId,
+          intent: 'skill_learn',
+          title: `Learned Voice Skill: "${trigger}"`,
+          description: `Automated Pipeline: ${steps.map(s => s.label).join(' ➔ ')}`,
+          spokenResponse: spokenResponseText,
+          status: 'executed',
+          createdAt: nowStr
+        };
+      }
+
+      // B. Check for Custom Skill Trigger Matching
+      if (!actionCard) {
+        const matchedSkill = customSkills.find(s => 
+          s.isEnabled && 
+          (textLower === s.triggerPhrase || textLower.includes(s.triggerPhrase))
+        );
+        if (matchedSkill) {
+          await executeCustomSkill(matchedSkill.id);
+          return;
+        }
+      }
+
+      // C. Confirmation Dialogues ("Yes, send it", "Cancel", "No")
+      if (!actionCard && dialogueManager.hasPendingAction()) {
+        const pending = dialogueManager.getPendingAction();
+        if (/^(yes|yeah|sure|confirm|do it|send it|execute|please)/i.test(textLower)) {
+          if (pending?.type === 'send_email') {
+            await sendDirectEmail(pending.payload);
+            spokenResponseText = `Email confirmed and sent to ${pending.payload.toName || pending.payload.toEmail}!`;
+          } else if (pending?.type === 'create_task') {
+            const task = pending.payload as TaskItem;
+            setTasks(prev => [task, ...prev]);
+            spokenResponseText = `Task "${task.title}" has been confirmed and logged.`;
+          }
+          dialogueManager.clearPendingAction();
+          actionCard = {
+            id: cardId,
+            intent: 'general_query',
+            title: `Action Confirmed`,
+            description: spokenResponseText,
+            spokenResponse: spokenResponseText,
+            status: 'executed',
+            createdAt: nowStr
+          };
+        } else if (/^(no|cancel|stop|nevermind|don't)/i.test(textLower)) {
+          dialogueManager.clearPendingAction();
+          spokenResponseText = `Understood. I have cancelled the pending action.`;
+          actionCard = {
+            id: cardId,
+            intent: 'general_query',
+            title: `Action Cancelled`,
+            description: spokenResponseText,
+            spokenResponse: spokenResponseText,
+            status: 'executed',
+            createdAt: nowStr
+          };
+        }
+      }
+
+      // D. Contact Inquiry & Multi-Turn Pronoun Context ("Who is Sarah?", "Who is David?")
+      if (!actionCard && /^(who\s+is|tell\s+me\s+about)\s+([a-zA-Z]+)/i.test(textLower)) {
+        const nameMatch = textLower.match(/^(?:who\s+is|tell\s+me\s+about)\s+([a-zA-Z]+)/i);
+        const searchedName = nameMatch ? nameMatch[1] : '';
+        const foundContact = contacts.find(c => c.name.toLowerCase().includes(searchedName)) || {
+          id: 'c1',
+          name: searchedName.charAt(0).toUpperCase() + searchedName.slice(1),
+          role: 'Strategic Partner',
+          company: 'Innovate AI',
+          email: `${searchedName.toLowerCase()}@innovate.co`,
+          phone: '+1 (555) 234-5678',
+          notes: 'Key collaborator on AI projects'
+        };
+
+        dialogueManager.setContextContact(foundContact);
+        spokenResponseText = `${foundContact.name} is ${foundContact.role} at ${foundContact.company}. Her email is ${foundContact.email}. Would you like me to send her an email or call her?`;
+        
+        actionCard = {
+          id: cardId,
+          intent: 'general_query',
+          title: `Contact: ${foundContact.name}`,
+          description: `${foundContact.role} • ${foundContact.company} • ${foundContact.email}`,
+          spokenResponse: spokenResponseText,
+          status: 'executed',
+          createdAt: nowStr
+        };
+      }
+
+      // E. Pronoun Resolution ("Send her an email", "Call him", "Write to them")
+      if (!actionCard && /(send\s+her|send\s+him|email\s+her|email\s+him|write\s+to\s+her|write\s+to\s+him|call\s+her|call\s+him)/i.test(textLower)) {
+        const lastContact = dialogueManager.getLastMentionedContact() || {
+          id: 'c1',
+          name: 'Sarah Chen',
+          email: 'sarah.chen@innovate.co',
+          role: 'Head of Product',
+          company: 'Innovate AI'
+        };
+
+        const emailDraft: EmailDraft = {
+          id: 'em-' + Date.now().toString(36),
+          toName: lastContact.name,
+          toEmail: lastContact.email || 'sarah.chen@innovate.co',
+          subject: 'Quick Follow-up from Andrew',
+          body: `Hi ${lastContact.name},\n\nFollowing up on our conversation.\n\nBest regards,\nAndrew`,
+          tone: 'professional' as const,
+          status: 'sent' as const,
+          sentAt: nowStr
+        };
+
+        spokenResponseText = `I have drafted an email to ${lastContact.name} (${lastContact.email}). Should I send it now?`;
+        dialogueManager.setPendingAction({
+          type: 'send_email',
+          payload: emailDraft,
+          prompt: spokenResponseText
+        });
+
+        actionCard = {
+          id: cardId,
+          intent: 'email_draft',
+          title: `Drafted Email to ${lastContact.name}`,
+          description: `Ready to send to ${lastContact.email}. Say "Yes, send it" to dispatch.`,
+          spokenResponse: spokenResponseText,
+          status: 'confirmed',
+          createdAt: nowStr,
+          emailData: emailDraft
+        };
+      }
+
+      // F. 1. Check Gemini Ultra Provider if configured
+      if (!actionCard && aiBrainProvider === 'gemini_ultra' && geminiApiKey) {
         try {
           const geminiResult = await processSpeechWithGemini(text, geminiApiKey, 'gemini-1.5-flash');
           if (geminiResult) {
@@ -322,7 +675,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       }
 
-      // 2. Try Backend Edge API (/api/voice/process-text)
+      // G. 2. Try Backend Edge API (/api/voice/process-text)
       if (!actionCard) {
         try {
           const res = await api.processVoiceText(text, 'browser_mic');
@@ -336,9 +689,9 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       }
 
-      // 3. Infallible Client-Side Instant Intent Engine (Handles Memory, Google Assistant features, Wife Emails, Calendar, Calling)
+      // H. 3. Infallible Client-Side Instant Intent Engine (Handles Memory, Google Assistant features, Wife Emails, Calendar, Calling)
       if (!actionCard) {
-        // A. Adaptive Executive Memory & Self-Learning ("Remember that...", "What is my...")
+        // Memory learn
         if (/^(remember\s+that|remember\s+|learn\s+that|don't\s+forget\s+that|save\s+memory[:\s]+)/i.test(textLower)) {
           const memContent = text.replace(/^(remember\s+that|remember\s+|learn\s+that|don't\s+forget\s+that|save\s+memory[:\s]+)\s*/i, '').trim();
           actionCard = {
@@ -351,7 +704,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             createdAt: nowStr
           };
         }
-        // B. Memory Recall
+        // Memory recall
         else if (/^(what\s+is|when\s+is|recall|what\s+did\s+i\s+ask\s+you\s+to\s+remember|list\s+my\s+memories)/i.test(textLower) && !/weather|time|date|task|email/i.test(textLower)) {
           actionCard = {
             id: cardId,
@@ -363,7 +716,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             createdAt: nowStr
           };
         }
-        // C. Timers & Alarms
+        // Timers & Alarms
         else if (/(timer|alarm|stopwatch)/i.test(textLower) && /(set|start|create|for|\d+)/i.test(textLower)) {
           let durationSeconds = 300;
           const minMatch = textLower.match(/(\d+)\s*(?:minute|min|m)/i);
@@ -384,7 +737,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             createdAt: nowStr
           };
         }
-        // D. Reminders
+        // Reminders
         else if (/^remind\s+me\s+to|^create\s+reminder/i.test(textLower)) {
           const reminderContent = text.replace(/^(remind\s+me\s+to|create\s+reminder[:\s]+)\s*/i, '').trim();
           actionCard = {
@@ -397,7 +750,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             createdAt: nowStr
           };
         }
-        // E. Calculations & Math
+        // Calculations & Math
         else if (/^(what\s+is|calculate|how\s+much\s+is)\s+[\d\s+\-*/%$.^()]+$/i.test(textLower) || /\d+\s*[%+\-*/]\s*\d+/.test(textLower)) {
           let mathAnswer = `Calculation: ${text}`;
           try {
@@ -419,7 +772,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             createdAt: nowStr
           };
         }
-        // F. Weather & Forecast
+        // Weather & Forecast
         else if (/(weather|forecast|temperature|will\s+it\s+rain)/i.test(textLower)) {
           const weatherMsg = `Currently it's 22°C (72°F) and sunny with mild conditions and clear skies.`;
           actionCard = {
@@ -432,7 +785,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             createdAt: nowStr
           };
         }
-        // G. Smart Notes Ingest
+        // Smart Notes Ingest
         else if (/^(take\s+a\s+note|save\s+note|write\s+this\s+down)[:\s]+/i.test(textLower)) {
           const noteBody = text.replace(/^(take\s+a\s+note|save\s+note|write\s+this\s+down)[:\s]*/i, '').trim();
           actionCard = {
@@ -445,7 +798,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             createdAt: nowStr
           };
         }
-        // H. Email Intent (e.g. wife / loved ones / contacts)
+        // Email Intent (e.g. wife / loved ones / contacts)
         else if (/(email|mail|message|write|send|tell)\s+/i.test(textLower) && /(wife|emily|sarah|david|alex|celine|love|loved)/i.test(textLower) ||
             /love|loved/i.test(textLower) && /wife|emily/i.test(textLower)) {
           
@@ -519,7 +872,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             category: 'vip'
           }, ...prev]);
         }
-        // I. Calendar Booking
+        // Calendar Booking
         else if (/book|schedule|meet|appointment|sync|calendar/i.test(textLower)) {
           const aptTitle = text.length > 50 ? text.substring(0, 47) + '...' : text;
           const start = new Date(Date.now() + 86400000).toISOString();
@@ -546,7 +899,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           };
           setAppointments(prev => [apt, ...prev]);
         }
-        // J. Call Contact
+        // Call Contact
         else if (/call|dial|phone/i.test(textLower)) {
           actionCard = {
             id: cardId,
@@ -558,7 +911,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             createdAt: nowStr
           };
         }
-        // D. Work Hub Task Creation (Fallback)
+        // Work Hub Task Creation (Fallback)
         else {
           const newTask: TaskItem = {
             id: 'task-' + Date.now().toString(36),
@@ -601,7 +954,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       }
 
-      // 4. Update UI State & Present Deliverables
+      // Update UI State & Present Deliverables
       if (actionCard) {
         setActionCards(prev => [actionCard!, ...prev]);
 
@@ -623,7 +976,19 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         };
         setMemos(prev => [memo, ...prev]);
 
-        // 5. Sound & Natural Voice Feedback
+        // Register Assistant Dialogue Turn
+        const assistantTurn: DialogueTurn = {
+          id: 'turn-a-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5),
+          speaker: 'assistant',
+          text: actionCard.spokenResponse || actionCard.description,
+          spokenResponse: actionCard.spokenResponse,
+          intent: actionCard.intent,
+          timestamp: nowStr
+        };
+
+        setDialogueTurns(prev => [assistantTurn, userTurn, ...prev]);
+
+        // Sound & Natural Voice Feedback
         try {
           playChime('action_success');
         } catch {}
@@ -632,7 +997,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           speakResponse(actionCard.spokenResponse);
         }
 
-        // 6. Forward to Google Apps Script Webhook
+        // Forward to Google Apps Script Webhook
         forwardEventToGoogleCloud({
           action: actionCard.intent,
           actionCard,
@@ -907,6 +1272,17 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         callLogs,
         autonomousJobs,
         wikiArticles,
+        customSkills,
+        dialogueTurns,
+        isWakeWordActive,
+        setIsWakeWordActive,
+        toggleWakeWordListener,
+        continuousConversation,
+        setContinuousConversation,
+        createCustomSkill,
+        deleteCustomSkill,
+        toggleCustomSkill,
+        executeCustomSkill,
         kpi,
         activeView,
         setActiveView,

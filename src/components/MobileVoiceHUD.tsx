@@ -13,7 +13,13 @@ import {
   Bot,
   Layers,
   ChevronRight,
-  Radio
+  Radio,
+  Zap,
+  MessageSquare,
+  User,
+  ShieldCheck,
+  Flame,
+  CheckCircle2
 } from 'lucide-react';
 
 export const MobileVoiceHUD: React.FC = () => {
@@ -26,11 +32,29 @@ export const MobileVoiceHUD: React.FC = () => {
     stopVoiceListening, 
     submitVoiceTranscript,
     actionCards,
+    dialogueTurns,
+    customSkills,
+    isWakeWordActive,
+    toggleWakeWordListener,
+    executeCustomSkill,
     kpi,
     setActiveView
   } = useAssistant();
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Keyboard shortcut listener (Cmd+K or Spacebar to activate Assistant)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        if (isListening) stopVoiceListening();
+        else startVoiceListening();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isListening]);
 
   // Dynamic Glowing Audio Waveform Visualizer
   useEffect(() => {
@@ -109,20 +133,65 @@ export const MobileVoiceHUD: React.FC = () => {
 
   const quickPrompts = [
     "Send an email to my wife to say I love her",
-    "Remember that Emily loves peonies and dark chocolate",
-    "What did I ask you to remember?",
+    "When I say 'Daily Standup', triage inbox and summarize tasks",
+    "Who is Sarah?",
+    "Send her an email about the budget",
+    "Yes, send it",
     "Set a timer for 15 minutes",
     "What is 15% of $850?",
     "What's the weather in Tokyo?",
-    "Draft an email to Sarah about our Q3 growth sprint",
-    "Book strategy session with David next Tuesday at 2 PM",
-    "Take a note: Review Q3 enterprise security audit"
+    "Book strategy session with David next Tuesday at 2 PM"
   ];
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex flex-col justify-between max-w-4xl mx-auto px-4 py-6 space-y-6">
+    <div className="min-h-[calc(100vh-4rem)] flex flex-col justify-between max-w-4xl mx-auto px-4 py-6 space-y-6 animate-fadeIn">
       
-      {/* Top Status & Metrics Card */}
+      {/* Top Wake-Word Status & Metric Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">
+        <div className="flex items-center space-x-3">
+          <div className={`p-2.5 rounded-xl border flex items-center justify-center transition ${
+            isWakeWordActive 
+              ? 'bg-teal-500/10 border-teal-500/30 text-teal-400' 
+              : 'bg-slate-800 border-slate-700 text-slate-400'
+          }`}>
+            <Radio className={`w-5 h-5 ${isWakeWordActive ? 'animate-pulse' : ''}`} />
+          </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-bold text-white">"Hey Google" Wake Word</span>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
+                isWakeWordActive ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' : 'bg-slate-800 text-slate-400'
+              }`}>
+                {isWakeWordActive ? 'Listening Active' : 'Muted'}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400">Say <em>"Hey Google"</em> or press <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-300 text-[10px] font-mono">Cmd+K</kbd></p>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={toggleWakeWordListener}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
+              isWakeWordActive
+                ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+                : 'bg-teal-600 hover:bg-teal-500 text-white border-teal-500'
+            }`}
+          >
+            {isWakeWordActive ? 'Disable Wake Word' : 'Enable Wake Word'}
+          </button>
+
+          <button
+            onClick={() => setActiveView('skills')}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/30 text-brand-300 text-xs font-semibold transition"
+          >
+            <Zap className="w-3.5 h-3.5" />
+            <span>Skill Studio ({customSkills.length})</span>
+          </button>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-slate-900/80 border border-slate-800/90 rounded-2xl p-3.5 flex items-center space-x-3 shadow-lg">
           <div className="p-2.5 bg-brand-500/10 rounded-xl text-brand-400 border border-brand-500/20">
@@ -171,43 +240,8 @@ export const MobileVoiceHUD: React.FC = () => {
         </div>
       </div>
 
-      {/* Fast Executive Switcher Bar */}
-      <div className="flex items-center justify-center gap-2 overflow-x-auto pb-1 text-xs">
-        <button
-          onClick={() => setActiveView('gmail')}
-          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-slate-300 transition whitespace-nowrap"
-        >
-          <Mail className="w-3.5 h-3.5 text-red-400" />
-          <span>Gmail Suite</span>
-        </button>
-
-        <button
-          onClick={() => setActiveView('calendar')}
-          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-slate-300 transition whitespace-nowrap"
-        >
-          <Calendar className="w-3.5 h-3.5 text-teal-400" />
-          <span>Calendar Hub</span>
-        </button>
-
-        <button
-          onClick={() => setActiveView('comms')}
-          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-slate-300 transition whitespace-nowrap"
-        >
-          <Radio className="w-3.5 h-3.5 text-indigo-400" />
-          <span>Comms & Calls</span>
-        </button>
-
-        <button
-          onClick={() => setActiveView('autonomous')}
-          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 text-slate-300 transition whitespace-nowrap"
-        >
-          <Bot className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Autonomous Loop</span>
-        </button>
-      </div>
-
       {/* Main Center Voice Orb & Transcript */}
-      <div className="flex flex-col items-center justify-center py-4 relative">
+      <div className="flex flex-col items-center justify-center py-2 relative">
         
         {/* Canvas Visualizer */}
         <div className="relative flex items-center justify-center">
@@ -221,17 +255,11 @@ export const MobileVoiceHUD: React.FC = () => {
           {/* Central Tactile Push-to-Talk Orb Button */}
           <button
             onClick={isListening ? stopVoiceListening : startVoiceListening}
-            onTouchStart={(e) => {
-              // Push to talk on mobile hold
-              if (!isListening && !isProcessingSpeech) {
-                startVoiceListening();
-              }
+            onTouchStart={() => {
+              if (!isListening && !isProcessingSpeech) startVoiceListening();
             }}
-            onTouchEnd={(e) => {
-              // Release to talk
-              if (isListening) {
-                setTimeout(() => stopVoiceListening(), 300);
-              }
+            onTouchEnd={() => {
+              if (isListening) setTimeout(() => stopVoiceListening(), 300);
             }}
             className={`absolute z-10 w-24 h-24 rounded-full flex flex-col items-center justify-center transition-all duration-300 transform active:scale-95 shadow-2xl ${
               isListening
@@ -244,7 +272,7 @@ export const MobileVoiceHUD: React.FC = () => {
             {isListening ? (
               <>
                 <Radio className="w-8 h-8 animate-bounce" />
-                <span className="text-[10px] font-bold uppercase tracking-wider mt-1">Tap/Release</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider mt-1">Listening</span>
               </>
             ) : isProcessingSpeech ? (
               <>
@@ -261,7 +289,7 @@ export const MobileVoiceHUD: React.FC = () => {
         </div>
 
         {/* Live Streaming Transcript Card */}
-        <div className="w-full max-w-xl mt-4 px-4">
+        <div className="w-full max-w-xl mt-2 px-4">
           {liveTranscript ? (
             <div className="bg-slate-900/90 border border-brand-500/40 rounded-2xl p-4 shadow-xl text-center animate-fadeIn">
               <p className="text-xs text-brand-400 font-semibold uppercase tracking-wider mb-1 flex items-center justify-center gap-1.5">
@@ -274,18 +302,18 @@ export const MobileVoiceHUD: React.FC = () => {
             <div className="bg-slate-900/90 border border-purple-500/40 rounded-2xl p-4 shadow-xl text-center">
               <p className="text-xs text-purple-400 font-semibold uppercase tracking-wider mb-1 flex items-center justify-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 animate-spin" />
-                Analyzing intent, extracting tasks & blueprints...
+                Executing conversational turn & intelligence...
               </p>
             </div>
           ) : (
-            <div className="text-center text-slate-400 text-xs py-2">
-              <p className="font-medium text-slate-300">Talk to me anytime. Say commands like:</p>
-              <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2.5">
-                {quickPrompts.slice(0, 3).map((prompt, idx) => (
+            <div className="text-center text-slate-400 text-xs py-1">
+              <p className="font-medium text-slate-300">Try saying or clicking prompts:</p>
+              <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2">
+                {quickPrompts.slice(0, 4).map((prompt, idx) => (
                   <button
                     key={idx}
                     onClick={() => submitVoiceTranscript(prompt)}
-                    className="text-[11px] px-2.5 py-1 rounded-full bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-brand-300 border border-slate-800 hover:border-brand-500/30 transition text-left"
+                    className="text-[11px] px-2.5 py-1 rounded-full bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-brand-300 border border-slate-800 hover:border-brand-500/30 transition text-left"
                   >
                     "{prompt}"
                   </button>
@@ -295,6 +323,80 @@ export const MobileVoiceHUD: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Learned Custom Voice Skills Shortcut Bar */}
+      {customSkills.length > 0 && (
+        <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-brand-400" />
+              <span>Learned Voice Routines ({customSkills.length})</span>
+            </span>
+            <button 
+              onClick={() => setActiveView('skills')}
+              className="text-[11px] text-brand-400 hover:underline font-semibold"
+            >
+              Manage Blueprint Studio ➔
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {customSkills.map(skill => (
+              <button
+                key={skill.id}
+                onClick={() => executeCustomSkill(skill.id)}
+                className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-brand-500/40 text-xs text-slate-300 hover:text-white flex items-center space-x-2 transition"
+              >
+                <span>⚡</span>
+                <span className="font-medium">{skill.name}</span>
+                <code className="text-[10px] text-brand-400 font-mono">"{skill.triggerPhrase}"</code>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Live Conversational Multi-Turn Dialogue Feed */}
+      {dialogueTurns.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <MessageSquare className="w-4 h-4 text-teal-400" />
+              <span>Conversational Dialogue History</span>
+            </h3>
+            <span className="text-[11px] text-slate-400">{dialogueTurns.length} turns</span>
+          </div>
+
+          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3 max-h-72 overflow-y-auto">
+            {dialogueTurns.slice(0, 6).map((turn) => (
+              <div 
+                key={turn.id} 
+                className={`flex space-x-3 p-3 rounded-xl ${
+                  turn.speaker === 'user' 
+                    ? 'bg-slate-950/70 border border-slate-800/80 ml-6' 
+                    : 'bg-brand-950/20 border border-brand-500/20 mr-6'
+                }`}
+              >
+                <div className={`p-2 rounded-xl h-fit shrink-0 ${
+                  turn.speaker === 'user' ? 'bg-slate-800 text-slate-300' : 'bg-brand-500/20 text-brand-400'
+                }`}>
+                  {turn.speaker === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
+                </div>
+                <div className="space-y-1 overflow-hidden">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-bold text-white">
+                      {turn.speaker === 'user' ? 'You' : 'Assistant (Hey Google)'}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      {new Date(turn.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-200 leading-relaxed break-words">{turn.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Action Cards & Live Executive Feed */}
       <div className="space-y-3 pt-2">
@@ -308,7 +410,7 @@ export const MobileVoiceHUD: React.FC = () => {
 
         {(!Array.isArray(actionCards) || actionCards.length === 0) ? (
           <div className="bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl p-6 text-center text-slate-400 text-xs">
-            No voice actions yet. Tap the microphone and tell me what you need done!
+            No voice actions yet. Say "Hey Google" or tap the microphone to begin!
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -322,3 +424,4 @@ export const MobileVoiceHUD: React.FC = () => {
     </div>
   );
 };
+

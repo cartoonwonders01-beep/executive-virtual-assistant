@@ -12,6 +12,7 @@ import { CommunicationsHubView } from './components/CommunicationsHubView';
 import { AutonomousWorkerDeck } from './components/AutonomousWorkerDeck';
 import { MultiAgentSwarmView } from './components/MultiAgentSwarmView';
 import { WikiKnowledgeHub } from './components/WikiKnowledgeHub';
+import { SkillLearningHub } from './components/SkillLearningHub';
 import { AutomationStudioModal } from './components/AutomationStudioModal';
 import { VoiceRecorderModal } from './components/VoiceRecorderModal';
 import { TaskDetailModal } from './components/TaskDetailModal';
@@ -85,6 +86,12 @@ const AppContent: React.FC = () => {
         {activeView === 'wiki' && (
           <div className="space-y-6">
             <WikiKnowledgeHub />
+          </div>
+        )}
+
+        {activeView === 'skills' && (
+          <div className="space-y-6">
+            <SkillLearningHub />
           </div>
         )}
       </main>

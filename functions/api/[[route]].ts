@@ -378,6 +378,71 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
     }), { headers: corsHeaders });
   }
 
+  // Skills
+  if (path === '/skills' && method === 'GET') {
+    return new Response(JSON.stringify([
+      {
+        id: 'skill-morning-briefing',
+        name: 'Morning Executive Briefing',
+        triggerPhrase: 'morning briefing',
+        description: 'Triages VIP inbox, checks calendar, and lists top tasks.',
+        actionSteps: [
+          { id: 's1', order: 1, actionType: 'triage_inbox', label: 'Triage VIP Inbox' },
+          { id: 's2', order: 2, actionType: 'check_calendar', label: 'Check Schedule' },
+          { id: 's3', order: 3, actionType: 'list_tasks', label: 'List Top Priorities' }
+        ],
+        learnedAt: '2026-08-20T08:00:00Z',
+        executionCount: 14,
+        isEnabled: true,
+        source: 'builtin'
+      },
+      {
+        id: 'skill-wife-love',
+        name: 'Wife Check-in & Love Dispatch',
+        triggerPhrase: 'wife check-in',
+        description: 'Sends an affectionate check-in email to Emily Baxter.',
+        actionSteps: [
+          { id: 's1', order: 1, actionType: 'send_email', label: 'Draft Love Note to Emily', target: 'emily.baxter@personal.com' }
+        ],
+        learnedAt: '2026-08-21T10:00:00Z',
+        executionCount: 8,
+        isEnabled: true,
+        source: 'voice_learned'
+      }
+    ]), { headers: corsHeaders });
+  }
+
+  // Execute Skill
+  if (path.startsWith('/skills/') && path.endsWith('/execute') && method === 'POST') {
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Executed autonomous routine steps successfully.',
+      executedAt: new Date().toISOString()
+    }), { headers: corsHeaders });
+  }
+
+  // Dialogue Turn
+  if (path === '/dialogue/turn' && method === 'POST') {
+    const body = await request.json() as { speech: string };
+    const speech = body.speech || '';
+    const nowStr = new Date().toISOString();
+
+    return new Response(JSON.stringify({
+      turn: {
+        id: 'turn-' + Date.now().toString(36),
+        speaker: 'assistant',
+        text: `I heard: "${speech}". How else can I assist you?`,
+        spokenResponse: `I'm on it! How else can I assist you?`,
+        timestamp: nowStr
+      },
+      session: {
+        id: 'sess-edge',
+        status: 'idle',
+        turns: []
+      }
+    }), { headers: corsHeaders });
+  }
+
   // Default fallback response
   return new Response(JSON.stringify({ success: true, edge: true }), { headers: corsHeaders });
 }

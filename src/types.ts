@@ -107,6 +107,7 @@ export type ActionIntentType =
   | 'automation_run'
   | 'web_search'
   | 'general_chat'
+  | 'general_query'
   | 'timer_alarm'
   | 'reminder_create'
   | 'memory_learn'
@@ -114,6 +115,10 @@ export type ActionIntentType =
   | 'weather_query'
   | 'calc_query'
   | 'note_save'
+  | 'skill_learn'
+  | 'custom_skill_exec'
+  | 'custom_skill_learn'
+  | 'dialogue_confirmation'
   | 'knowledge_qa';
 
 export interface EmailDraft {
@@ -243,7 +248,7 @@ export interface SwarmAgent {
   currentTaskId?: string;
   tasksCompletedCount: number;
   hoursWonBack: number;
-  efficiencyRating: string; // e.g. "98.4%"
+  efficiencyRating: string;
   lastActiveAt: string;
   recentLog: string;
 }
@@ -301,6 +306,82 @@ export interface WikiArticle {
   icon?: string;
 }
 
+// =========================================================================
+// INTERACTIVE CONVERSATIONAL DIALOGUE & SKILL LEARNING TYPES
+// =========================================================================
+
+export interface DialogueTurn {
+  id: string;
+  speaker: 'user' | 'assistant';
+  text: string;
+  intent?: ActionIntentType;
+  spokenResponse?: string;
+  timestamp: string;
+  actionCardId?: string;
+}
+
+export interface DialogueContext {
+  lastMentionedContact?: ContactPerson;
+  lastDraftedEmail?: EmailDraft;
+  lastCreatedTask?: TaskItem;
+  lastAppointment?: CalendarAppointment;
+  pendingAction?: {
+    type: 'confirm_send_email' | 'confirm_book_appointment' | 'confirm_delete_task' | 'confirm_run_skill' | 'send_email' | 'create_task' | string;
+    payload: any;
+    prompt: string;
+  };
+  variables: Record<string, any>;
+}
+
+export interface DialogueSession {
+  id: string;
+  turns: DialogueTurn[];
+  context: DialogueContext;
+  status: 'active' | 'idle' | 'waiting_for_confirmation';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SkillActionType = 
+  | 'triage_inbox'
+  | 'send_email'
+  | 'check_calendar'
+  | 'book_appointment'
+  | 'list_tasks'
+  | 'summarize_kpi'
+  | 'run_autonomous'
+  | 'query_weather'
+  | 'custom_command';
+
+export interface SkillStep {
+  id: string;
+  order: number;
+  actionType: SkillActionType;
+  label: string;
+  target?: string;
+  params?: Record<string, any>;
+}
+
+export interface CustomSkill {
+  id: string;
+  name: string;
+  triggerPhrase: string;
+  description: string;
+  actionSteps: SkillStep[];
+  learnedAt: string;
+  executionCount: number;
+  isEnabled: boolean;
+  source: 'voice_learned' | 'user_configured' | 'builtin';
+}
+
+export interface WakeWordConfig {
+  enabled: boolean;
+  wakeWords: string[];
+  continuousListening: boolean;
+  bargeInEnabled: boolean;
+  selectedPersona: 'aria_female' | 'executive_british' | 'crisp_male' | 'warm_australian';
+}
+
 export type AppView = 
   | 'voice_hud'
   | 'gmail'
@@ -311,5 +392,5 @@ export type AppView =
   | 'matrix'
   | 'autonomous'
   | 'swarm'
-  | 'wiki';
-
+  | 'wiki'
+  | 'skills';
