@@ -28,6 +28,7 @@ import { speakResponse, stopSpeaking } from '../services/speechSynthesis';
 import { processSpeechWithGemini } from '../services/geminiService';
 import { playChime } from '../services/soundEffects';
 import { intelligentAdvisor } from '../services/intelligentAdvisor';
+import { logger } from '../services/loggerService';
 
 export type AIBrainProvider = 'gemini_ultra' | 'groq';
 
@@ -85,6 +86,8 @@ interface AssistantContextType {
   startInteractiveTour: () => void;
   isSettingsOpen: boolean;
   setIsSettingsOpen: (open: boolean) => void;
+  isActivityLogOpen: boolean;
+  setIsActivityLogOpen: (open: boolean) => void;
 
   // Cloud API Keys & Webhooks
   groqApiKey: string;
@@ -209,6 +212,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isRecordModalOpen, setIsRecordModalOpen] = useState<boolean>(false);
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [isActivityLogOpen, setIsActivityLogOpen] = useState<boolean>(false);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -427,20 +431,25 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Passive Wake-Word Listener Effect ("Hey Google" / "Hey Assistant")
   useEffect(() => {
     if (!isWakeWordActive) {
+      logger.log('info', 'wake_word', 'Passive wake-word listener paused.');
       wakeWordService.stopPassiveListening();
       return;
     }
 
+    logger.log('info', 'wake_word', 'Starting passive wake-word listener for "Hey Eve"...');
     wakeWordService.startPassiveListening({
       onWakeWordDetected: (wakeWord, trailingCommand) => {
+        logger.log('success', 'wake_word', `🎯 Wake-word recognized: "${wakeWord}"`, { trailingCommand });
         try {
           wakeWordService.playGoogleAssistantChime();
         } catch {}
 
         if (trailingCommand && trailingCommand.trim().length > 1) {
+          logger.log('info', 'speech_stt', `Trailing command extracted from wake-word: "${trailingCommand.trim()}"`);
           submitVoiceTranscript(trailingCommand.trim());
         } else {
-          // Wake word triggered without command, start voice recording
+          // Wake word triggered without trailing command, open active voice recording
+          logger.log('info', 'audio', 'Wake-word heard without trailing command. Activating microphone for user request...');
           startVoiceListening();
         }
       }
@@ -452,7 +461,11 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [isWakeWordActive]);
 
   const toggleWakeWordListener = () => {
-    setIsWakeWordActive(prev => !prev);
+    setIsWakeWordActive(prev => {
+      const next = !prev;
+      logger.log('info', 'wake_word', `Passive wake-word listener toggled ${next ? 'ON' : 'OFF'}.`);
+      return next;
+    });
   };
 
   // Submit speech transcript to AI backend & Local Engine
@@ -1016,12 +1029,18 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
         setDialogueTurns(prev => [assistantTurn, userTurn, ...prev]);
 
+        logger.log('success', 'ai_reasoning', `Intent resolved to [${actionCard.intent}]: "${actionCard.title}"`, {
+          spokenResponse: actionCard.spokenResponse,
+          description: actionCard.description.substring(0, 100) + '...'
+        });
+
         // Sound & Natural Voice Feedback
         try {
           playChime('action_success');
         } catch {}
 
         if (voiceFeedbackEnabled && actionCard.spokenResponse) {
+          logger.log('info', 'tts_speech', `Dispatched voice audio: "${actionCard.spokenResponse}"`);
           speakResponse(actionCard.spokenResponse);
         }
 
@@ -1035,8 +1054,8 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         });
       }
 
-    } catch (err) {
-      console.error('Failed to process voice transcript:', err);
+    } catch (err: any) {
+      logger.log('error', 'ai_reasoning', `Failed to process voice transcript: ${err?.message || err}`);
       try { playChime('error_alert'); } catch {}
     } finally {
       setIsProcessingSpeech(false);
@@ -1049,48 +1068,62 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     stopSpeaking();
     setLiveTranscript('');
     setIsListening(true);
+    logger.log('info', 'audio', 'Active microphone listening started. Listening for your speech...');
 
     const started = await audioRecorder.start({
       onAudioLevel: (level) => setAudioLevel(level),
-      onLiveTranscript: (text) => setLiveTranscript(text),
+      onLiveTranscript: (text) => {
+        setLiveTranscript(text);
+        if (text) {
+          logger.log('info', 'speech_stt', `Live STT: "${text}"`);
+        }
+      },
       onRecordingComplete: async (blob, mimeType, liveTranscript) => {
         setIsProcessingSpeech(true);
+        logger.log('info', 'audio', `Recording completed (size: ${blob.size} bytes). Processing speech...`);
         try {
           let textToProcess = (liveTranscript || '').trim();
 
           if (groqApiKey && blob.size > 500) {
             try {
+              logger.log('info', 'speech_stt', 'Sending audio to Groq Whisper for high-speed transcription...');
               const res = await api.transcribeRecordedAudio(blob, mimeType, groqApiKey);
               if (res.transcript && res.transcript.trim()) {
                 textToProcess = res.transcript.trim();
+                logger.log('success', 'speech_stt', `Groq Whisper transcribed: "${textToProcess}"`);
               }
-            } catch (wErr) {
-              console.warn('Groq Whisper refine skipped, using live transcript:', wErr);
+            } catch (wErr: any) {
+              logger.log('warn', 'speech_stt', `Groq Whisper refine skipped (${wErr?.message}), using live transcript: "${textToProcess}"`);
             }
           }
 
           if (textToProcess) {
+            logger.log('info', 'speech_stt', `Final speech transcript ready: "${textToProcess}"`);
             await submitVoiceTranscript(textToProcess);
+          } else {
+            logger.log('warn', 'audio', 'No speech detected during recording cycle.');
           }
-        } catch (err) {
-          console.error('Audio processing error:', err);
+        } catch (err: any) {
+          logger.log('error', 'audio', `Audio processing error: ${err?.message || err}`);
         } finally {
           setIsProcessingSpeech(false);
         }
       },
       onError: (err) => {
-        console.warn('Audio recorder error:', err);
+        logger.log('error', 'audio', `Audio recorder error: ${err}`);
         setIsListening(false);
         setAudioLevel(0);
       }
     });
 
     if (!started) {
+      logger.log('warn', 'audio', 'Failed to start active audio recording.');
       setIsListening(false);
     }
   };
 
   const stopVoiceListening = () => {
+    logger.log('info', 'audio', 'Stopping active microphone listening.');
     audioRecorder.stop();
     setIsListening(false);
     setAudioLevel(0);
@@ -1336,6 +1369,8 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         startInteractiveTour,
         isSettingsOpen,
         setIsSettingsOpen,
+        isActivityLogOpen,
+        setIsActivityLogOpen,
         groqApiKey,
         setGroqApiKey,
         geminiApiKey,

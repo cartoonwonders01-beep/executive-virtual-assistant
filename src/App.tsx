@@ -19,9 +19,10 @@ import { VoiceRecorderModal } from './components/VoiceRecorderModal';
 import { TaskDetailModal } from './components/TaskDetailModal';
 import { InteractiveTourModal } from './components/InteractiveTourModal';
 import { SettingsModal } from './components/SettingsModal';
+import { ActivityLogDrawer } from './components/ActivityLogDrawer';
 
 const AppContent: React.FC = () => {
-  const { activeView } = useAssistant();
+  const { activeView, isActivityLogOpen, setIsActivityLogOpen } = useAssistant();
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-brand-500 selection:text-slate-950">
@@ -104,6 +105,7 @@ const AppContent: React.FC = () => {
       <TaskDetailModal />
       <InteractiveTourModal />
       <SettingsModal />
+      <ActivityLogDrawer isOpen={isActivityLogOpen} onClose={() => setIsActivityLogOpen(false)} />
     </div>
   );
 };

@@ -17,7 +17,8 @@ import {
   Mail,
   Phone,
   Bot,
-  Users
+  Users,
+  Terminal
 } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
@@ -32,6 +33,7 @@ export const Navigation: React.FC = () => {
     setIsRecordModalOpen,
     startInteractiveTour,
     setIsSettingsOpen,
+    setIsActivityLogOpen,
     inboxEmails,
     kpi
   } = useAssistant();
@@ -155,6 +157,16 @@ export const Navigation: React.FC = () => {
               title="Hybrid Groq & Gemini Settings"
             >
               <Settings className="w-4 h-4" />
+            </button>
+
+            {/* Live Activity & Telemetry Log Trigger */}
+            <button
+              onClick={() => setIsActivityLogOpen(true)}
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 rounded-xl transition shadow-sm"
+              title="Live GUI Activity & Telemetry Log"
+            >
+              <Terminal className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Logs</span>
             </button>
 
             {/* Global Microphone Push-to-Talk Toggle */}

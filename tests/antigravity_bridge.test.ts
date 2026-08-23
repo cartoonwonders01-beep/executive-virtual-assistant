@@ -92,4 +92,22 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     assert.ok(job.outputLogs.some(l => l.includes('10.211.55.6')));
   });
 
+  await t.test('Module 5: Live GUI Activity Logger records telemetry events and supports filtering', async () => {
+    const { logger } = await import('../src/services/loggerService');
+    
+    logger.log('info', 'wake_word', 'Test wake-word listener initialized');
+    logger.log('success', 'wake_word', '🎯 Test Wake-Word DETECTED: "Hey Eve"');
+    logger.log('info', 'speech_stt', 'Live STT: "What are 3 strategies for deep work?"');
+    logger.log('success', 'ai_reasoning', 'Intent resolved to [knowledge_qa]: 3 Strategies for Deep Work');
+    logger.log('info', 'tts_speech', 'Speaking aloud response to user');
+
+    const entries = logger.getEntries();
+    assert.ok(entries.length >= 5, 'Logger captured all 5 events');
+    assert.equal(entries[0].category, 'tts_speech');
+    assert.equal(entries[0].level, 'info');
+
+    const successEntries = entries.filter(e => e.level === 'success');
+    assert.ok(successEntries.length >= 2, 'Filtered success level entries');
+  });
+
 });

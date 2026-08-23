@@ -19,7 +19,8 @@ import {
   User,
   ShieldCheck,
   Flame,
-  CheckCircle2
+  CheckCircle2,
+  Terminal
 } from 'lucide-react';
 
 export const MobileVoiceHUD: React.FC = () => {
@@ -37,6 +38,7 @@ export const MobileVoiceHUD: React.FC = () => {
     isWakeWordActive,
     toggleWakeWordListener,
     executeCustomSkill,
+    setIsActivityLogOpen,
     kpi,
     setActiveView
   } = useAssistant();
@@ -180,6 +182,15 @@ export const MobileVoiceHUD: React.FC = () => {
             }`}
           >
             {isWakeWordActive ? 'Disable Wake Word' : 'Enable Wake Word'}
+          </button>
+
+          <button
+            onClick={() => setIsActivityLogOpen(true)}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-semibold transition"
+            title="Open Live GUI Activity Log"
+          >
+            <Terminal className="w-3.5 h-3.5" />
+            <span>Live Logs</span>
           </button>
 
           <button

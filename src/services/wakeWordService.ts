@@ -1,3 +1,5 @@
+import { logger } from './loggerService';
+
 export interface WakeWordListenerConfig {
   onWakeWord?: (detectedTrigger: string, trailingSpeech?: string) => void;
   onWakeWordDetected?: (detectedTrigger: string, trailingSpeech?: string) => void;
@@ -50,7 +52,7 @@ export class WakeWordService {
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      console.warn('SpeechRecognition API not available in this browser environment.');
+      logger.log('warn', 'wake_word', 'SpeechRecognition API not available in this browser environment.');
       return false;
     }
 
@@ -64,6 +66,8 @@ export class WakeWordService {
       this.recognition.interimResults = true;
       this.recognition.lang = 'en-US';
 
+      logger.log('info', 'wake_word', `Passive wake-word listener activated. Listening for "${this.primaryWakeWord}"...`);
+
       this.recognition.onresult = (event: any) => {
         let transcript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -71,6 +75,10 @@ export class WakeWordService {
         }
 
         const lower = transcript.toLowerCase().trim();
+        if (lower) {
+          logger.log('info', 'speech_stt', `Passive Audio Stream: "${lower}"`);
+        }
+
         if (this.config?.onSpeechDetected) {
           this.config.onSpeechDetected(lower);
         }
@@ -82,8 +90,13 @@ export class WakeWordService {
             const triggerIdx = lower.indexOf(trigger);
             const afterTrigger = lower.substring(triggerIdx + trigger.length).replace(/^[,.\s]+/, '').trim();
             
+            logger.log('success', 'wake_word', `🎯 Wake-Word DETECTED: "${trigger}"`, { trailingCommand: afterTrigger || 'none' });
+
             // Play Google-style double-tone wake chime
             this.playGoogleAssistantChime();
+
+            // Temporarily pause passive recognition so active recorder has exclusive mic access
+            try { this.recognition.stop(); } catch {}
             
             if (this.config?.onWakeWord) {
               this.config.onWakeWord(trigger, afterTrigger);
@@ -98,12 +111,12 @@ export class WakeWordService {
 
       this.recognition.onerror = (event: any) => {
         if (event.error !== 'no-speech') {
-          console.log('Passive wake word recognition notice:', event.error);
+          logger.log('warn', 'wake_word', `Passive recognition event notice: ${event.error}`);
         }
       };
 
       this.recognition.onend = () => {
-        // Auto-restart passive listening if still enabled
+        // Auto-restart passive listening only if still enabled and not actively recording
         if (this.isListening) {
           try {
             this.recognition.start();
@@ -115,7 +128,7 @@ export class WakeWordService {
       this.isListening = true;
       return true;
     } catch (err: any) {
-      console.error('Failed to start passive wake-word listener:', err);
+      logger.log('error', 'wake_word', `Failed to start passive wake-word listener: ${err?.message}`);
       this.config?.onError?.(err?.message || 'Wake-word listener error');
       return false;
     }
