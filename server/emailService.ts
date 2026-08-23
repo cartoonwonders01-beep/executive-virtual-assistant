@@ -25,9 +25,12 @@ export function draftEmailFromSpeech(speechText: string, contactHint?: string): 
   let toEmail = recipient ? (recipient.email || 'partner@example.com') : 'recipient@example.com';
 
   if (!recipient) {
+    const contacts = db.getContacts();
+    const wifeContact = contacts.find(c => (c.role && /wife|family/i.test(c.role)) || /emily/i.test(c.name));
+    
     if (textLower.includes('wife')) {
-      toName = 'My Wife';
-      toEmail = 'wife@personal.com';
+      toName = wifeContact ? wifeContact.name : 'Emily Baxter (Wife)';
+      toEmail = wifeContact?.email || 'emily.baxter@personal.com';
     } else if (textLower.includes('husband')) {
       toName = 'My Husband';
       toEmail = 'husband@personal.com';
@@ -50,17 +53,19 @@ export function draftEmailFromSpeech(speechText: string, contactHint?: string): 
   let subject = 'Message from Andrew';
   let bodyContent = '';
 
-  const sayingMatch = speechText.match(/(?:saying|that says|with message|telling (?:her|him|them))\s+(.+)$/i);
+  const sayingMatch = speechText.match(/(?:saying|to say|that says|with message|telling (?:her|him|them)|to tell (?:her|him|them))\s+(.+)$/i);
   const regardingMatch = speechText.match(/(?:regarding|about|re:|topic:|for)\s+([^,.]+)/i);
 
-  if (sayingMatch) {
+  if (/love|loved/i.test(textLower) && (textLower.includes('wife') || textLower.includes('emily'))) {
+    subject = 'Thinking of you ❤️';
+    bodyContent = `Hi Emily,\n\nJust wanted to send you a quick note to say I love you and hope you are having a wonderful day!\n\nLove,\nAndrew`;
+  } else if (sayingMatch) {
     const directMessage = sayingMatch[1].trim();
     subject = directMessage.length > 40 ? directMessage.substring(0, 37) + '...' : directMessage;
-    // Capitalize first letter
     subject = subject.charAt(0).toUpperCase() + subject.slice(1);
     
-    // Check if personal/affectionate
     if (/love you|miss you|thinking of you|kiss|hug/i.test(directMessage)) {
+      subject = 'Thinking of you ❤️';
       bodyContent = `${directMessage.charAt(0).toUpperCase() + directMessage.slice(1)} ❤️\n\nWith all my love,\nAndrew`;
     } else {
       bodyContent = `Hi ${toName.split(' ')[0]},\n\n${directMessage.charAt(0).toUpperCase() + directMessage.slice(1)}.\n\nBest regards,\nAndrew`;

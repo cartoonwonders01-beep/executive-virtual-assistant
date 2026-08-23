@@ -108,10 +108,10 @@ export const MobileVoiceHUD: React.FC = () => {
   }, [isListening, audioLevel, isProcessingSpeech]);
 
   const quickPrompts = [
+    "Send an email to my wife to say I love her",
     "Draft an email to Sarah about our Q3 growth sprint",
     "Book strategy session with David next Tuesday at 2 PM",
     "Automate PDF invoice extraction from billing emails",
-    "Reschedule my Friday sync to Monday 10 AM",
     "Call David Miller regarding cloud architecture"
   ];
 

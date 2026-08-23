@@ -14,6 +14,7 @@
     "test:cloud": "tsx tests/google_cloud_suite.test.ts",
     "test:exhaustive": "tsx tests/exhaustive_ui_suite.test.ts",
     "test:flow": "tsx tests/clean_slate_and_flow_audit.test.ts",
+    "test:voice": "tsx tests/voice_assistant_execution.test.ts",
     "preview": "vite preview --host 0.0.0.0 --port 5173"
   },
   "dependencies": {
