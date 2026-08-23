@@ -23,6 +23,8 @@ import {
   Terminal
 } from 'lucide-react';
 
+import { wakeWordService } from '../services/wakeWordService';
+
 export const MobileVoiceHUD: React.FC = () => {
   const { 
     isListening, 
@@ -43,7 +45,14 @@ export const MobileVoiceHUD: React.FC = () => {
     setActiveView
   } = useAssistant();
 
+  const [sensitivity, setSensitivityState] = React.useState<'high' | 'normal'>(() => wakeWordService.getSensitivity());
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  const toggleSensitivity = () => {
+    const next = sensitivity === 'high' ? 'normal' : 'high';
+    setSensitivityState(next);
+    wakeWordService.setSensitivity(next);
+  };
 
   // Keyboard shortcut listener (Cmd+K or Spacebar to activate Assistant)
   useEffect(() => {
@@ -183,6 +192,21 @@ export const MobileVoiceHUD: React.FC = () => {
           >
             {isWakeWordActive ? 'Disable Wake Word' : 'Enable Wake Word'}
           </button>
+
+          {isWakeWordActive && (
+            <button
+              onClick={toggleSensitivity}
+              className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center gap-1 ${
+                sensitivity === 'high'
+                  ? 'bg-brand-500/20 text-brand-300 border-brand-500/40 shadow-sm'
+                  : 'bg-slate-800 text-slate-400 border-slate-700'
+              }`}
+              title="Toggle Wake-Word Sensitivity (High vs Standard)"
+            >
+              <Sparkles className="w-3 h-3 text-brand-400" />
+              <span>{sensitivity === 'high' ? 'High Sensitivity' : 'Standard'}</span>
+            </button>
+          )}
 
           <button
             onClick={() => setIsActivityLogOpen(true)}

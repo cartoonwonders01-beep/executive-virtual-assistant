@@ -289,6 +289,34 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
         spokenResponse = `I booked your strategy session for tomorrow at 2 PM on Google Meet.`;
       }
 
+      // 9. Conversational Q&A, Small Talk & Strategic Advice
+      else {
+        intent = 'knowledge_qa';
+        if (/how\s+are\s+you|how\s+is\s+it\s+going|how\s+are\s+things/i.test(textLower)) {
+          title = `Conversational Check-in`;
+          spokenResponse = `I'm doing fantastic, Andrew! My neural engines are primed, your calendar is synchronized, and I'm ready to help you tackle your highest-leverage priorities today. How are you feeling?`;
+        } else if (/good\s+morning|hello|hi\s+eve|hey\s+there/i.test(textLower)) {
+          title = `Executive Greeting`;
+          spokenResponse = `Good day, Andrew! I'm here and ready. We have your work hub loaded and ready for action. What should we focus on first?`;
+        } else if (/joke|funny/i.test(textLower)) {
+          title = `Executive Humor Break`;
+          spokenResponse = `Why do programmers prefer dark mode? Because light attracts bugs!`;
+        } else if (/morning\s+routine|productivity|focus/i.test(textLower)) {
+          title = `Executive Productivity Strategy`;
+          spokenResponse = `To maximize your daily leverage, implement a 90-minute morning deep work block before opening email, protect your cognitive energy with time-boxing, and delegate sub-80 dollar per hour operational tasks.`;
+        } else if (/client\s+escalation|difficult\s+client/i.test(textLower)) {
+          title = `Client Escalation Resolution Protocol`;
+          spokenResponse = `For client escalations, use the 4-step A.C.T.S. framework: Acknowledge the impact immediately, Contain the issue with a dedicated lead, Transparently communicate root causes, and Solve with a preventative SLA.`;
+        } else if (/dcf|discounted\s+cash\s+flow|valuation/i.test(textLower)) {
+          title = `DCF Valuation Model`;
+          spokenResponse = `A DCF model estimates intrinsic enterprise value by forecasting Unlevered Free Cash Flows over 5 to 10 years, discounting them with WACC, and adding Terminal Value.`;
+        } else {
+          const cleanTopic = text.replace(/^(what\s+is|what\s+are|how\s+do\s+i|how\s+can\s+we|why\s+is|explain|tell\s+me\s+about)\s+/i, '').replace(/[?.]+$/, '').trim();
+          title = `Analysis: ${cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1)}`;
+          spokenResponse = `Regarding ${cleanTopic}: The most effective executive approach is to establish clear success criteria, eliminate operational friction, and execute in focused rapid iterations. Here is the full breakdown.`;
+        }
+      }
+
       const actionCard = {
         id: 'ac-' + Date.now().toString(36),
         intent,

@@ -12,18 +12,38 @@ export class WakeWordService {
   private recognition: any = null;
   private config: WakeWordListenerConfig | null = null;
   private primaryWakeWord = 'hey eve';
+  private sensitivity: 'high' | 'normal' = 'high';
+  private recentTranscripts: string[] = [];
+
+  // Expanded phonetic wake triggers
   private wakeTriggers = [
     'hey eve',
     'hello eve',
     'ok eve',
+    'okay eve',
     'eve',
     'hey eva',
     'hello eva',
+    'hey eave',
+    'hey if',
+    'hey heave',
+    'hey dave',
+    'hey eevee',
+    'hey ava',
+    'hay eve',
+    'a eve',
     'hey andy',
     'hello andy',
     'hey assistant',
     'hello assistant',
     'ok assistant'
+  ];
+
+  // Regex patterns for phonetic fuzzy match
+  private phoneticPatterns = [
+    /\b(?:hey|hay|hi|hello|ok|okay|a|pay)\s+(?:eve|eva|eave|eevee|eeve|ava|iva|iv|if|heave|leave|dave)\b/i,
+    /\b(?:eve|eva|eevee)\b/i,
+    /\b(?:hey\s+assistant|hello\s+assistant|ok\s+assistant)\b/i
   ];
 
   public getPrimaryWakeWord(): string {
@@ -36,6 +56,15 @@ export class WakeWordService {
     if (!this.wakeTriggers.includes(clean)) {
       this.wakeTriggers.unshift(clean);
     }
+  }
+
+  public setSensitivity(level: 'high' | 'normal'): void {
+    this.sensitivity = level;
+    logger.log('info', 'wake_word', `Wake-word sensitivity set to: ${level.toUpperCase()}`);
+  }
+
+  public getSensitivity(): 'high' | 'normal' {
+    return this.sensitivity;
   }
 
   public setCustomWakeWords(words: string[]): void {
@@ -66,15 +95,16 @@ export class WakeWordService {
       this.recognition.interimResults = true;
       this.recognition.lang = 'en-US';
 
-      logger.log('info', 'wake_word', `Passive wake-word listener activated. Listening for "${this.primaryWakeWord}"...`);
+      logger.log('info', 'wake_word', `Passive wake-word listener activated (Mode: ${this.sensitivity.toUpperCase()}). Listening for "${this.primaryWakeWord}"...`);
 
       this.recognition.onresult = (event: any) => {
-        let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          transcript += event.results[i][0].transcript;
+        // Collect full window across recent results to prevent split-word drops
+        let fullTranscript = '';
+        for (let i = 0; i < event.results.length; ++i) {
+          fullTranscript += ' ' + event.results[i][0].transcript;
         }
 
-        const lower = transcript.toLowerCase().trim();
+        const lower = fullTranscript.toLowerCase().trim();
         if (lower) {
           logger.log('info', 'speech_stt', `Passive Audio Stream: "${lower}"`);
         }
@@ -83,40 +113,57 @@ export class WakeWordService {
           this.config.onSpeechDetected(lower);
         }
 
-        // Check if any wake trigger is contained in transcript
+        // 1. Direct Trigger Matching
+        let matchedTrigger: string | null = null;
+        let command = '';
+
         for (const trigger of this.wakeTriggers) {
           if (lower.includes(trigger)) {
-            // Extract trailing command after the trigger
+            matchedTrigger = trigger;
             const triggerIdx = lower.indexOf(trigger);
-            const afterTrigger = lower.substring(triggerIdx + trigger.length).replace(/^[,.\s]+/, '').trim();
-            
-            logger.log('success', 'wake_word', `🎯 Wake-Word DETECTED: "${trigger}"`, { trailingCommand: afterTrigger || 'none' });
-
-            // Play Google-style double-tone wake chime
-            this.playGoogleAssistantChime();
-
-            // Temporarily pause passive recognition so active recorder has exclusive mic access
-            try { this.recognition.stop(); } catch {}
-            
-            if (this.config?.onWakeWord) {
-              this.config.onWakeWord(trigger, afterTrigger);
-            }
-            if (this.config?.onWakeWordDetected) {
-              this.config.onWakeWordDetected(trigger, afterTrigger);
-            }
+            command = lower.substring(triggerIdx + trigger.length).replace(/^[,.\s]+/, '').trim();
             break;
+          }
+        }
+
+        // 2. Phonetic Regex Matching if in High Sensitivity Mode
+        if (!matchedTrigger && this.sensitivity === 'high') {
+          for (const pattern of this.phoneticPatterns) {
+            const match = lower.match(pattern);
+            if (match) {
+              matchedTrigger = match[0];
+              const matchIdx = lower.indexOf(matchedTrigger);
+              command = lower.substring(matchIdx + matchedTrigger.length).replace(/^[,.\s]+/, '').trim();
+              break;
+            }
+          }
+        }
+
+        if (matchedTrigger) {
+          logger.log('success', 'wake_word', `🎯 Wake-Word DETECTED: "${matchedTrigger}"`, { trailingCommand: command || 'none' });
+
+          // Play Google-style double-tone wake chime
+          this.playGoogleAssistantChime();
+
+          // Temporarily pause passive recognition so active dialogue has exclusive mic access
+          try { this.recognition.stop(); } catch {}
+
+          if (this.config?.onWakeWord) {
+            this.config.onWakeWord(matchedTrigger, command);
+          }
+          if (this.config?.onWakeWordDetected) {
+            this.config.onWakeWordDetected(matchedTrigger, command);
           }
         }
       };
 
       this.recognition.onerror = (event: any) => {
         if (event.error !== 'no-speech') {
-          logger.log('warn', 'wake_word', `Passive recognition event notice: ${event.error}`);
+          logger.log('warn', 'wake_word', `Passive recognition notice: ${event.error}`);
         }
       };
 
       this.recognition.onend = () => {
-        // Auto-restart passive listening only if still enabled and not actively recording
         if (this.isListening) {
           try {
             this.recognition.start();

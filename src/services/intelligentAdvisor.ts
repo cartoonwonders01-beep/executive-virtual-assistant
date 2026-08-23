@@ -216,14 +216,102 @@ export class IntelligentAdvisor {
       };
     }
 
-    // 8. General High-IQ Executive Answer Synthesis (Fallback for any question)
-    const cleanTopic = text.replace(/^(what\s+is|what\s+are|how\s+do\s+i|how\s+can\s+we|why\s+is|explain|tell\s+me\s+about|give\s+me\s+advice\s+on)\s+/i, '').replace(/[?.]+$/, '').trim();
+    // 8. Human Small Talk, Greetings & Emotional Check-ins
+    if (/^(how\s+are\s+you|how\s+is\s+it\s+going|how\s+are\s+things|how\s+do\s+you\s+feel|how\s+was\s+your\s+day)/i.test(lower)) {
+      return {
+        title: 'Conversational Check-in',
+        category: 'General',
+        spokenResponse: "I'm doing fantastic, Andrew! My neural engines are primed, your calendar is synchronized, and I'm ready to help you tackle your highest-leverage priorities today. How are you feeling?",
+        summary: 'Executive assistant status and readiness check-in.',
+        keyInsights: [
+          'Systems Operational: All edge AI engines, Google ecosystem bridges, and task automations are active.',
+          'Focus Alignment: Protecting your cognitive deep work blocks and eliminating sub-$100/hr operational drag.'
+        ],
+        actionSteps: [
+          'Ask Eve any strategic question or brainstorm a new initiative.',
+          'Triage your VIP inbox or review ongoing Monday.com backlog tasks.'
+        ]
+      };
+    }
+
+    if (/^(good\s+morning|morning|good\s+afternoon|good\s+evening|hello|hey\s+there|hi\s+eve)/i.test(lower)) {
+      return {
+        title: 'Executive Greeting',
+        category: 'General',
+        spokenResponse: "Good day, Andrew! I'm here and ready. We have your work hub loaded and ready for action. What should we focus on first?",
+        summary: 'Warm executive morning briefing greeting.',
+        keyInsights: [
+          'Immediate Readiness: Ready to take voice dictation, draft emails, or analyze strategic decisions.'
+        ],
+        actionSteps: [
+          'Dictate a new thought or action in the Thought Studio.',
+          'Say "Hey Eve, triage my inbox" to review high-priority correspondence.'
+        ]
+      };
+    }
+
+    // 9. Humor & Jokes
+    if (/tell\s+me\s+a\s+joke|make\s+me\s+laugh|say\s+something\s+funny|joke/i.test(lower)) {
+      const jokes = [
+        {
+          setup: "Why do programmers prefer dark mode?",
+          punchline: "Because light attracts bugs!",
+          spoken: "Why do programmers prefer dark mode? Because light attracts bugs!"
+        },
+        {
+          setup: "Why did the AI go on a diet?",
+          punchline: "It had too many bytes and wanted to reduce its parameter bloat!",
+          spoken: "Why did the AI go on a diet? It had too many bytes and wanted to reduce its parameter bloat!"
+        },
+        {
+          setup: "How many executives does it take to change a lightbulb?",
+          punchline: "None. They delegate it to AI, automate the procurement, and log 4 hours won back on the KPI board!",
+          spoken: "How many executives does it take to change a lightbulb? None. They delegate it to AI, automate the procurement, and log four hours won back!"
+        }
+      ];
+      const selected = jokes[Math.floor(Math.random() * jokes.length)];
+      return {
+        title: 'Executive Humor Break',
+        category: 'General',
+        spokenResponse: selected.spoken,
+        summary: `${selected.setup} — ${selected.punchline}`,
+        keyInsights: [
+          'Humor & Cognitive Relief: Taking quick mental resets enhances neuroplasticity and problem-solving creativity.'
+        ],
+        actionSteps: [
+          'Smile, take a deep breath, and dive back into your highest-leverage sprint.'
+        ]
+      };
+    }
+
+    // 10. Meaning of Life & Philosophy
+    if (/meaning\s+of\s+life|philosophy|purpose|why\s+are\s+we\s+here|happiness|stoicism/i.test(lower)) {
+      return {
+        title: 'Philosophy & The Pursuit of Purpose',
+        category: 'General',
+        spokenResponse: "From both modern philosophy and Stoicism, the meaning of life isn't something you find—it's something you create through purposeful action, deep relationships, continuous mastery, and leaving the world slightly better than you found it.",
+        summary: 'Philosophical synthesis on agency, purpose, and the creation of meaning.',
+        keyInsights: [
+          'Action Creates Meaning: Purpose is forged through taking responsibility and building things that matter.',
+          'The Stoic Dichotomy of Control: Focus 100% of your energy on your actions, character, and decisions, while accepting external outcomes with equanimity.',
+          'Compound Relationships: Deep bonds with family, friends, and collaborators form the bedrock of genuine fulfillment.'
+        ],
+        actionSteps: [
+          'Identify your single most meaningful personal and professional priority for this quarter.',
+          'Dedicate uninterrupted, device-free time to loved ones this evening.'
+        ],
+        proTip: '"We suffer more often in imagination than in reality." — Seneca'
+      };
+    }
+
+    // 11. General High-IQ Executive Answer Synthesis (Fallback for any question)
+    const cleanTopic = text.replace(/^(what\s+is|what\s+are|how\s+do\s+i|how\s+can\s+we|why\s+is|why\s+are|explain|tell\s+me\s+about|give\s+me\s+advice\s+on|can\s+you\s+explain|what\s+do\s+you\s+think\s+about)\s+/i, '').replace(/[?.]+$/, '').trim();
     const capitalizedTopic = cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1);
 
     return {
       title: `Analysis & Strategic Solution: ${capitalizedTopic}`,
       category: 'Business & Strategy',
-      spokenResponse: `Regarding ${cleanTopic}: The optimal executive approach is to establish clear success criteria, eliminate low-value operational friction, and implement a structured 3-phase execution plan. Here is the full breakdown on your screen.`,
+      spokenResponse: `Regarding ${cleanTopic}: The most effective approach is to establish clear success criteria, eliminate low-value operational friction, and execute in focused rapid iterations. Here is the breakdown on your screen.`,
       summary: `Comprehensive analysis and strategic roadmap for ${cleanTopic}.`,
       keyInsights: [
         `Core Objective: Align execution around the primary driver of value and leverage in ${cleanTopic}.`,

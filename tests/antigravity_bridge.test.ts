@@ -110,4 +110,24 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     assert.ok(successEntries.length >= 2, 'Filtered success level entries');
   });
 
+  await t.test('Module 6: Human-Like Conversational Intelligence & Small Talk Solver', async () => {
+    const { intelligentAdvisor } = await import('../server/intelligentAdvisor');
+
+    // 1. Small talk: "How are you?"
+    const ans1 = intelligentAdvisor.solve('How are you doing today?');
+    assert.ok(ans1.spokenResponse.includes('doing fantastic'), 'Responds warmly to small talk');
+
+    // 2. Humor: "Tell me a joke"
+    const ans2 = intelligentAdvisor.solve('Tell me a joke');
+    assert.ok(ans2.spokenResponse.length > 10, 'Delivers punchy humor');
+
+    // 3. Meaning of life
+    const ans3 = intelligentAdvisor.solve('What is the meaning of life?');
+    assert.ok(ans3.spokenResponse.includes('meaning of life'), 'Provides philosophical depth');
+
+    // 4. Executive Strategy
+    const ans4 = intelligentAdvisor.solve('How do I handle a difficult client escalation?');
+    assert.ok(ans4.spokenResponse.includes('A.C.T.S.'), 'Provides structured executive framework');
+  });
+
 });
