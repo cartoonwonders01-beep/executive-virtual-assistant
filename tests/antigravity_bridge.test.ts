@@ -130,4 +130,16 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     assert.ok(ans4.spokenResponse.includes('A.C.T.S.'), 'Provides structured executive framework');
   });
 
+  await t.test('Module 7: Relay Configuration & Tuning Engine handles audio slices, bitrates & persistence', async () => {
+    const config = await import('../src/config');
+    
+    assert.equal(config.DEFAULT_CHUNK_INTERVAL_MS, 3500);
+    assert.equal(config.DEFAULT_AUDIO_BITRATE_KBPS, 64);
+    assert.equal(config.DEFAULT_SILENCE_DURATION_MS, 1600);
+    assert.ok(config.CHUNK_INTERVAL_OPTIONS.length >= 4, 'Provides slice options');
+    assert.ok(config.LIVE_MODEL_OPTIONS.length >= 4, 'Provides model failover options');
+    assert.ok(config.AUDIO_BITRATE_OPTIONS.length >= 3, 'Provides bitrate options');
+    assert.equal(config.APP_VERSION, '3.2.0');
+  });
+
 });

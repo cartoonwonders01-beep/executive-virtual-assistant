@@ -1,3 +1,10 @@
+import { 
+  getStoredChunkIntervalMs, 
+  getStoredAudioBitrateKbps, 
+  getStoredSilenceDurationMs, 
+  getStoredMimeType 
+} from '../config';
+
 // Production MediaRecorder & Web Audio monitoring with intelligent Voice Activity Detection (VAD)
 // and Concurrent Web Speech API Real-Time Speech Recognition
 
@@ -34,13 +41,13 @@ export class AudioRecorderService {
   private speechRecognition: any = null;
   private capturedLiveTranscript = '';
 
-  // VAD & Slicing State
+  // VAD & Slicing State (Hydrated from persistent config)
   private vadOptions: VADOptions = {
     autoStopOnSilence: true,
     silenceThreshold: 0.06,
-    silenceDurationMs: 1600,
+    silenceDurationMs: getStoredSilenceDurationMs(),
     speechTriggerThreshold: 0.12,
-    chunkIntervalMs: 3500
+    chunkIntervalMs: getStoredChunkIntervalMs()
   };
   private hasDetectedSpeech = false;
   private silenceStartTime: number | null = null;
@@ -56,6 +63,10 @@ export class AudioRecorderService {
 
   public resolveMimeType(): string {
     if (typeof window === 'undefined' || !window.MediaRecorder) return 'audio/webm';
+    const preferred = getStoredMimeType();
+    if (preferred && preferred !== 'auto' && window.MediaRecorder.isTypeSupported(preferred)) {
+      return preferred;
+    }
     if (window.MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) return 'audio/webm;codecs=opus';
     if (window.MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
     if (window.MediaRecorder.isTypeSupported('audio/mp4')) return 'audio/mp4';
@@ -180,9 +191,10 @@ export class AudioRecorderService {
         let segRecorder: MediaRecorder;
 
         try {
+          const bitrate = getStoredAudioBitrateKbps() * 1000;
           segRecorder = new MediaRecorder(this.mediaStream, {
             mimeType: resolvedMimeType || undefined,
-            audioBitsPerSecond: 64000
+            audioBitsPerSecond: bitrate
           });
         } catch (err) {
           console.error('Segment recorder creation failed:', err);

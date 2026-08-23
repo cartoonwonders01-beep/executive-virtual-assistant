@@ -13,6 +13,31 @@ import {
   resolveBestVoice
 } from '../services/speechSynthesis';
 import { wakeWordService } from '../services/wakeWordService';
+import {
+  APP_VERSION,
+  CHUNK_INTERVAL_OPTIONS,
+  AUDIO_BITRATE_OPTIONS,
+  MIME_TYPE_OPTIONS,
+  SILENCE_DURATION_OPTIONS,
+  LIVE_MODEL_OPTIONS,
+  PAYLOAD_FORMAT_OPTIONS,
+  getStoredChunkIntervalMs,
+  storeChunkIntervalMs,
+  getStoredAudioBitrateKbps,
+  storeAudioBitrateKbps,
+  getStoredMimeType,
+  storeMimeType,
+  getStoredSilenceDurationMs,
+  storeSilenceDurationMs,
+  getStoredPurgeAudio,
+  storePurgeAudio,
+  getStoredDebugMode,
+  storeDebugMode,
+  getStoredLiveModel,
+  storeLiveModel,
+  getStoredPayloadFormat,
+  storePayloadFormat
+} from '../config';
 import { 
   Settings, 
   X, 
@@ -26,7 +51,12 @@ import {
   RefreshCw,
   Zap,
   Layers,
-  Radio
+  Radio,
+  Sliders,
+  SlidersHorizontal,
+  ChevronDown,
+  ChevronUp,
+  FileText
 } from 'lucide-react';
 
 export const SettingsModal: React.FC = () => {
@@ -54,6 +84,17 @@ export const SettingsModal: React.FC = () => {
   const [isSyncingGoogle, setIsSyncingGoogle] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(false);
 
+  // Relay Configuration State
+  const [chunkIntervalMs, setChunkIntervalMs] = useState<number>(() => getStoredChunkIntervalMs());
+  const [audioBitrateKbps, setAudioBitrateKbps] = useState<number>(() => getStoredAudioBitrateKbps());
+  const [mimeType, setMimeType] = useState<string>(() => getStoredMimeType());
+  const [silenceDurationMs, setSilenceDurationMs] = useState<number>(() => getStoredSilenceDurationMs());
+  const [purgeAudio, setPurgeAudio] = useState<boolean>(() => getStoredPurgeAudio());
+  const [debugMode, setDebugMode] = useState<boolean>(() => getStoredDebugMode());
+  const [liveModel, setLiveModel] = useState<string>(() => getStoredLiveModel());
+  const [payloadFormat, setPayloadFormat] = useState<string>(() => getStoredPayloadFormat());
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
+
   // Voice Persona State
   const [persona, setPersona] = useState<VoicePersona>(getVoicePersona());
   const [rate, setRate] = useState<number>(getVoiceRate());
@@ -70,6 +111,14 @@ export const SettingsModal: React.FC = () => {
       setPersona(getVoicePersona());
       setRate(getVoiceRate());
       setPitch(getVoicePitch());
+      setChunkIntervalMs(getStoredChunkIntervalMs());
+      setAudioBitrateKbps(getStoredAudioBitrateKbps());
+      setMimeType(getStoredMimeType());
+      setSilenceDurationMs(getStoredSilenceDurationMs());
+      setPurgeAudio(getStoredPurgeAudio());
+      setDebugMode(getStoredDebugMode());
+      setLiveModel(getStoredLiveModel());
+      setPayloadFormat(getStoredPayloadFormat());
       const voice = resolveBestVoice(getVoicePersona());
       if (voice) setDetectedVoiceName(voice.name);
       try {
@@ -125,6 +174,17 @@ export const SettingsModal: React.FC = () => {
     setVoicePersona(persona);
     setVoiceRate(rate);
     setVoicePitch(pitch);
+    
+    // Store Relay Tuning Settings
+    storeChunkIntervalMs(chunkIntervalMs);
+    storeAudioBitrateKbps(audioBitrateKbps);
+    storeMimeType(mimeType);
+    storeSilenceDurationMs(silenceDurationMs);
+    storePurgeAudio(purgeAudio);
+    storeDebugMode(debugMode);
+    storeLiveModel(liveModel);
+    storePayloadFormat(payloadFormat);
+
     const cleanWake = selectedWakeWord.toLowerCase().trim() || 'hey eve';
     wakeWordService.setPrimaryWakeWord(cleanWake);
     try {
@@ -443,6 +503,137 @@ export const SettingsModal: React.FC = () => {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Relay Engine Audio Slicing & Pipeline Tuning */}
+          <div className="border border-purple-900/60 rounded-2xl overflow-hidden bg-slate-950">
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-900 transition"
+            >
+              <div className="flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-purple-400" />
+                <span className="font-semibold text-purple-200 text-xs">Relay Audio Slicing & AI Pipeline Tuning</span>
+              </div>
+              {showAdvanced ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+            </button>
+
+            {showAdvanced && (
+              <div className="p-3.5 border-t border-slate-800 space-y-3.5 bg-slate-950/70">
+                {/* Audio Slice Duration */}
+                <div className="space-y-1">
+                  <label className="text-[11px] text-slate-300 font-semibold flex items-center justify-between">
+                    <span>Audio Slice Duration (Groq Whisper Streaming)</span>
+                    <span className="text-[10px] text-purple-400 font-mono">{(chunkIntervalMs / 1000).toFixed(1)}s</span>
+                  </label>
+                  <select
+                    value={chunkIntervalMs}
+                    onChange={(e) => setChunkIntervalMs(Number(e.target.value))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500"
+                  >
+                    {CHUNK_INTERVAL_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-slate-400">
+                    Controls the size of lightweight audio chunks streamed to Whisper in the background.
+                  </p>
+                </div>
+
+                {/* VAD Silence Duration */}
+                <div className="space-y-1">
+                  <label className="text-[11px] text-slate-300 font-semibold flex items-center justify-between">
+                    <span>Voice Activity Detection (VAD) Silence Hold</span>
+                    <span className="text-[10px] text-purple-400 font-mono">{(silenceDurationMs / 1000).toFixed(1)}s</span>
+                  </label>
+                  <select
+                    value={silenceDurationMs}
+                    onChange={(e) => setSilenceDurationMs(Number(e.target.value))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500"
+                  >
+                    {SILENCE_DURATION_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Audio Bitrate & MIME Type */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-slate-300 font-semibold">Audio Bitrate</label>
+                    <select
+                      value={audioBitrateKbps}
+                      onChange={(e) => setAudioBitrateKbps(Number(e.target.value))}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500"
+                    >
+                      {AUDIO_BITRATE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] text-slate-300 font-semibold">MIME Codec Format</label>
+                    <select
+                      value={mimeType}
+                      onChange={(e) => setMimeType(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500"
+                    >
+                      {MIME_TYPE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Live Model Selection */}
+                <div className="space-y-1">
+                  <label className="text-[11px] text-slate-300 font-semibold">Primary Live Reasoning Model</label>
+                  <select
+                    value={liveModel}
+                    onChange={(e) => setLiveModel(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500"
+                  >
+                    {LIVE_MODEL_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Developer Diagnostic Debug Mode */}
+                <div className="flex items-center justify-between pt-2 border-t border-slate-900">
+                  <div className="flex flex-col">
+                    <span className="text-[11px] font-semibold text-slate-200 font-mono">Developer Diagnostic Mode</span>
+                    <span className="text-[10px] text-slate-400">Stream raw Whisper latency & byte payloads to activity logs</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={debugMode}
+                    onChange={(e) => setDebugMode(e.target.checked)}
+                    className="w-4 h-4 rounded text-purple-600 bg-slate-900 border-slate-800 cursor-pointer"
+                  />
+                </div>
+
+                {/* Version Inspector Badge */}
+                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-[10px] font-mono">
+                  <span className="text-slate-400">Relay Engine Build:</span>
+                  <span className="text-purple-300 font-bold bg-purple-950/80 px-2 py-0.5 rounded border border-purple-800">
+                    v{APP_VERSION} Live
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Workspace Hygiene & System Reset */}
