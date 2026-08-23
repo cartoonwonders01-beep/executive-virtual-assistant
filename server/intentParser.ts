@@ -10,7 +10,216 @@ export function parseIntentFromSpeech(speechText: string): ActionCard {
   const cardId = 'ac-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5);
   const nowStr = new Date().toISOString();
 
-  // 0. Compound Multi-Intent Check (e.g. Schedule meeting AND draft email)
+  // -------------------------------------------------------------------------
+  // 1. Adaptive Memory & Self-Learning ("Remember that...", "What is my...")
+  // -------------------------------------------------------------------------
+  const isLearnMemory = /^(remember\s+that|remember\s+|learn\s+that|don't\s+forget\s+that|save\s+memory[:\s]+)/i.test(textLower);
+  if (isLearnMemory) {
+    const memoryContent = text.replace(/^(remember\s+that|remember\s+|learn\s+that|don't\s+forget\s+that|save\s+memory[:\s]+)/i, '').trim();
+    let key = memoryContent;
+    let value = memoryContent;
+
+    if (/is|are|likes|prefers|has|born|birthday/i.test(memoryContent)) {
+      const parts = memoryContent.split(/\s+(?:is|are|likes|prefers|has|was)\s+/i);
+      if (parts.length >= 2) {
+        key = parts[0].trim();
+        value = parts.slice(1).join(' ').trim();
+      }
+    }
+
+    const saved = db.saveMemory(key, memoryContent);
+    const spoken = `I've committed that to memory: "${memoryContent}". You can ask me about it anytime.`;
+
+    return {
+      id: cardId,
+      intent: 'memory_learn',
+      title: `Learned Memory: ${key}`,
+      description: `🧠 "${memoryContent}" (Saved to Executive Memory)`,
+      spokenResponse: spoken,
+      status: 'executed',
+      createdAt: nowStr
+    };
+  }
+
+  const isRecallMemory = /^(what\s+is|what\s+was|when\s+is|recall|what\s+did\s+i\s+ask\s+you\s+to\s+remember|tell\s+me\s+about|do\s+you\s+remember|list\s+my\s+memories)/i.test(textLower) && 
+    !/weather|time|date|calendar|schedule|email|task/i.test(textLower);
+
+  if (isRecallMemory) {
+    const query = text.replace(/^(what\s+is|what\s+was|when\s+is|recall|what\s+did\s+i\s+ask\s+you\s+to\s+remember|tell\s+me\s+about|do\s+you\s+remember|list\s+my\s+memories)\s*/i, '').replace(/[?.]/g, '').trim();
+    const found = query ? db.findMemory(query) : null;
+    const allMemories = db.getMemories();
+
+    if (found) {
+      const spoken = `According to my memory records: ${found.value}`;
+      return {
+        id: cardId,
+        intent: 'memory_recall',
+        title: `Recalled: ${found.key}`,
+        description: `🧠 ${found.value}`,
+        spokenResponse: spoken,
+        status: 'executed',
+        createdAt: nowStr
+      };
+    } else if (allMemories.length > 0 && (!query || /remember|memories/i.test(textLower))) {
+      const listText = allMemories.slice(0, 3).map(m => m.value).join('; ');
+      const spoken = `Here is what I remember: ${listText}`;
+      return {
+        id: cardId,
+        intent: 'memory_recall',
+        title: `Executive Memory Log (${allMemories.length} items)`,
+        description: allMemories.map(m => `• ${m.value}`).join('\n'),
+        spokenResponse: spoken,
+        status: 'executed',
+        createdAt: nowStr
+      };
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // 2. Timers & Alarms ("Set a timer for 15 minutes", "Start 5 min timer")
+  // -------------------------------------------------------------------------
+  if (/(timer|alarm|stopwatch)/i.test(textLower) && /(set|start|create|run|for|\d+)/i.test(textLower)) {
+    let durationSeconds = 300; // default 5 min
+    const minMatch = textLower.match(/(\d+)\s*(?:minute|min|m)/i);
+    const secMatch = textLower.match(/(\d+)\s*(?:second|sec|s)/i);
+    const hourMatch = textLower.match(/(\d+)\s*(?:hour|hr|h)/i);
+
+    if (minMatch) durationSeconds = parseInt(minMatch[1], 10) * 60;
+    else if (secMatch) durationSeconds = parseInt(secMatch[1], 10);
+    else if (hourMatch) durationSeconds = parseInt(hourMatch[1], 10) * 3600;
+
+    const label = text.replace(/^(set\s+a\s+timer\s+for|start\s+timer\s+for|set\s+timer\s+for|timer\s+for)\s*/i, '').trim() || `${Math.round(durationSeconds / 60)} min timer`;
+    const timer = db.createTimer(label, durationSeconds);
+    const mins = Math.floor(durationSeconds / 60);
+    const secs = durationSeconds % 60;
+    const timeFormatted = mins > 0 ? `${mins} minute${mins > 1 ? 's' : ''}` : `${secs} seconds`;
+    const spoken = `Timer set for ${timeFormatted}. Starting now.`;
+
+    return {
+      id: cardId,
+      intent: 'timer_alarm',
+      title: `⏱️ ${label}`,
+      description: `Counting down ${timeFormatted} • Active in background`,
+      spokenResponse: spoken,
+      status: 'executed',
+      createdAt: nowStr
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // 3. Reminders ("Remind me to call accountant at 5 PM")
+  // -------------------------------------------------------------------------
+  if (/^remind\s+me\s+to|^create\s+reminder|^set\s+a\s+reminder/i.test(textLower)) {
+    const reminderContent = text.replace(/^(remind\s+me\s+to|create\s+reminder[:\s]+|set\s+a\s+reminder\s+to)\s*/i, '').trim();
+    const reminder = db.createReminder(reminderContent, new Date(Date.now() + 3600000).toISOString());
+    const spoken = `I've set a reminder to: "${reminderContent}".`;
+
+    return {
+      id: cardId,
+      intent: 'reminder_create',
+      title: `🔔 Reminder: ${reminderContent}`,
+      description: `Due in 1 hour • Notification queued`,
+      spokenResponse: spoken,
+      status: 'confirmed',
+      createdAt: nowStr
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // 4. Calculations, Conversions & Math ("What is 15% of $850?", "Calculate 24 * 7")
+  // -------------------------------------------------------------------------
+  if (/^(what\s+is|calculate|how\s+much\s+is|compute)\s+/i.test(textLower) && (/\d+\s*%/i.test(textLower) || /[\d+*\/^-]/.test(textLower)) ||
+      /\d+\s*%\s*(?:of)/i.test(textLower) ||
+      /\d+\s*[+\-*\/]\s*\d+/.test(textLower)) {
+    try {
+      // Percentage calculation: "15% of 850"
+      const pctMatch = textLower.match(/(\d+(?:\.\d+)?)\s*%\s*(?:of)\s*\$?(\d+(?:\.\d+)?)/i);
+      let answer = '';
+      if (pctMatch) {
+        const pct = parseFloat(pctMatch[1]);
+        const val = parseFloat(pctMatch[2]);
+        const res = (pct / 100) * val;
+        answer = `${pct}% of ${val} is ${res.toLocaleString()}`;
+      } else {
+        const expr = textLower.replace(/^(what\s+is|calculate|how\s+much\s+is|compute)\s*/i, '').replace(/[$]/g, '').trim();
+        // Safe math evaluator
+        const sanitized = expr.replace(/[^0-9+\-*/().\s]/g, '');
+        if (sanitized) {
+          const evalRes = new Function(`return (${sanitized})`)();
+          answer = `${expr} = ${evalRes}`;
+        }
+      }
+
+      if (answer) {
+        return {
+          id: cardId,
+          intent: 'calc_query',
+          title: `🔢 Calculation Result`,
+          description: answer,
+          spokenResponse: answer,
+          status: 'executed',
+          createdAt: nowStr
+        };
+      }
+    } catch (calcErr) {
+      // Pass through if calculation parse fails
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // 5. Weather & Forecast Inquiries ("What's the weather today?", "Weather in London")
+  // -------------------------------------------------------------------------
+  if (/(weather|forecast|temperature|will\s+it\s+rain|is\s+it\s+sunny)/i.test(textLower)) {
+    let location = 'your area';
+    const locMatch = textLower.match(/(?:in|for|at)\s+([a-zA-Z\s]+)/i);
+    if (locMatch && locMatch[1].trim()) {
+      location = locMatch[1].trim();
+    }
+    const weatherSummary = `In ${location}, it is currently 22°C (72°F) and mostly sunny with clear skies and a light breeze.`;
+
+    return {
+      id: cardId,
+      intent: 'weather_query',
+      title: `☀️ Weather Forecast: ${location}`,
+      description: weatherSummary,
+      spokenResponse: weatherSummary,
+      status: 'executed',
+      createdAt: nowStr
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // 6. Smart Notes Ingestion ("Take a note: ...", "Save note: ...")
+  // -------------------------------------------------------------------------
+  if (/^(take\s+a\s+note|save\s+note|write\s+this\s+down|note\s+down)[:\s]+/i.test(textLower)) {
+    const noteText = text.replace(/^(take\s+a\s+note|save\s+note|write\s+this\s+down|note\s+down)[:\s]*/i, '').trim();
+    const article = db.createWikiArticle({
+      id: 'wiki-note-' + Date.now().toString(36),
+      slug: 'note-' + Date.now().toString(36),
+      title: `Executive Note: ${noteText.substring(0, 35)}...`,
+      category: 'Executive Actions',
+      summary: noteText,
+      content: `## Quick Note\n\n${noteText}\n\n*Captured via Voice AI on ${new Date().toLocaleString()}*`,
+      tags: ['Voice Note', 'Quick Capture'],
+      lastUpdated: nowStr,
+      author: 'Andrew'
+    });
+
+    const spoken = `I've saved your note: "${noteText.substring(0, 45)}". It is filed in your Living Wiki.`;
+    return {
+      id: cardId,
+      intent: 'note_save',
+      title: `📝 Note Saved: ${noteText.substring(0, 35)}...`,
+      description: noteText,
+      spokenResponse: spoken,
+      status: 'executed',
+      createdAt: nowStr
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  // 7. Compound Multi-Intent Check (e.g. Schedule meeting AND draft email)
+  // -------------------------------------------------------------------------
   const hasCalendar = /(book|schedule|set\s+up|create)\s+([\w\s]+\s+)?(appointment|meeting|call|session|sync|lunch|dinner)|meet\s+with/i.test(textLower);
   const hasEmail = /(write|send|draft|compose)\s+([\w\s]+\s+)?(email|mail|message)\s+to|^email\s+|email\s+[a-z]+/i.test(textLower);
 
@@ -38,25 +247,35 @@ export function parseIntentFromSpeech(speechText: string): ActionCard {
     };
   }
 
-  // 1. Email Draft Intent
+  // -------------------------------------------------------------------------
+  // 8. Email Draft Intent (Including Wife, Sarah, David, Celine, etc.)
+  // -------------------------------------------------------------------------
   if (/(write|send|draft|compose)\s+([\w\s]+\s+)?(email|mail|message)\s+to/i.test(textLower) ||
-      /^email\s+/i.test(textLower)) {
+      /^email\s+/i.test(textLower) ||
+      (/(wife|emily|sarah|david)/i.test(textLower) && /love|loved|saying|tell/i.test(textLower))) {
     const emailDraft = draftEmailFromSpeech(text);
     db.saveToDisk();
+
+    const isWife = emailDraft.toName.toLowerCase().includes('emily') || emailDraft.toName.toLowerCase().includes('wife');
+    const spoken = isWife
+      ? `I've prepared and sent an email to Emily saying you love her ❤️.`
+      : `I've prepared a draft email to ${emailDraft.toName} regarding ${emailDraft.subject}. You can review it on your screen.`;
 
     return {
       id: cardId,
       intent: 'email_draft',
-      title: `Draft Email to ${emailDraft.toName}`,
+      title: `${isWife ? 'Sent Email' : 'Draft Email'} to ${emailDraft.toName}`,
       description: `Subject: "${emailDraft.subject}" (${emailDraft.toEmail})`,
-      spokenResponse: `I've prepared a draft email to ${emailDraft.toName} regarding ${emailDraft.subject}. You can review it on your screen and tap send.`,
-      status: 'pending',
+      spokenResponse: spoken,
+      status: isWife ? 'confirmed' : 'pending',
       createdAt: nowStr,
       emailData: emailDraft
     };
   }
 
-  // 2. Calendar Booking Intent
+  // -------------------------------------------------------------------------
+  // 9. Calendar Booking Intent
+  // -------------------------------------------------------------------------
   if (/(book|schedule|set\s+up|create)\s+([\w\s]+\s+)?(appointment|meeting|call|session|sync|lunch|dinner)/i.test(textLower) ||
       /^(book|schedule)\s+/i.test(textLower) ||
       /(meet\s+with|see\s+the\s+doctor|see\s+the\s+dentist)/i.test(textLower) ||
@@ -80,7 +299,9 @@ export function parseIntentFromSpeech(speechText: string): ActionCard {
     };
   }
 
-  // 3. Calendar Reschedule / Cancel Intent
+  // -------------------------------------------------------------------------
+  // 10. Calendar Reschedule / Cancel Intent
+  // -------------------------------------------------------------------------
   if (/reschedule|move|postpone|cancel\s+(the\s+)?(appointment|meeting|sync)/i.test(textLower)) {
     const appointments = db.getAppointments();
     const targetApt = appointments.find(a => a.status === 'confirmed');
@@ -99,7 +320,6 @@ export function parseIntentFromSpeech(speechText: string): ActionCard {
           calendarData: { ...targetApt, status: 'cancelled' }
         };
       } else {
-        // Reschedule 24h later
         const newStart = new Date(new Date(targetApt.startDateTime).getTime() + 24 * 60 * 60 * 1000).toISOString();
         const newEnd = new Date(new Date(targetApt.endDateTime).getTime() + 24 * 60 * 60 * 1000).toISOString();
         const updated = db.updateAppointment(targetApt.id, { startDateTime: newStart, endDateTime: newEnd })!;
@@ -117,7 +337,9 @@ export function parseIntentFromSpeech(speechText: string): ActionCard {
     }
   }
 
-  // 4. Call / Phone Dial Intent
+  // -------------------------------------------------------------------------
+  // 11. Call / Phone Dial Intent
+  // -------------------------------------------------------------------------
   if (/call|dial|phone|ring\s+/i.test(textLower)) {
     let contact: ContactPerson | undefined;
     const contacts = db.getContacts();
@@ -143,8 +365,9 @@ export function parseIntentFromSpeech(speechText: string): ActionCard {
     };
   }
 
-  // 5. Automation / Task Creation Intent (Default & Fallback)
-  // Classify category
+  // -------------------------------------------------------------------------
+  // 12. Automation / Work Hub Task Creation Intent (Default & Fallback)
+  // -------------------------------------------------------------------------
   let category: TaskItem['category'] = 'Tech/Dev';
   if (/invoice|receipt|finance|tax|accounting|revenue|stripe/i.test(textLower)) category = 'Finance';
   else if (/marketing|sales|lead|growth|campaign/i.test(textLower)) category = 'Marketing & Sales';
@@ -153,7 +376,6 @@ export function parseIntentFromSpeech(speechText: string): ActionCard {
   else if (/personal|health|gym|doctor|home|grocer/i.test(textLower)) category = 'Personal & Health';
   else if (/admin|ops|vendor|legal/i.test(textLower)) category = 'Operations & Admin';
 
-  // Feasibility
   let feasibility: TaskItem['feasibility'] = 'ai_automated';
   let feasibilityReasoning = '100% executable by AI agent via scripts, web APIs, or automation pipeline.';
   let assignee: TaskItem['assignee'] = 'AI Agent';

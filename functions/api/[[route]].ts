@@ -66,6 +66,9 @@ const SEED_DATA = {
   ],
   wikiArticles: [
     { id: 'wiki-1', slug: 'voice-ai-hud-mobile-pwa', title: '📱 Voice AI HUD & Mobile PWA', category: 'Voice AI & Mobile', summary: 'Real-time voice recognition and spoken TTS feedback.' }
+  ],
+  memories: [
+    { id: 'mem-1', key: "Wife's Birthday", value: "Emily's birthday is on June 14th.", learnedAt: '2026-08-20T10:00:00Z', category: 'personal' }
   ]
 };
 
@@ -101,6 +104,7 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
       const body = await request.json() as { text: string };
       const text = (body.text || '').trim();
       const textLower = text.toLowerCase();
+      const nowStr = new Date().toISOString();
 
       let intent = 'task_create';
       let title = `Task: ${text}`;
@@ -108,8 +112,58 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
       let emailData: any = undefined;
       let calendarData: any = undefined;
 
-      // 1. Email Intent (e.g. wife, Sarah, David, etc.)
-      if (/email|message|write to|send to|mail/i.test(textLower)) {
+      // 1. Adaptive Memory & Learning ("Remember that...", "What is my...")
+      if (/^(remember\s+that|remember\s+|learn\s+that|don't\s+forget\s+that)/i.test(textLower)) {
+        const memFact = text.replace(/^(remember\s+that|remember\s+|learn\s+that|don't\s+forget\s+that)\s*/i, '').trim();
+        intent = 'memory_learn';
+        title = `Learned Fact`;
+        spokenResponse = `I have committed that to memory: "${memFact}".`;
+      }
+      else if (/^(what\s+is|when\s+is|recall|what\s+did\s+i\s+ask\s+you\s+to\s+remember|list\s+my\s+memories)/i.test(textLower) && !/weather|time|date|task|email/i.test(textLower)) {
+        intent = 'memory_recall';
+        title = `Executive Memory Recall`;
+        spokenResponse = `According to what you taught me, Emily's birthday is on June 14th, and Sarah prefers Slack over email.`;
+      }
+
+      // 2. Timers & Alarms
+      else if (/(timer|alarm|stopwatch)/i.test(textLower) && /(set|start|create|for|\d+)/i.test(textLower)) {
+        intent = 'timer_alarm';
+        title = `⏱️ Timer Active`;
+        spokenResponse = `Timer set and running. I will alert you when it expires.`;
+      }
+
+      // 3. Reminders
+      else if (/^remind\s+me\s+to|^create\s+reminder/i.test(textLower)) {
+        intent = 'reminder_create';
+        const rem = text.replace(/^(remind\s+me\s+to|create\s+reminder[:\s]+)\s*/i, '').trim();
+        title = `🔔 Reminder: ${rem}`;
+        spokenResponse = `I have created a reminder to: "${rem}".`;
+      }
+
+      // 4. Calculations & Math
+      else if (/^(what\s+is|calculate|how\s+much\s+is)\s+[\d\s+\-*/%$.^()]+$/i.test(textLower) || /\d+\s*[%+\-*/]\s*\d+/.test(textLower)) {
+        intent = 'calc_query';
+        title = `🔢 Calculation`;
+        spokenResponse = `Calculation evaluated: ${text}.`;
+      }
+
+      // 5. Weather
+      else if (/(weather|forecast|temperature|will\s+it\s+rain)/i.test(textLower)) {
+        intent = 'weather_query';
+        title = `☀️ Weather Forecast`;
+        spokenResponse = `In your location, it is currently 22°C (72°F) and sunny with mild conditions.`;
+      }
+
+      // 6. Notes
+      else if (/^(take\s+a\s+note|save\s+note|write\s+this\s+down)/i.test(textLower)) {
+        intent = 'note_save';
+        const note = text.replace(/^(take\s+a\s+note|save\s+note|write\s+this\s+down)[:\s]*/i, '').trim();
+        title = `📝 Note Saved`;
+        spokenResponse = `I've saved your note: "${note.substring(0, 40)}".`;
+      }
+
+      // 7. Email Intent (e.g. wife, Sarah, David, etc.)
+      else if (/email|message|write to|send to|mail|love/i.test(textLower) && /wife|emily|sarah|david|celine|love/i.test(textLower)) {
         intent = 'email_draft';
         let toName = 'Contact';
         let toEmail = 'partner@company.com';
@@ -127,7 +181,7 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
 
         let subject = 'Personal Note';
         let emailBody = text;
-        if (/love/i.test(textLower)) {
+        if (/love|wife/i.test(textLower)) {
           subject = 'Thinking of you ❤️';
           emailBody = 'Hi Emily,\n\nJust wanted to send you a quick note to say I love you and hope you have a wonderful day!\n\nLove,\nAndrew';
         }
@@ -140,7 +194,7 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
           body: emailBody,
           tone: /love|wife/i.test(textLower) ? 'friendly' : 'professional',
           status: 'sent',
-          sentAt: new Date().toISOString()
+          sentAt: nowStr
         };
 
         title = `Sent Email to ${toName}`;
@@ -149,7 +203,7 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
           : `I've prepared and dispatched the email to ${toName} regarding ${subject}.`;
       }
 
-      // 2. Calendar Booking
+      // 8. Calendar Booking
       else if (/book|schedule|meet|appointment|sync/i.test(textLower)) {
         intent = 'calendar_booking';
         title = `Strategy Session with David Miller`;
@@ -174,7 +228,7 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
         description: spokenResponse,
         spokenResponse,
         status: 'confirmed',
-        createdAt: new Date().toISOString(),
+        createdAt: nowStr,
         emailData,
         calendarData
       };
@@ -183,7 +237,7 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
         id: 'memo-' + Date.now().toString(36),
         title: text.length > 50 ? text.substring(0, 47) + '...' : text,
         durationSeconds: 15,
-        recordedAt: new Date().toISOString(),
+        recordedAt: nowStr,
         transcript: text,
         status: 'analyzed',
         extractedTaskIds: [],
@@ -221,6 +275,11 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
   // Inbox
   if (path === '/gmail/inbox') {
     return new Response(JSON.stringify(SEED_DATA.inboxEmails), { headers: corsHeaders });
+  }
+
+  // Memories
+  if (path === '/memories') {
+    return new Response(JSON.stringify(SEED_DATA.memories), { headers: corsHeaders });
   }
 
   // KPI

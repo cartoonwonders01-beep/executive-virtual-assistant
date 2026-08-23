@@ -12,7 +12,10 @@ import {
   InboxEmail,
   ChatMessage,
   CallLog,
-  AutonomousJob
+  AutonomousJob,
+  AssistantMemory,
+  TimerItem,
+  ReminderItem
 } from '../src/types';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -34,6 +37,9 @@ export interface AssistantDatabase {
   callLogs: CallLog[];
   autonomousJobs: AutonomousJob[];
   wikiArticles: WikiArticle[];
+  memories?: AssistantMemory[];
+  timers?: TimerItem[];
+  reminders?: ReminderItem[];
 }
 
 const SEED_DATA: AssistantDatabase = {
@@ -1026,6 +1032,76 @@ export const db = {
     dbCache.wikiArticles = dbCache.wikiArticles.filter(a => a.id !== id && a.slug !== id);
     saveToDisk();
     return true;
+  },
+
+  // Adaptive Executive Memory (Self-Learning)
+  getMemories: () => dbCache.memories || [],
+  saveMemory: (key: string, value: string, category: 'personal' | 'preference' | 'work' | 'credential' = 'personal') => {
+    if (!dbCache.memories) dbCache.memories = [];
+    // Update existing if same key or append
+    const cleanKey = key.trim().toLowerCase();
+    const existingIdx = dbCache.memories.findIndex(m => m.key.toLowerCase() === cleanKey);
+    const mem: AssistantMemory = {
+      id: 'mem-' + Date.now().toString(36),
+      key: key.trim(),
+      value: value.trim(),
+      learnedAt: new Date().toISOString(),
+      category
+    };
+    if (existingIdx !== -1) {
+      dbCache.memories[existingIdx] = mem;
+    } else {
+      dbCache.memories.unshift(mem);
+    }
+    saveToDisk();
+    return mem;
+  },
+  findMemory: (query: string) => {
+    if (!dbCache.memories || dbCache.memories.length === 0) return null;
+    const q = query.toLowerCase().trim();
+    return dbCache.memories.find(m => 
+      q.includes(m.key.toLowerCase()) || 
+      m.key.toLowerCase().includes(q) ||
+      m.value.toLowerCase().includes(q)
+    ) || null;
+  },
+  deleteMemory: (id: string) => {
+    if (!dbCache.memories) return false;
+    dbCache.memories = dbCache.memories.filter(m => m.id !== id);
+    saveToDisk();
+    return true;
+  },
+
+  // Timers & Alarms
+  getTimers: () => dbCache.timers || [],
+  createTimer: (label: string, durationSeconds: number) => {
+    if (!dbCache.timers) dbCache.timers = [];
+    const timer: TimerItem = {
+      id: 'tm-' + Date.now().toString(36),
+      label: label || 'Timer',
+      durationSeconds,
+      remainingSeconds: durationSeconds,
+      status: 'running',
+      createdAt: new Date().toISOString()
+    };
+    dbCache.timers.unshift(timer);
+    saveToDisk();
+    return timer;
+  },
+
+  // Reminders
+  getReminders: () => dbCache.reminders || [],
+  createReminder: (text: string, dueDateTime: string) => {
+    if (!dbCache.reminders) dbCache.reminders = [];
+    const reminder: ReminderItem = {
+      id: 'rem-' + Date.now().toString(36),
+      text,
+      dueDateTime: dueDateTime || new Date(Date.now() + 3600000).toISOString(),
+      status: 'pending'
+    };
+    dbCache.reminders.unshift(reminder);
+    saveToDisk();
+    return reminder;
   },
 
   // KPI Calculations

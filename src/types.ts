@@ -73,6 +73,30 @@ export interface VoiceMemo {
   source: 'browser_mic' | 'ios_shortcut' | 'file_upload' | 'watch_memo';
 }
 
+export interface AssistantMemory {
+  id: string;
+  key: string;
+  value: string;
+  learnedAt: string;
+  category: 'personal' | 'preference' | 'work' | 'credential';
+}
+
+export interface TimerItem {
+  id: string;
+  label: string;
+  durationSeconds: number;
+  remainingSeconds: number;
+  status: 'running' | 'paused' | 'completed';
+  createdAt: string;
+}
+
+export interface ReminderItem {
+  id: string;
+  text: string;
+  dueDateTime: string;
+  status: 'pending' | 'completed';
+}
+
 export type ActionIntentType = 
   | 'email_draft'
   | 'calendar_booking'
@@ -82,7 +106,15 @@ export type ActionIntentType =
   | 'task_create'
   | 'automation_run'
   | 'web_search'
-  | 'general_chat';
+  | 'general_chat'
+  | 'timer_alarm'
+  | 'reminder_create'
+  | 'memory_learn'
+  | 'memory_recall'
+  | 'weather_query'
+  | 'calc_query'
+  | 'note_save'
+  | 'knowledge_qa';
 
 export interface EmailDraft {
   id: string;

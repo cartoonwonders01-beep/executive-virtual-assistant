@@ -109,10 +109,14 @@ export const MobileVoiceHUD: React.FC = () => {
 
   const quickPrompts = [
     "Send an email to my wife to say I love her",
+    "Remember that Emily loves peonies and dark chocolate",
+    "What did I ask you to remember?",
+    "Set a timer for 15 minutes",
+    "What is 15% of $850?",
+    "What's the weather in Tokyo?",
     "Draft an email to Sarah about our Q3 growth sprint",
     "Book strategy session with David next Tuesday at 2 PM",
-    "Automate PDF invoice extraction from billing emails",
-    "Call David Miller regarding cloud architecture"
+    "Take a note: Review Q3 enterprise security audit"
   ];
 
   return (
