@@ -12,6 +12,7 @@ import {
   VoicePersona,
   resolveBestVoice
 } from '../services/speechSynthesis';
+import { wakeWordService } from '../services/wakeWordService';
 import { 
   Settings, 
   X, 
@@ -24,7 +25,8 @@ import {
   Cpu, 
   RefreshCw,
   Zap,
-  Layers
+  Layers,
+  Radio
 } from 'lucide-react';
 
 export const SettingsModal: React.FC = () => {
@@ -57,6 +59,7 @@ export const SettingsModal: React.FC = () => {
   const [rate, setRate] = useState<number>(getVoiceRate());
   const [pitch, setPitch] = useState<number>(getVoicePitch());
   const [detectedVoiceName, setDetectedVoiceName] = useState<string>('');
+  const [selectedWakeWord, setSelectedWakeWord] = useState<string>('hey nova');
 
   useEffect(() => {
     if (isSettingsOpen) {
@@ -69,6 +72,10 @@ export const SettingsModal: React.FC = () => {
       setPitch(getVoicePitch());
       const voice = resolveBestVoice(getVoicePersona());
       if (voice) setDetectedVoiceName(voice.name);
+      try {
+        const stored = localStorage.getItem('assistant_primary_wake_word') || 'hey nova';
+        setSelectedWakeWord(stored);
+      } catch {}
     }
   }, [isSettingsOpen, groqApiKey, geminiApiKey, googleAppsScriptUrl, aiBrainProvider]);
 
@@ -118,12 +125,25 @@ export const SettingsModal: React.FC = () => {
     setVoicePersona(persona);
     setVoiceRate(rate);
     setVoicePitch(pitch);
+    const cleanWake = selectedWakeWord.toLowerCase().trim() || 'hey nova';
+    wakeWordService.setPrimaryWakeWord(cleanWake);
+    try {
+      localStorage.setItem('assistant_primary_wake_word', cleanWake);
+    } catch {}
     setSaved(true);
     setTimeout(() => {
       setSaved(false);
       setIsSettingsOpen(false);
     }, 1000);
   };
+
+  const wakeWordPresets = [
+    { id: 'hey nova', label: '🌟 Hey Nova', desc: 'Short, sweet & executive (Recommended)' },
+    { id: 'hey aria', label: '🎙️ Hey Aria', desc: 'Natural & articulate' },
+    { id: 'hey andy', label: '👤 Hey Andy', desc: 'Direct personal executive name' },
+    { id: 'hey eva', label: '⚡ Hey Eva', desc: 'Fast, crisp & futuristic' },
+    { id: 'hey assistant', label: '🤖 Hey Assistant', desc: 'Universal assistant trigger' },
+  ];
 
   const voicePersonas = [
     { id: 'studio_american_female' as VoicePersona, title: 'Studio American Female', desc: 'Natural, articulate, and studio-grade' },
@@ -306,6 +326,51 @@ export const SettingsModal: React.FC = () => {
                 <span>{syncSuccess ? 'Synced to BigQuery & Sheets! ✅' : isSyncingGoogle ? 'Syncing...' : '1-Click Sync Work Hub to Google'}</span>
               </button>
             )}
+          </div>
+
+          {/* Wake-Word Keyword Trigger Selection */}
+          <div className="space-y-2 bg-slate-950 p-3.5 rounded-2xl border border-teal-500/40 shadow-sm">
+            <div className="flex items-center justify-between">
+              <label className="text-slate-200 font-semibold flex items-center gap-1.5">
+                <Radio className="w-4 h-4 text-teal-400" />
+                <span>Voice Activation Wake Word ("Hey ...")</span>
+              </label>
+              <span className="text-[10px] font-mono text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/20 font-bold">
+                "{selectedWakeWord}"
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-400">
+              Select your hands-free voice trigger phrase. The assistant passively listens and activates with a double-chime.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              {wakeWordPresets.map((ww) => (
+                <div
+                  key={ww.id}
+                  onClick={() => setSelectedWakeWord(ww.id)}
+                  className={`p-2.5 rounded-xl border cursor-pointer transition ${
+                    selectedWakeWord === ww.id
+                      ? 'bg-teal-500/10 border-teal-500 text-teal-300 shadow-sm'
+                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                  }`}
+                >
+                  <p className="font-semibold text-slate-200 text-xs">{ww.label}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">{ww.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Custom Wake Word Input */}
+            <div className="pt-2 border-t border-slate-900 flex items-center space-x-2">
+              <span className="text-[11px] text-slate-400 whitespace-nowrap">Custom Trigger:</span>
+              <input
+                type="text"
+                value={selectedWakeWord}
+                onChange={(e) => setSelectedWakeWord(e.target.value)}
+                placeholder="e.g. hey nova"
+                className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-teal-500 font-mono text-xs"
+              />
+            </div>
           </div>
 
           {/* Human Voice Persona Selection */}

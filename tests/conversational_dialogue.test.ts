@@ -59,15 +59,20 @@ test('Conversational Dialogue Engine & Dynamic Skill Learning Suite', async (t) 
   });
 
   await t.test('Turn 6: Wake-word extraction isolates trigger phrase and trailing command', () => {
-    const res1 = wakeWordService.testRecognize('Hey Google what is the weather today');
+    const res1 = wakeWordService.testRecognize('Hey Nova what is the weather today');
     assert.equal(res1.detected, true);
-    assert.equal(res1.wakeWord, 'hey google');
+    assert.equal(res1.wakeWord, 'hey nova');
     assert.equal(res1.command, 'what is the weather today');
 
-    const res2 = wakeWordService.testRecognize('Hello Assistant send an email to Emily');
+    const res2 = wakeWordService.testRecognize('Hello Nova send an email to Emily');
     assert.equal(res2.detected, true);
-    assert.equal(res2.wakeWord, 'hello assistant');
+    assert.equal(res2.wakeWord, 'hello nova');
     assert.equal(res2.command, 'send an email to emily');
+
+    const res3 = wakeWordService.testRecognize('Hey Aria check my calendar');
+    assert.equal(res3.detected, true);
+    assert.equal(res3.wakeWord, 'hey aria');
+    assert.equal(res3.command, 'check my calendar');
   });
 
 });

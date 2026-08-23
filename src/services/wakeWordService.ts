@@ -9,16 +9,34 @@ export class WakeWordService {
   private isListening = false;
   private recognition: any = null;
   private config: WakeWordListenerConfig | null = null;
+  private primaryWakeWord = 'hey nova';
   private wakeTriggers = [
-    'hey google',
-    'hello google',
-    'ok google',
+    'hey nova',
+    'hello nova',
+    'ok nova',
+    'nova',
+    'hey aria',
+    'hello aria',
+    'hey andy',
+    'hello andy',
+    'hey eva',
+    'hello eva',
     'hey assistant',
     'hello assistant',
-    'ok assistant',
-    'hey andy',
-    'hello andy'
+    'ok assistant'
   ];
+
+  public getPrimaryWakeWord(): string {
+    return this.primaryWakeWord;
+  }
+
+  public setPrimaryWakeWord(word: string): void {
+    const clean = word.toLowerCase().trim();
+    this.primaryWakeWord = clean;
+    if (!this.wakeTriggers.includes(clean)) {
+      this.wakeTriggers.unshift(clean);
+    }
+  }
 
   public setCustomWakeWords(words: string[]): void {
     this.wakeTriggers = words.map(w => w.toLowerCase().trim());
@@ -118,10 +136,10 @@ export class WakeWordService {
   }
 
   /**
-   * Synthesizes Google Assistant double-tone activation chime
+   * Synthesizes double-tone activation chime
    * (High note -> Higher note: 880Hz to 1320Hz)
    */
-  public playGoogleAssistantChime(): void {
+  public playActivationChime(): void {
     if (typeof window === 'undefined') return;
     try {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -155,6 +173,10 @@ export class WakeWordService {
     } catch (e) {
       console.log('Audio chime error:', e);
     }
+  }
+
+  public playGoogleAssistantChime(): void {
+    this.playActivationChime();
   }
 
   public testRecognize(transcript: string): { detected: boolean; wakeWord?: string; command?: string } {
