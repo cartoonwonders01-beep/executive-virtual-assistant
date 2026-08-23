@@ -150,20 +150,32 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({ isOpen, on
             visibleEntries.map((entry) => {
               const style = LEVEL_STYLES[entry.level] || LEVEL_STYLES.info;
               const timeStr = new Date(entry.ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 as any });
+              
+              const categoryBadge = {
+                groq_whisper: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+                speech_stt: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+                ai_reasoning: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+                wake_word: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
+                tts_speech: 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30',
+                audio: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+                google_sync: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+                system: 'bg-slate-800 text-slate-400 border-slate-700'
+              }[entry.category] || 'bg-slate-800 text-slate-400 border-slate-700';
+
               return (
                 <div
                   key={entry.id}
                   className={`p-2.5 rounded-xl border ${style.bg} ${style.border} flex items-start gap-2.5 leading-relaxed transition hover:border-slate-600`}
                 >
                   <span className="shrink-0 mt-0.5">{style.icon}</span>
-                  <span className="text-slate-500 text-[10px] shrink-0 tabular-nums">{timeStr}</span>
-                  <span className="px-1.5 py-0.2 rounded bg-slate-800 text-[10px] text-slate-400 font-semibold uppercase tracking-wider shrink-0">
-                    {entry.category}
+                  <span className="text-slate-500 text-[10px] shrink-0 tabular-nums font-mono">{timeStr}</span>
+                  <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider shrink-0 border ${categoryBadge}`}>
+                    {entry.category.replace('_', ' ')}
                   </span>
                   <span className={`flex-1 min-w-0 break-words ${style.text}`}>
                     {entry.msg}
                     {entry.details && (
-                      <pre className="mt-1 p-2 rounded-lg bg-slate-950/80 text-[10px] text-slate-400 overflow-x-auto border border-slate-800">
+                      <pre className="mt-1.5 p-2 rounded-lg bg-slate-950 text-[10px] text-slate-300 overflow-x-auto border border-slate-800/90 font-mono">
                         {typeof entry.details === 'string' ? entry.details : JSON.stringify(entry.details, null, 2)}
                       </pre>
                     )}

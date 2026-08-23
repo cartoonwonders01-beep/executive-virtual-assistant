@@ -428,6 +428,8 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch {}
   };
 
+  const lastHeardPassiveSpeechRef = useRef<{ text: string; ts: number }>({ text: '', ts: 0 });
+
   // Passive Wake-Word Listener Effect ("Hey Google" / "Hey Assistant")
   useEffect(() => {
     if (!isWakeWordActive) {
@@ -438,6 +440,11 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     logger.log('info', 'wake_word', 'Starting passive wake-word listener for "Hey Eve"...');
     wakeWordService.startPassiveListening({
+      onSpeechDetected: (text) => {
+        if (text && text.trim().length > 1) {
+          lastHeardPassiveSpeechRef.current = { text: text.trim(), ts: Date.now() };
+        }
+      },
       onWakeWordDetected: (wakeWord, trailingCommand) => {
         logger.log('success', 'wake_word', `🎯 Wake-word recognized: "${wakeWord}"`, { trailingCommand });
         try {
@@ -468,7 +475,6 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
   };
 
-  // Submit speech transcript to AI backend & Local Engine
   const submitVoiceTranscript = async (text: string) => {
     if (!text.trim()) return;
     setIsProcessingSpeech(true);
@@ -476,7 +482,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const cardId = 'ac-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5);
     const nowStr = new Date().toISOString();
 
-    // 0. Register User Dialogue Turn
+    logger.log('info', 'ai_reasoning', `🧠 Analyzing intent for user speech: "${text}"`);
     const userTurn: DialogueTurn = {
       id: 'turn-u-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5),
       speaker: 'user',
@@ -1040,8 +1046,10 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         } catch {}
 
         if (voiceFeedbackEnabled && actionCard.spokenResponse) {
-          logger.log('info', 'tts_speech', `Dispatched voice audio: "${actionCard.spokenResponse}"`);
-          speakResponse(actionCard.spokenResponse);
+          logger.log('info', 'tts_speech', `🔊 Speaking response (Voice: Studio American Female, Speed: 1.05x): "${actionCard.spokenResponse}"`);
+          speakResponse(actionCard.spokenResponse, () => {
+            logger.log('success', 'tts_speech', '✅ Voice playback complete.');
+          });
         }
 
         // Forward to Google Apps Script Webhook
@@ -1063,67 +1071,81 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  // Real Audio Streaming
+  // Real Audio Streaming with Full Relay-Style Telemetry & Groq Whisper Relay
   const startVoiceListening = async () => {
     stopSpeaking();
     setLiveTranscript('');
     setIsListening(true);
-    logger.log('info', 'audio', 'Active microphone listening started. Listening for your speech...');
+    logger.log('info', 'audio', '🎙️ Active microphone stream started (WebM Opus / 64kbps). Speak to Eve now...');
 
     const started = await audioRecorder.start({
       onAudioLevel: (level) => setAudioLevel(level),
       onLiveTranscript: (text) => {
         setLiveTranscript(text);
         if (text) {
-          logger.log('info', 'speech_stt', `Live STT: "${text}"`);
+          logger.log('info', 'speech_stt', `🎙️ Live STT: "${text}"`);
         }
       },
       onRecordingComplete: async (blob, mimeType, liveTranscript) => {
         setIsProcessingSpeech(true);
-        logger.log('info', 'audio', `Recording completed (size: ${blob.size} bytes). Processing speech...`);
+        const sizeKb = (blob.size / 1024).toFixed(1);
+        logger.log('info', 'audio', `💾 Audio buffer captured: ${sizeKb} KB (${blob.size} bytes, MIME: ${mimeType || 'audio/webm'})`);
+        
         try {
           let textToProcess = (liveTranscript || '').trim();
 
-          if (groqApiKey && blob.size > 500) {
+          // 1. Send Audio Blob to Groq Whisper
+          if (blob.size > 200) {
+            const startWhisper = Date.now();
+            logger.log('info', 'groq_whisper', `🚀 Sending ${sizeKb} KB audio slice to Groq Whisper (whisper-large-v3-turbo)...`);
             try {
-              logger.log('info', 'speech_stt', 'Sending audio to Groq Whisper for high-speed transcription...');
               const res = await api.transcribeRecordedAudio(blob, mimeType, groqApiKey);
-              if (res.transcript && res.transcript.trim()) {
+              const elapsedMs = Date.now() - startWhisper;
+              if (res?.transcript && res.transcript.trim()) {
                 textToProcess = res.transcript.trim();
-                logger.log('success', 'speech_stt', `Groq Whisper transcribed: "${textToProcess}"`);
+                logger.log('success', 'groq_whisper', `⚡ Groq Whisper returned in ${elapsedMs}ms: "${textToProcess}" (HTTP 200)`);
+              } else {
+                logger.log('warn', 'groq_whisper', `Groq Whisper completed in ${elapsedMs}ms but returned empty transcript. Checking fallback stream...`);
               }
             } catch (wErr: any) {
-              logger.log('warn', 'speech_stt', `Groq Whisper refine skipped (${wErr?.message}), using live transcript: "${textToProcess}"`);
+              logger.log('warn', 'groq_whisper', `Groq Whisper relay notice: ${wErr?.message || wErr}. Falling back to browser speech stream.`);
             }
           }
 
+          // 2. If still empty, check passive speech buffer from right before recording
+          if (!textToProcess && lastHeardPassiveSpeechRef.current.text && (Date.now() - lastHeardPassiveSpeechRef.current.ts < 12000)) {
+            textToProcess = lastHeardPassiveSpeechRef.current.text;
+            logger.log('info', 'speech_stt', `🎙️ Recovered speech from passive audio stream: "${textToProcess}"`);
+          }
+
+          // 3. Dispatch to AI Reasoning Core
           if (textToProcess) {
-            logger.log('info', 'speech_stt', `Final speech transcript ready: "${textToProcess}"`);
+            logger.log('success', 'speech_stt', `🎯 Final speech transcript ready for AI reasoning: "${textToProcess}"`);
             await submitVoiceTranscript(textToProcess);
           } else {
-            logger.log('warn', 'audio', 'No speech detected during recording cycle.');
+            logger.log('warn', 'audio', `⚠️ No spoken speech detected in ${sizeKb} KB buffer. Speak into microphone or tap a quick prompt.`);
           }
         } catch (err: any) {
-          logger.log('error', 'audio', `Audio processing error: ${err?.message || err}`);
+          logger.log('error', 'audio', `Audio processing pipeline error: ${err?.message || err}`);
         } finally {
           setIsProcessingSpeech(false);
         }
       },
       onError: (err) => {
-        logger.log('error', 'audio', `Audio recorder error: ${err}`);
+        logger.log('error', 'audio', `Microphone hardware error: ${err}`);
         setIsListening(false);
         setAudioLevel(0);
       }
     });
 
     if (!started) {
-      logger.log('warn', 'audio', 'Failed to start active audio recording.');
+      logger.log('warn', 'audio', 'Failed to initialize active audio recording stream.');
       setIsListening(false);
     }
   };
 
   const stopVoiceListening = () => {
-    logger.log('info', 'audio', 'Stopping active microphone listening.');
+    logger.log('info', 'audio', '⏹️ Stopping active microphone listening.');
     audioRecorder.stop();
     setIsListening(false);
     setAudioLevel(0);

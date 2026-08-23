@@ -8,7 +8,7 @@ export interface LogEntry {
   id: string;
   ts: number;
   level: LogLevel;
-  category: 'audio' | 'wake_word' | 'speech_stt' | 'ai_reasoning' | 'tts_speech' | 'google_sync' | 'system';
+  category: 'audio' | 'wake_word' | 'speech_stt' | 'groq_whisper' | 'ai_reasoning' | 'tts_speech' | 'google_sync' | 'system';
   msg: string;
   details?: any;
 }
