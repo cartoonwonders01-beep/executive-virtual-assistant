@@ -59,7 +59,7 @@ export const SettingsModal: React.FC = () => {
   const [rate, setRate] = useState<number>(getVoiceRate());
   const [pitch, setPitch] = useState<number>(getVoicePitch());
   const [detectedVoiceName, setDetectedVoiceName] = useState<string>('');
-  const [selectedWakeWord, setSelectedWakeWord] = useState<string>('hey nova');
+  const [selectedWakeWord, setSelectedWakeWord] = useState<string>('hey eve');
 
   useEffect(() => {
     if (isSettingsOpen) {
@@ -73,7 +73,7 @@ export const SettingsModal: React.FC = () => {
       const voice = resolveBestVoice(getVoicePersona());
       if (voice) setDetectedVoiceName(voice.name);
       try {
-        const stored = localStorage.getItem('assistant_primary_wake_word') || 'hey nova';
+        const stored = localStorage.getItem('assistant_primary_wake_word') || 'hey eve';
         setSelectedWakeWord(stored);
       } catch {}
     }
@@ -125,7 +125,7 @@ export const SettingsModal: React.FC = () => {
     setVoicePersona(persona);
     setVoiceRate(rate);
     setVoicePitch(pitch);
-    const cleanWake = selectedWakeWord.toLowerCase().trim() || 'hey nova';
+    const cleanWake = selectedWakeWord.toLowerCase().trim() || 'hey eve';
     wakeWordService.setPrimaryWakeWord(cleanWake);
     try {
       localStorage.setItem('assistant_primary_wake_word', cleanWake);
@@ -138,10 +138,10 @@ export const SettingsModal: React.FC = () => {
   };
 
   const wakeWordPresets = [
-    { id: 'hey nova', label: '🌟 Hey Nova', desc: 'Short, sweet & executive (Recommended)' },
-    { id: 'hey aria', label: '🎙️ Hey Aria', desc: 'Natural & articulate' },
-    { id: 'hey andy', label: '👤 Hey Andy', desc: 'Direct personal executive name' },
+    { id: 'hey eve', label: '🌟 Hey Eve', desc: 'Short, sweet & executive (Recommended)' },
     { id: 'hey eva', label: '⚡ Hey Eva', desc: 'Fast, crisp & futuristic' },
+    { id: 'hey andy', label: '👤 Hey Andy', desc: 'Direct personal executive name' },
+    { id: 'hey aria', label: '🎙️ Hey Aria', desc: 'Natural & articulate' },
     { id: 'hey assistant', label: '🤖 Hey Assistant', desc: 'Universal assistant trigger' },
   ];
 

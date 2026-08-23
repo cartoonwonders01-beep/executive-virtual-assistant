@@ -17,7 +17,7 @@ function assert(condition: boolean, testName: string, details?: any) {
 
 export async function runVoiceAssistantExecutionAudit() {
   console.log('======================================================================');
-  console.log('🎙️ RUNNING VOICE ASSISTANT EXECUTION & "HEY NOVA" CAPABILITY AUDIT');
+  console.log('🎙️ RUNNING VOICE ASSISTANT EXECUTION & "HEY EVE" CAPABILITY AUDIT');
   console.log('======================================================================');
 
   // -------------------------------------------------------------------------

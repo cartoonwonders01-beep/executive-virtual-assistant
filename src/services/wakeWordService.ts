@@ -9,18 +9,16 @@ export class WakeWordService {
   private isListening = false;
   private recognition: any = null;
   private config: WakeWordListenerConfig | null = null;
-  private primaryWakeWord = 'hey nova';
+  private primaryWakeWord = 'hey eve';
   private wakeTriggers = [
-    'hey nova',
-    'hello nova',
-    'ok nova',
-    'nova',
-    'hey aria',
-    'hello aria',
-    'hey andy',
-    'hello andy',
+    'hey eve',
+    'hello eve',
+    'ok eve',
+    'eve',
     'hey eva',
     'hello eva',
+    'hey andy',
+    'hello andy',
     'hey assistant',
     'hello assistant',
     'ok assistant'

@@ -158,14 +158,14 @@ export const MobileVoiceHUD: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-white">"Hey Nova" Wake Word</span>
+              <span className="text-xs font-bold text-white">"Hey Eve" Wake Word</span>
               <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${
                 isWakeWordActive ? 'bg-teal-500/20 text-teal-300 border border-teal-500/30' : 'bg-slate-800 text-slate-400'
               }`}>
                 {isWakeWordActive ? 'Listening Active' : 'Muted'}
               </span>
             </div>
-            <p className="text-[11px] text-slate-400">Say <em>"Hey Nova"</em> or press <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-300 text-[10px] font-mono">Cmd+K</kbd></p>
+            <p className="text-[11px] text-slate-400">Say <em>"Hey Eve"</em> or press <kbd className="px-1.5 py-0.5 bg-slate-800 border border-slate-700 rounded text-slate-300 text-[10px] font-mono">Cmd+K</kbd></p>
           </div>
         </div>
 
@@ -384,7 +384,7 @@ export const MobileVoiceHUD: React.FC = () => {
                 <div className="space-y-1 overflow-hidden">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs font-bold text-white">
-                      {turn.speaker === 'user' ? 'You' : 'Assistant (Nova)'}
+                      {turn.speaker === 'user' ? 'You' : 'Assistant (Eve)'}
                     </span>
                     <span className="text-[10px] text-slate-500 font-mono">
                       {new Date(turn.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -410,7 +410,7 @@ export const MobileVoiceHUD: React.FC = () => {
 
         {(!Array.isArray(actionCards) || actionCards.length === 0) ? (
           <div className="bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl p-6 text-center text-slate-400 text-xs">
-            No voice actions yet. Say "Hey Nova" or tap the microphone to begin!
+            No voice actions yet. Say "Hey Eve" or tap the microphone to begin!
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
