@@ -132,14 +132,15 @@ export const MobileVoiceHUD: React.FC = () => {
   }, [isListening, audioLevel, isProcessingSpeech]);
 
   const quickPrompts = [
+    "What are 3 strategies to improve my morning routine?",
+    "How do I handle a difficult client escalation?",
+    "Can you explain how a DCF model works?",
     "Send an email to my wife to say I love her",
     "When I say 'Daily Standup', triage inbox and summarize tasks",
     "Who is Sarah?",
     "Send her an email about the budget",
     "Yes, send it",
-    "Set a timer for 15 minutes",
     "What is 15% of $850?",
-    "What's the weather in Tokyo?",
     "Book strategy session with David next Tuesday at 2 PM"
   ];
 

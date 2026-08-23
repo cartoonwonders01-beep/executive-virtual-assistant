@@ -27,6 +27,7 @@ import { dialogueManager } from '../services/dialogueManager';
 import { speakResponse, stopSpeaking } from '../services/speechSynthesis';
 import { processSpeechWithGemini } from '../services/geminiService';
 import { playChime } from '../services/soundEffects';
+import { intelligentAdvisor } from '../services/intelligentAdvisor';
 
 export type AIBrainProvider = 'gemini_ultra' | 'groq';
 
@@ -689,10 +690,37 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       }
 
-      // H. 3. Infallible Client-Side Instant Intent Engine (Handles Memory, Google Assistant features, Wife Emails, Calendar, Calling)
+      // H. 3. Infallible Client-Side Instant Intent Engine (Q&A Answers, Memory, Google Assistant features, Wife Emails, Calendar, Calling)
       if (!actionCard) {
+        const isExplicitTaskCommand = /^(add\s+task|create\s+task|log\s+task|put\s+on\s+my\s+board|new\s+task|automate\s+task)\b/i.test(textLower);
+
+        // Intelligent Strategic Q&A & Advice Engine (Answers any question)
+        if (!isExplicitTaskCommand && intelligentAdvisor.isQuestionOrInquiry(text)) {
+          const solution = intelligentAdvisor.solve(text);
+          const formattedDesc = [
+            solution.summary,
+            '',
+            '**Strategic Insights:**',
+            ...solution.keyInsights.map(k => `• ${k}`),
+            '',
+            '**Execution Steps:**',
+            ...solution.actionSteps.map((s, i) => `${i + 1}. ${s}`),
+            solution.proTip ? `\n💡 **Executive Pro-Tip:** ${solution.proTip}` : '',
+            solution.formulaOrCode ? `\n\`\`\`\n${solution.formulaOrCode}\n\`\`\`` : ''
+          ].filter(Boolean).join('\n');
+
+          actionCard = {
+            id: cardId,
+            intent: 'knowledge_qa',
+            title: solution.title,
+            description: formattedDesc,
+            spokenResponse: solution.spokenResponse,
+            status: 'executed',
+            createdAt: nowStr
+          };
+        }
         // Memory learn
-        if (/^(remember\s+that|remember\s+|learn\s+that|don't\s+forget\s+that|save\s+memory[:\s]+)/i.test(textLower)) {
+        else if (/^(remember\s+that|remember\s+|learn\s+that|don't\s+forget\s+that|save\s+memory[:\s]+)/i.test(textLower)) {
           const memContent = text.replace(/^(remember\s+that|remember\s+|learn\s+that|don't\s+forget\s+that|save\s+memory[:\s]+)\s*/i, '').trim();
           actionCard = {
             id: cardId,

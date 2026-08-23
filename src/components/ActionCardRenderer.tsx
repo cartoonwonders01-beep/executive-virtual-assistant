@@ -212,6 +212,54 @@ export const ActionCardRenderer: React.FC<ActionCardRendererProps> = ({ card }) 
     );
   }
 
+  // AI Knowledge & Strategic Solution Card
+  if (card.intent === 'knowledge_qa') {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+      navigator.clipboard.writeText(`${card.title}\n\n${card.description}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+      <div className="bg-gradient-to-br from-slate-900 via-slate-900/95 to-brand-950/40 border border-brand-500/40 rounded-2xl p-4 shadow-xl relative overflow-hidden transition-all hover:border-brand-400/60">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-2 text-brand-400 text-xs font-semibold uppercase tracking-wider">
+            <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+            <span>AI Strategic Solution & Answer</span>
+          </div>
+          <button
+            onClick={handleCopy}
+            className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-[10px] font-medium border border-slate-700 transition"
+          >
+            {copied ? <CheckCircle2 className="w-3 h-3 text-emerald-400" /> : <Sparkles className="w-3 h-3 text-brand-400" />}
+            <span>{copied ? 'Copied!' : 'Copy Solution'}</span>
+          </button>
+        </div>
+
+        <h4 className="text-sm font-bold text-white mt-2 flex items-center gap-1.5">
+          <span>💡</span>
+          <span>{card.title}</span>
+        </h4>
+
+        <div className="mt-2.5 bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 text-xs text-slate-200 leading-relaxed whitespace-pre-line font-sans space-y-2">
+          {card.description}
+        </div>
+
+        {card.spokenResponse && (
+          <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+            <span className="flex items-center gap-1.5 text-teal-400 font-medium">
+              <Bot className="w-3.5 h-3.5" />
+              <span>Spoken Audio Summary:</span>
+            </span>
+            <span className="italic text-slate-300 truncate max-w-[280px]">"{card.spokenResponse}"</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // Default Action Card
   return (
     <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-xl">

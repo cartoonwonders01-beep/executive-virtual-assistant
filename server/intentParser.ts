@@ -3,12 +3,44 @@ import { db } from './db';
 import { draftEmailFromSpeech } from './emailService';
 import { parseAppointmentFromSpeech } from './calendarService';
 import { generateAutomationBlueprint } from './automationEngine';
+import { intelligentAdvisor } from './intelligentAdvisor';
 
 export function parseIntentFromSpeech(speechText: string): ActionCard {
   const text = speechText.trim();
   const textLower = text.toLowerCase();
   const cardId = 'ac-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5);
   const nowStr = new Date().toISOString();
+
+  // -------------------------------------------------------------------------
+  // 0. High-IQ Knowledge, Q&A & Strategic Solution Engine
+  // (Analyse questions, inquiries, strategies, explanations, advice)
+  // -------------------------------------------------------------------------
+  const isExplicitTaskCommand = /^(add\s+task|create\s+task|log\s+task|put\s+on\s+my\s+board|new\s+task|automate\s+task)\b/i.test(textLower);
+  
+  if (!isExplicitTaskCommand && intelligentAdvisor.isQuestionOrInquiry(text)) {
+    const solution = intelligentAdvisor.solve(text);
+    const formattedDesc = [
+      solution.summary,
+      '',
+      '**Strategic Insights:**',
+      ...solution.keyInsights.map(k => `• ${k}`),
+      '',
+      '**Execution Steps:**',
+      ...solution.actionSteps.map((s, i) => `${i + 1}. ${s}`),
+      solution.proTip ? `\n💡 **Executive Pro-Tip:** ${solution.proTip}` : '',
+      solution.formulaOrCode ? `\n\`\`\`\n${solution.formulaOrCode}\n\`\`\`` : ''
+    ].filter(Boolean).join('\n');
+
+    return {
+      id: cardId,
+      intent: 'knowledge_qa',
+      title: solution.title,
+      description: formattedDesc,
+      spokenResponse: solution.spokenResponse,
+      status: 'executed',
+      createdAt: nowStr
+    };
+  }
 
   // -------------------------------------------------------------------------
   // 1. Adaptive Memory & Self-Learning ("Remember that...", "What is my...")

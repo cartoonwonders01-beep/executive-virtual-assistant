@@ -75,4 +75,27 @@ test('Conversational Dialogue Engine & Dynamic Skill Learning Suite', async (t) 
     assert.equal(res3.command, 'check my calendar');
   });
 
+  await t.test('Turn 7: Open question on productivity delivers spoken advice and structured solution', () => {
+    const res = dialogueEngine.processTurn('What are three strategies to improve my morning routine?');
+    assert.equal(res.turn.speaker, 'assistant');
+    assert.equal(res.actionCard?.intent, 'knowledge_qa', 'Intent resolved to knowledge_qa instead of creating a task');
+    assert.ok(res.turn.spokenResponse?.includes('deep work') || res.turn.spokenResponse?.includes('leverage'), 'Spoke actionable productivity advice');
+    assert.ok(res.actionCard?.description.includes('Strategic Insights'), 'Contains structured insights');
+  });
+
+  await t.test('Turn 8: Strategic client escalation inquiry delivers executive framework', () => {
+    const res = dialogueEngine.processTurn('How do I handle a difficult client escalation?');
+    assert.equal(res.turn.speaker, 'assistant');
+    assert.equal(res.actionCard?.intent, 'knowledge_qa');
+    assert.ok(res.turn.spokenResponse?.includes('A.C.T.S.') || res.turn.spokenResponse?.includes('escalation'), 'Spoke de-escalation framework');
+  });
+
+  await t.test('Turn 9: Financial valuation inquiry explains DCF model and formula', () => {
+    const res = dialogueEngine.processTurn('Can you explain how a DCF model works?');
+    assert.equal(res.turn.speaker, 'assistant');
+    assert.equal(res.actionCard?.intent, 'knowledge_qa');
+    assert.ok(res.turn.spokenResponse?.includes('Free Cash Flows') || res.turn.spokenResponse?.includes('WACC'), 'Spoke DCF financial explanation');
+    assert.ok(res.actionCard?.description.includes('Enterprise Value'), 'Card includes formula and methodology');
+  });
+
 });

@@ -104,6 +104,22 @@ export async function runVoiceAssistantExecutionAudit() {
   const contactsData: any = await contactsRes.json();
   assert(contactsData.some((c: any) => c.name === 'Emily Baxter'), 'T5.2: Edge contacts contains Emily Baxter');
 
+  // -------------------------------------------------------------------------
+  // TEST 6: Intelligent AI Q&A & Strategic Problem Solving
+  // -------------------------------------------------------------------------
+  console.log('\n--- [Test 6] Intelligent AI Q&A & Strategic Problem Solving ---');
+  const q1 = parseIntentFromSpeech("What are three strategies to improve my morning routine?");
+  assert(q1.intent === 'knowledge_qa', 'T6.1: Morning routine question resolved to knowledge_qa');
+  assert(q1.spokenResponse.includes('deep work') || q1.spokenResponse.includes('leverage'), 'T6.2: Productivity advice spoken');
+
+  const q2 = parseIntentFromSpeech("How do I handle a difficult client escalation?");
+  assert(q2.intent === 'knowledge_qa', 'T6.3: Client escalation question resolved to knowledge_qa');
+  assert(q2.spokenResponse.includes('A.C.T.S.') || q2.spokenResponse.includes('escalation'), 'T6.4: Client escalation framework spoken');
+
+  const q3 = parseIntentFromSpeech("Can you explain how a DCF model works?");
+  assert(q3.intent === 'knowledge_qa', 'T6.5: Financial question resolved to knowledge_qa');
+  assert(q3.spokenResponse.includes('Cash Flow') || q3.spokenResponse.includes('WACC'), 'T6.6: DCF valuation explanation spoken');
+
   console.log('\n======================================================================');
   console.log(`📊 VOICE & GOOGLE ASSISTANT AUDIT COMPLETE: ${passed} Passed, ${failed} Failed`);
   console.log('======================================================================\n');

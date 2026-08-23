@@ -152,8 +152,36 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
       let emailData: any = undefined;
       let calendarData: any = undefined;
 
+      // 0. Question / Advice / Strategic Inquiry Resolver
+      const isExplicitTask = /^(add\s+task|create\s+task|log\s+task|put\s+on\s+my\s+board|new\s+task)\b/i.test(textLower);
+      const isQuestion = !isExplicitTask && (
+        /^(what|why|how|when|where|who|which|can you|explain|tell me|give me advice|how should|how do|what are|is it|suggest|recommend|who are you|what can you do)/i.test(textLower) ||
+        textLower.endsWith('?')
+      );
+
+      if (isQuestion) {
+        intent = 'knowledge_qa';
+        if (/morning|productivity|deep\s+work|focus/i.test(textLower)) {
+          title = 'Executive Productivity Protocol';
+          spokenResponse = 'To maximize your daily leverage, implement a 90-minute morning deep work block before opening email, time-box strategic thinking, and delegate repetitive operational tasks.';
+        } else if (/escalat|difficult\s+client|angry/i.test(textLower)) {
+          title = 'Client Escalation Framework';
+          spokenResponse = 'For client escalations, use the A.C.T.S. framework: Acknowledge the impact immediately, Contain the issue with a single lead, Transparently communicate root causes, and Solve with a preventative SLA.';
+        } else if (/dcf|discounted\s+cash\s+flow|valuation/i.test(textLower)) {
+          title = 'DCF Valuation Framework';
+          spokenResponse = 'A DCF model estimates enterprise value by forecasting future Unlevered Free Cash Flows over 5 to 10 years, discounting them with WACC, and adding Terminal Value.';
+        } else if (/who\s+are\s+you|what\s+can\s+you\s+do|introduce/i.test(textLower)) {
+          title = 'Eve — Executive Assistant';
+          spokenResponse = 'I am Eve, your Executive AI Assistant. I manage your emails, calendar, Monday.com work hub, and voice automations, and answer any strategic questions you have.';
+        } else {
+          const cleanTopic = text.replace(/^(what\s+is|what\s+are|how\s+do\s+i|explain|tell\s+me\s+about)\s+/i, '').replace(/[?.]+$/, '');
+          title = `Solution: ${cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1)}`;
+          spokenResponse = `Regarding ${cleanTopic}: The recommended executive approach is to establish clear success criteria, eliminate low-value operational friction, and execute a 3-step action plan.`;
+        }
+      }
+
       // 1. Adaptive Memory & Learning ("Remember that...", "What is my...")
-      if (/^(remember\s+that|remember\s+|learn\s+that|don't\s+forget\s+that)/i.test(textLower)) {
+      else if (/^(remember\s+that|remember\s+|learn\s+that|don't\s+forget\s+that)/i.test(textLower)) {
         const memFact = text.replace(/^(remember\s+that|remember\s+|learn\s+that|don't\s+forget\s+that)\s*/i, '').trim();
         intent = 'memory_learn';
         title = `Learned Fact`;
