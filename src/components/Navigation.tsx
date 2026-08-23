@@ -39,11 +39,12 @@ export const Navigation: React.FC = () => {
   const unreadEmailCount = inboxEmails.filter(e => e.isUnread).length;
 
   const navItems: { id: AppView; label: string; icon: React.ReactNode; badge?: number; badgeColor?: string }[] = [
+    { id: 'thought_hub', label: 'Thought Studio', icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
     { id: 'voice_hud', label: 'Voice AI HUD', icon: <Mic className="w-4 h-4" /> },
     { id: 'gmail', label: 'Gmail Suite', icon: <Mail className="w-4 h-4" />, badge: unreadEmailCount, badgeColor: 'bg-red-500 text-white' },
     { id: 'calendar', label: 'Calendar Hub', icon: <CalendarDays className="w-4 h-4" /> },
     { id: 'comms', label: 'Comms & Calls', icon: <Phone className="w-4 h-4" /> },
-    { id: 'skills', label: 'Skill Studio', icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
+    { id: 'skills', label: 'Skill Studio', icon: <Bot className="w-4 h-4 text-brand-400" /> },
     { id: 'table', label: 'Work Table', icon: <Table2 className="w-4 h-4" />, badge: kpi?.totalTasks },
     { id: 'gantt', label: 'Gantt Timeline', icon: <GanttChartSquare className="w-4 h-4" /> },
     { id: 'matrix', label: 'Priority Matrix', icon: <LayoutGrid className="w-4 h-4" /> },

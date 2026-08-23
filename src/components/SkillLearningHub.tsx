@@ -12,10 +12,13 @@ import {
   ArrowRight,
   ShieldCheck,
   RefreshCw,
-  Code
+  Code,
+  Terminal,
+  Copy
 } from 'lucide-react';
 import { useAssistant } from '../context/AssistantContext';
 import { CustomSkill, SkillStep } from '../types';
+import { antigravityBridge } from '../services/antigravityBridge';
 
 export const SkillLearningHub: React.FC = () => {
   const { 
@@ -235,6 +238,18 @@ export const SkillLearningHub: React.FC = () => {
                         <span>Test Run</span>
                       </>
                     )}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      const exp = antigravityBridge.exportToAntigravitySkill(skill);
+                      navigator.clipboard.writeText(exp.skillContent);
+                      alert(`⚡ Antigravity SKILL.md for "${skill.name}" copied to clipboard!`);
+                    }}
+                    className="p-1.5 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 border border-brand-500/30 text-brand-300 transition"
+                    title="Export to Antigravity SKILL.md"
+                  >
+                    <Terminal className="w-3.5 h-3.5" />
                   </button>
 
                   <button

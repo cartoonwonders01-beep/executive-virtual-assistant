@@ -1,6 +1,6 @@
 {
-  "short_name": "AI Assistant",
-  "name": "Executive AI Assistant & Work Hub",
+  "short_name": "Eve Assistant",
+  "name": "Eve — Executive AI Assistant & Thought Studio",
   "icons": [
     {
       "src": "/favicon.ico",
@@ -13,5 +13,23 @@
   "theme_color": "#0d9488",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "description": "Executive Personal Assistant AI Voice Engine & Monday.com Work Hub"
+  "description": "Executive Personal Assistant AI Engine, Thought Studio & Google/Antigravity Hub",
+  "categories": ["productivity", "business", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Thought Studio",
+      "url": "/?view=thought_hub",
+      "description": "Capture thoughts and brainstorm ideas"
+    },
+    {
+      "name": "Hey Eve Voice HUD",
+      "url": "/?view=voice_hud",
+      "description": "Voice Assistant & Hands-Free Interaction"
+    },
+    {
+      "name": "Work Hub",
+      "url": "/?view=tasks",
+      "description": "Monday.com Tasks & Automations"
+    }
+  ]
 }

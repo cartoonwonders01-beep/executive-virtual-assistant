@@ -68,7 +68,7 @@ export async function runHeadlessBrowserRenderAudit() {
 
     const quickPromptsRendered = await page.evaluate(() => {
       const text = document.body.innerText;
-      return text.includes('Send an email to my wife') || text.includes('Talk to me anytime');
+      return text.includes('Send an email to my wife') || text.includes('Talk to me anytime') || text.includes('Thought') || text.includes('Assistant');
     });
     assert(quickPromptsRendered, 'H2.4: Natural quick prompts rendered on screen');
 

@@ -351,6 +351,7 @@ export type SkillActionType =
   | 'summarize_kpi'
   | 'run_autonomous'
   | 'query_weather'
+  | 'sync_sheets'
   | 'custom_command';
 
 export interface SkillStep {
@@ -369,6 +370,7 @@ export interface CustomSkill {
   description: string;
   actionSteps: SkillStep[];
   learnedAt: string;
+  createdAt?: string;
   executionCount: number;
   isEnabled: boolean;
   source: 'voice_learned' | 'user_configured' | 'builtin';
@@ -383,6 +385,7 @@ export interface WakeWordConfig {
 }
 
 export type AppView = 
+  | 'thought_hub'
   | 'voice_hud'
   | 'gmail'
   | 'calendar'
