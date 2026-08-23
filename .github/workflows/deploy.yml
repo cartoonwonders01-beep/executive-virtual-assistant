@@ -1,0 +1,48 @@
+name: Deploy to Cloudflare Pages & GitHub CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    name: Build, Test & Deploy to Cloudflare Pages
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Run TypeScript Strict Typecheck
+        run: npm run typecheck
+
+      - name: Run Full Test Suites
+        run: |
+          npm run test
+          npm run test:flow
+          npm run test:cloud
+          npm run test:exhaustive
+
+      - name: Build Production Bundle
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: 'executive-virtual-assistant'
+          directory: 'dist'
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

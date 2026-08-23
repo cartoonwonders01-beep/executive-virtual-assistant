@@ -1,0 +1,34 @@
+{
+  "shortcutName": "Executive Assistant Ingest",
+  "version": "2.0",
+  "description": "Stream voice audio or text directly from iOS Action Button & Apple Watch into the Executive AI Personal Assistant.",
+  "triggers": [
+    "Action Button (Hold)",
+    "Apple Watch Complication",
+    "Siri: 'Hey Siri, Log Executive Note'"
+  ],
+  "actions": [
+    {
+      "step": 1,
+      "action": "Record Audio",
+      "format": "M4A / AAC",
+      "quality": "High",
+      "startImmediately": true
+    },
+    {
+      "step": 2,
+      "action": "Get Contents of URL",
+      "url": "http://10.211.55.6:3001/api/voice/ingest",
+      "method": "POST",
+      "requestBody": "Form-Data",
+      "formFields": {
+        "audio": "Recorded Audio"
+      }
+    },
+    {
+      "step": 3,
+      "action": "Show Notification / Spoken Confirmation",
+      "text": "Extracted tasks and synchronized with Executive Work Hub."
+    }
+  ]
+}

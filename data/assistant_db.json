@@ -1,0 +1,892 @@
+{
+  "contacts": [
+    {
+      "id": "c1",
+      "name": "Sarah Chen",
+      "role": "Head of Growth",
+      "email": "sarah.chen@innovate.co",
+      "phone": "+1 (555) 234-5678",
+      "company": "Innovate Group",
+      "isVIP": true,
+      "avatarUrl": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+      "notes": "Key partner for Q3 growth sprint and marketing outbound."
+    },
+    {
+      "id": "c2",
+      "name": "David Miller",
+      "role": "VP Engineering",
+      "email": "david.m@cloudscale.io",
+      "phone": "+1 (555) 876-5432",
+      "company": "CloudScale Systems",
+      "isVIP": true,
+      "avatarUrl": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80",
+      "notes": "Lead technical architect for serverless Cloudflare Workers and Vector DB."
+    },
+    {
+      "id": "c3",
+      "name": "Dr. Celine Laurent",
+      "role": "Operations Lead",
+      "email": "celine@vandenbranden.com",
+      "phone": "+32 470 12 34 56",
+      "company": "VDB Suites",
+      "isVIP": true,
+      "avatarUrl": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
+      "notes": "Manages international property portfolio and luxury real estate operations."
+    },
+    {
+      "id": "c4",
+      "name": "Alex Rivera",
+      "role": "Accountant & Tax Advisor",
+      "email": "alex.r@riveratax.com",
+      "phone": "+1 (555) 345-6789",
+      "company": "Rivera Advisory",
+      "isVIP": false,
+      "avatarUrl": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80",
+      "notes": "Handles quarterly VAT filing and Stripe automated reconciliation."
+    },
+    {
+      "id": "c5",
+      "name": "Emily Baxter",
+      "role": "Wife / Personal",
+      "email": "emily.baxter@personal.com",
+      "phone": "+1 (555) 987-6543",
+      "company": "Family",
+      "isVIP": true,
+      "avatarUrl": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+      "notes": "Family calendar coordination and personal reminders."
+    }
+  ],
+  "inboxEmails": [
+    {
+      "id": "inbox-1",
+      "fromName": "Sarah Chen",
+      "fromEmail": "sarah.chen@innovate.co",
+      "toName": "Andrew Baxter",
+      "toEmail": "andy.j.baxter@gmail.com",
+      "subject": "Urgent: Q3 Growth Sprint Alignment & Budget Signoff",
+      "snippet": "Hi Andrew, I reviewed the preliminary numbers for our inbound qualification funnel...",
+      "body": "Hi Andrew,\n\nI reviewed the preliminary numbers for our inbound qualification funnel. We are currently tracking 24% ahead of target, but need to finalize the additional $4,500 serverless tool budget before Tuesday.\n\nCould we jump on a brief 15-minute sync or sign off directly so the dev team can begin onboarding?\n\nBest regards,\nSarah Chen",
+      "receivedAt": "2026-08-22T08:30:00Z",
+      "isUnread": true,
+      "isStarred": true,
+      "category": "vip",
+      "hasAttachments": true,
+      "suggestedReply": "Hi Sarah, the $4,500 budget is approved! Let us confirm details on our Tuesday sync."
+    },
+    {
+      "id": "inbox-2",
+      "fromName": "David Miller",
+      "fromEmail": "david.m@cloudscale.io",
+      "toName": "Andrew Baxter",
+      "toEmail": "andy.j.baxter@gmail.com",
+      "subject": "Architecture Update: Vector Search Benchmark Results",
+      "snippet": "Andrew, here are the latency benchmark comparisons between Cloudflare Vectorize and Pinecone...",
+      "body": "Hey Andrew,\n\nHere are the latency benchmark comparisons between Cloudflare Vectorize and Pinecone on 100k embedding vectors. Average p95 query latency is 38ms vs 92ms, reducing token retrieval overhead by over 58%.\n\nI have drafted the migration roadmap in the task hub.\n\nCheers,\nDavid",
+      "receivedAt": "2026-08-22T10:15:00Z",
+      "isUnread": true,
+      "isStarred": false,
+      "category": "primary",
+      "suggestedReply": "Great results David! Proceed with the Cloudflare Vectorize integration."
+    },
+    {
+      "id": "inbox-3",
+      "fromName": "Stripe Billing Alerts",
+      "fromEmail": "notifications@stripe.com",
+      "toName": "Andrew Baxter",
+      "toEmail": "andy.j.baxter@gmail.com",
+      "subject": "Monthly Net MRR Summary: +$14,200 New Subscriptions",
+      "snippet": "Your monthly billing cycle summary has been generated. Total gross volume: $68,400...",
+      "body": "Hello Andrew,\n\nYour monthly billing cycle summary for August 2026 has been generated.\n\n- Gross Processing Volume: $68,400\n- Net New MRR: +$14,200 (+18.4% MoM)\n- Churn Rate: 0.8%\n\nDetailed breakdown is available in your accounting ledger and BigQuery warehouse.",
+      "receivedAt": "2026-08-21T18:00:00Z",
+      "isUnread": false,
+      "isStarred": true,
+      "category": "finance"
+    },
+    {
+      "id": "inbox-4",
+      "fromName": "Google Cloud Platform",
+      "fromEmail": "no-reply-cloud@google.com",
+      "toName": "Andrew Baxter",
+      "toEmail": "andy.j.baxter@gmail.com",
+      "subject": "BigQuery Data Warehouse Trigger: Sync Completed (2,410 Rows)",
+      "snippet": "Your scheduled Google Apps Script cron successfully refreshed BigQuery partitioned tables...",
+      "body": "Google Cloud BigQuery Report:\n\nScheduled sync job \"executive_assistant_hub.tasks_ledger\" executed successfully with 0 errors.\n\nAll Looker Studio dashboards have been updated with the latest ROI multiplier and Hours Won metrics.",
+      "receivedAt": "2026-08-22T06:00:00Z",
+      "isUnread": false,
+      "isStarred": false,
+      "category": "updates"
+    }
+  ],
+  "chatMessages": [
+    {
+      "id": "msg-1",
+      "contactId": "c1",
+      "sender": "Sarah Chen",
+      "text": "Hey Andrew, let me know if Tuesday 2 PM works for the Q3 growth review!",
+      "sentAt": "2026-08-22T09:10:00Z"
+    },
+    {
+      "id": "msg-2",
+      "contactId": "c1",
+      "sender": "Andrew",
+      "text": "Tuesday 2 PM is locked in on the calendar with Google Meet. See you then!",
+      "sentAt": "2026-08-22T09:12:00Z"
+    },
+    {
+      "id": "msg-3",
+      "contactId": "c2",
+      "sender": "David Miller",
+      "text": "The Playwright scraper for competitor pricing is running cleanly inside the sandbox VM.",
+      "sentAt": "2026-08-22T11:00:00Z"
+    }
+  ],
+  "callLogs": [
+    {
+      "id": "call-1",
+      "contactId": "c1",
+      "contactName": "Sarah Chen",
+      "phone": "+1 (555) 234-5678",
+      "durationSeconds": 340,
+      "startedAt": "2026-08-21T15:20:00Z",
+      "status": "completed",
+      "notes": "Discussed inbound lead pipeline and agreed on 2x weekly metric digest.",
+      "transcriptSummary": "Agreed on $4.5k marketing tech spend; assistant drafted confirmation action card."
+    },
+    {
+      "id": "call-2",
+      "contactId": "c2",
+      "contactName": "David Miller",
+      "phone": "+1 (555) 876-5432",
+      "durationSeconds": 180,
+      "startedAt": "2026-08-22T10:00:00Z",
+      "status": "completed",
+      "notes": "Reviewed vector search latency benchmark.",
+      "transcriptSummary": "Vectorize confirmed at 38ms latency; task moved to completed."
+    }
+  ],
+  "autonomousJobs": [
+    {
+      "id": "job-1",
+      "taskId": "task-101",
+      "taskTitle": "Automate PDF Invoice & Receipt Extraction to Accounting Sheet",
+      "category": "Finance",
+      "currentStepIndex": 3,
+      "totalSteps": 5,
+      "currentStepText": "Validating mathematical totals & Zod schema validation...",
+      "progressPercent": 65,
+      "status": "running",
+      "logs": [
+        {
+          "timestamp": "2026-08-22T12:00:00Z",
+          "type": "info",
+          "message": "Initialized Cloudflare Email Worker trigger."
+        },
+        {
+          "timestamp": "2026-08-22T12:00:02Z",
+          "type": "info",
+          "message": "Inbound PDF parsed via Gemini Multimodal OCR."
+        },
+        {
+          "timestamp": "2026-08-22T12:00:04Z",
+          "type": "success",
+          "message": "Extracted 12 invoice line items totaling $3,450.00."
+        },
+        {
+          "timestamp": "2026-08-22T12:00:06Z",
+          "type": "info",
+          "message": "Upserting to Google Sheets & BigQuery warehouse."
+        }
+      ],
+      "startedAt": "2026-08-22T12:00:00Z"
+    },
+    {
+      "id": "job-2",
+      "taskId": "task-102",
+      "taskTitle": "Deploy Real-Time Competitor Pricing & Feature Scraper",
+      "category": "Business & Strategy",
+      "currentStepIndex": 2,
+      "totalSteps": 4,
+      "currentStepText": "Running Playwright crawler on competitor pricing tables...",
+      "progressPercent": 40,
+      "status": "running",
+      "logs": [
+        {
+          "timestamp": "2026-08-22T11:30:00Z",
+          "type": "info",
+          "message": "Launched headless Chromium in Sandbox Linux VM (10.211.55.6)."
+        },
+        {
+          "timestamp": "2026-08-22T11:30:05Z",
+          "type": "success",
+          "message": "Scraped 4 competitor pricing tables."
+        },
+        {
+          "timestamp": "2026-08-22T11:30:07Z",
+          "type": "info",
+          "message": "Comparing HTML hash against SQLite cache..."
+        }
+      ],
+      "startedAt": "2026-08-22T11:30:00Z"
+    }
+  ],
+  "appointments": [
+    {
+      "id": "apt-1",
+      "title": "Q3 Product Strategy & AI Roadmap",
+      "startDateTime": "2026-08-25T14:00:00.000Z",
+      "endDateTime": "2026-08-25T15:00:00.000Z",
+      "location": "Google Meet / Virtual",
+      "attendees": [
+        {
+          "name": "David Miller",
+          "email": "david.m@cloudscale.io"
+        },
+        {
+          "name": "Andrew Baxter",
+          "email": "andy.j.baxter@gmail.com"
+        }
+      ],
+      "description": "Align on Cloudflare Workers AI pipeline and vector search performance benchmark.",
+      "status": "confirmed",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Q3+Product+Strategy"
+    },
+    {
+      "id": "apt-2",
+      "title": "Weekly Leadership Sync",
+      "startDateTime": "2026-08-26T10:00:00.000Z",
+      "endDateTime": "2026-08-26T10:45:00.000Z",
+      "location": "Executive Boardroom & Meet",
+      "attendees": [
+        {
+          "name": "Sarah Chen",
+          "email": "sarah.chen@innovate.co"
+        }
+      ],
+      "description": "Review lead generation metrics and inbound automation pipeline.",
+      "status": "confirmed",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Weekly+Leadership+Sync"
+    },
+    {
+      "id": "apt-3",
+      "title": "Monthly Financial Audit & Invoice Clearance",
+      "startDateTime": "2026-08-28T16:00:00.000Z",
+      "endDateTime": "2026-08-28T17:00:00.000Z",
+      "location": "Zoom Audio Bridge",
+      "attendees": [
+        {
+          "name": "Alex Rivera",
+          "email": "alex.r@riveratax.com"
+        }
+      ],
+      "description": "Validate automated Stripe and bank reconciliation statements.",
+      "status": "tentative",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Monthly+Financial+Audit"
+    }
+  ],
+  "emails": [
+    {
+      "id": "em-1",
+      "toName": "Sarah Chen",
+      "toEmail": "sarah.chen@innovate.co",
+      "subject": "Follow-up: Q3 Growth Sprint & Inbound Automation",
+      "body": "Hi Sarah,\n\nFollowing up on our discussion regarding the inbound lead pipeline. I have outlined the automated workflow to qualify inbound requests and route high-tier leads directly to our calendar.\n\nLet me know if you would like to review the draft blueprint ahead of our Tuesday sync.\n\nBest,\nAndrew",
+      "tone": "professional",
+      "status": "draft"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-101",
+      "memoId": "memo-1",
+      "title": "Automate PDF Invoice & Receipt Extraction to Accounting Sheet",
+      "description": "Build an automated pipeline that monitors inbound billing emails, extracts invoice numbers, vendor, line items, and VAT via LLM vision, and appends them to Google Sheets/BigQuery.",
+      "category": "Finance",
+      "userPriority": "high",
+      "aiPriority": "critical",
+      "priorityRationale": "High frequency recurring administrative bottleneck. Automating this eliminates 12 hours/month of tedious manual data entry.",
+      "feasibility": "ai_automated",
+      "feasibilityReasoning": "100% solvable with Cloudflare Email Routing + Workers AI (Llama 3.2 Vision / OCR) + Google Sheets API.",
+      "valueScore": 9,
+      "estimatedValue": "$1,400/mo Time Savings",
+      "manualHoursEstimate": 14,
+      "automationHoursInvested": 4,
+      "timeWonBackHours": 36,
+      "status": "in_progress",
+      "startDate": "2026-08-22",
+      "dueDate": "2026-08-27",
+      "durationDays": 5,
+      "progressPercent": 65,
+      "dependencies": [],
+      "assignee": "AI Agent",
+      "createdAt": "2026-08-20T10:00:00Z",
+      "updatedAt": "2026-08-21T18:00:00Z",
+      "automationBlueprint": {
+        "strategy": [
+          "1. Bind Cloudflare Email Worker to inbound billing inbox.",
+          "2. Pipe PDF attachment buffers into Workers AI OCR parser.",
+          "3. Extract structured JSON schema: { vendor, invoice_date, total, vat, items }.",
+          "4. Upsert row into Google Sheets Accounting ledger via Service Account REST API.",
+          "5. Notify user via Telegram/Discord with summary & one-click approve link."
+        ],
+        "toolsNeeded": [
+          "Cloudflare Email Service",
+          "Workers AI / Gemini OCR",
+          "Google Sheets API",
+          "Telegram Bot API"
+        ],
+        "executableCodeSample": "import { EmailMessage } from \"cloudflare:email\";\n\nexport default {\n  async email(message: ForwardableEmailMessage, env: Env): Promise<void> {\n    const raw = await new Response(message.raw).arrayBuffer();\n    const parsed = await extractInvoiceFromEmail(raw, env.AI);\n    await appendToSheets(parsed, env.SHEETS_TOKEN);\n  }\n};",
+        "codeLanguage": "typescript",
+        "bestPractices": [
+          "Buffer single-use raw email stream before processing.",
+          "Use idempotent hash on invoice number to prevent duplicate rows.",
+          "Store raw PDF into Cloudflare R2 bucket as an audit trail."
+        ],
+        "webInspiration": [
+          {
+            "title": "Open-Source Invoice Parser using Vision LLMs",
+            "url": "https://github.com/example/invoice-vision-ai",
+            "keyTakeaway": "Zero-shot schema parsing is 98% more reliable than traditional regex/tesseract OCR."
+          },
+          {
+            "title": "Cloudflare Email Routing Best Practices",
+            "url": "https://developers.cloudflare.com/email-service",
+            "keyTakeaway": "Use email workers with postal-mime for streaming attachment extraction."
+          }
+        ],
+        "executionReadiness": "ready",
+        "estimatedHoursToBuild": 4,
+        "recurringHoursSavedPerMonth": 12
+      }
+    },
+    {
+      "id": "task-102",
+      "memoId": "memo-1",
+      "title": "Deploy Real-Time Competitor Pricing & Feature Scraper",
+      "description": "Schedule an automated scraper that checks competitor SaaS pricing tiers, feature additions, and changelogs every Sunday morning and generates a brief executive summary.",
+      "category": "Business & Strategy",
+      "userPriority": "medium",
+      "aiPriority": "high",
+      "priorityRationale": "Keeps leadership proactively informed of market movements without manual site browsing.",
+      "feasibility": "ai_automated",
+      "feasibilityReasoning": "Playwright / Puppeteer script running on Sandbox Linux VM with LLM diff summarization.",
+      "valueScore": 8,
+      "estimatedValue": "Market Advantage",
+      "manualHoursEstimate": 8,
+      "automationHoursInvested": 3,
+      "timeWonBackHours": 24,
+      "status": "automating",
+      "startDate": "2026-08-25",
+      "dueDate": "2026-08-30",
+      "durationDays": 5,
+      "progressPercent": 40,
+      "dependencies": [
+        "task-101"
+      ],
+      "assignee": "AI Agent",
+      "createdAt": "2026-08-21T09:00:00Z",
+      "updatedAt": "2026-08-21T16:00:00Z",
+      "automationBlueprint": {
+        "strategy": [
+          "1. Headless browser crawls 5 target competitor pricing URLs.",
+          "2. Extract DOM snapshot and compare with cached HTML hash.",
+          "3. If diff detected, feed text changes to Gemini/Claude for strategic summary.",
+          "4. Post markdown bullet briefing directly to Work Hub and Email."
+        ],
+        "toolsNeeded": [
+          "Playwright / Puppeteer",
+          "Gemini Flash API",
+          "Cron Trigger",
+          "Sqlite Hash Cache"
+        ],
+        "executableCodeSample": "import { chromium } from \"playwright\";\n\nexport async function scrapePricing(url: string) {\n  const browser = await chromium.launch({ headless: true });\n  const page = await browser.newPage();\n  await page.goto(url, { waitUntil: \"networkidle\" });\n  const text = await page.innerText(\"body\");\n  await browser.close();\n  return text;\n}",
+        "codeLanguage": "typescript",
+        "bestPractices": [
+          "Run browser in isolated Parallels Sandbox VM (`sandbox-vm`) to protect host.",
+          "Include backoff and randomized delay to prevent rate-limiting."
+        ],
+        "webInspiration": [
+          {
+            "title": "Serverless Playwright Scraper Patterns",
+            "url": "https://github.com/browserless/chrome",
+            "keyTakeaway": "Extract text-only DOM tree before sending to LLM to save 85% token cost."
+          }
+        ],
+        "executionReadiness": "ready",
+        "estimatedHoursToBuild": 3,
+        "recurringHoursSavedPerMonth": 8
+      }
+    },
+    {
+      "id": "task-103",
+      "memoId": "memo-2",
+      "title": "Negotiate Enterprise Cloud Agreement with Vendor Account Rep",
+      "description": "Face-to-face or video negotiation meeting with cloud hosting rep to secure custom enterprise discounting and annual commit terms.",
+      "category": "Operations & Admin",
+      "userPriority": "urgent",
+      "aiPriority": "high",
+      "priorityRationale": "Direct fiscal impact, but requires human authority and personal negotiation finesse.",
+      "feasibility": "human_only",
+      "feasibilityReasoning": "Requires executive judgment, legal signature authority, and live human conversation.",
+      "valueScore": 9,
+      "estimatedValue": "$18,000/yr Discount",
+      "manualHoursEstimate": 6,
+      "automationHoursInvested": 0.5,
+      "timeWonBackHours": 6,
+      "status": "backlog",
+      "startDate": "2026-08-28",
+      "dueDate": "2026-09-03",
+      "durationDays": 6,
+      "progressPercent": 10,
+      "dependencies": [],
+      "assignee": "Andrew",
+      "createdAt": "2026-08-21T14:30:00Z",
+      "updatedAt": "2026-08-21T14:30:00Z",
+      "automationBlueprint": {
+        "strategy": [
+          "1. AI gathers historical usage and benchmark competitor rates.",
+          "2. AI compiles a 1-page Negotiation Leverage Brief with target counter-offers.",
+          "3. Andrew attends the call armed with the AI dossier.",
+          "4. Post-call voice memo transcribed to log final terms."
+        ],
+        "toolsNeeded": [
+          "AI Negotiation Brief Generator",
+          "Cloudflare Billing Analytics"
+        ],
+        "executableCodeSample": "# AI Agent preparation script\npython3 -m assistant.brief --topic \"Vendor Cloud Negotiation\" --data usage_history.csv",
+        "codeLanguage": "bash",
+        "bestPractices": [
+          "Prepare fallback multi-year commit scenarios prior to call."
+        ],
+        "webInspiration": [
+          {
+            "title": "SaaS Contract Negotiation Playbook",
+            "keyTakeaway": "Highlight secondary cloud provider pricing as negotiation anchor."
+          }
+        ],
+        "executionReadiness": "requires_human_review",
+        "estimatedHoursToBuild": 0.5,
+        "recurringHoursSavedPerMonth": 0
+      }
+    },
+    {
+      "id": "task-104",
+      "memoId": "memo-2",
+      "title": "Weekly Stakeholder Executive Performance Digest",
+      "description": "Gather weekly Git commits, server uptime, customer support ticket volume, and revenue metrics into a polished 5-bullet summary email for investors and team leads.",
+      "category": "Marketing & Sales",
+      "userPriority": "high",
+      "aiPriority": "medium",
+      "priorityRationale": "High visibility task that AI can draft 90% of, leaving 5 minutes for human signoff.",
+      "feasibility": "hybrid",
+      "feasibilityReasoning": "AI compiles data and crafts draft email; Andrew reviews and presses Send.",
+      "valueScore": 7,
+      "estimatedValue": "Executive Alignment",
+      "manualHoursEstimate": 5,
+      "automationHoursInvested": 2,
+      "timeWonBackHours": 18,
+      "status": "completed",
+      "startDate": "2026-08-18",
+      "dueDate": "2026-08-22",
+      "durationDays": 4,
+      "progressPercent": 100,
+      "dependencies": [],
+      "assignee": "Hybrid",
+      "createdAt": "2026-08-18T08:00:00Z",
+      "updatedAt": "2026-08-21T17:00:00Z",
+      "automationBlueprint": {
+        "strategy": [
+          "1. Friday 16:00: Query GitHub API for weekly merged PRs.",
+          "2. Query Stripe webhook cache for MRR change and new customers.",
+          "3. AI synthesizes clear, executive-toned draft in Mobile HUD.",
+          "4. Push mobile notification to Andrew with 1-tap \"Approve & Send\"."
+        ],
+        "toolsNeeded": [
+          "GitHub API",
+          "Stripe API",
+          "Email Service",
+          "Mobile PWA Notification"
+        ],
+        "executableCodeSample": "async function generateWeeklyDigest(env) {\n  const metrics = await gatherMetrics(env);\n  const draft = await env.AI.run(\"@cf/meta/llama-3-8b-instruct\", {\n    prompt: `Generate concise executive digest from metrics: ${JSON.stringify(metrics)}`\n  });\n  return draft;\n}",
+        "codeLanguage": "typescript",
+        "bestPractices": [
+          "Format metrics with clear Week-over-Week percentage changes."
+        ],
+        "webInspiration": [
+          {
+            "title": "Automated Founder Update Newsletters",
+            "keyTakeaway": "Stick to standardized format: Good news, Bad news, Key metrics, Asks."
+          }
+        ],
+        "executionReadiness": "ready",
+        "estimatedHoursToBuild": 2,
+        "recurringHoursSavedPerMonth": 4
+      }
+    },
+    {
+      "id": "task-105",
+      "memoId": "memo-3",
+      "title": "Implement Voice-to-Action Mobile Assistant PWA",
+      "description": "Build responsive mobile voice assistant interface with speech-to-text, natural spoken feedback (TTS), calendar booking, email drafting, and direct Monday.com Gantt syncing.",
+      "category": "Tech/Dev",
+      "userPriority": "urgent",
+      "aiPriority": "critical",
+      "priorityRationale": "Core infrastructure enabling frictionless capture and automation trigger from phone.",
+      "feasibility": "ai_automated",
+      "feasibilityReasoning": "React + Web Speech + Audio Visualizer + Node/Express backend.",
+      "valueScore": 10,
+      "estimatedValue": "Primary Daily Workflow",
+      "manualHoursEstimate": 20,
+      "automationHoursInvested": 6,
+      "timeWonBackHours": 50,
+      "status": "in_progress",
+      "startDate": "2026-08-21",
+      "dueDate": "2026-08-24",
+      "durationDays": 3,
+      "progressPercent": 85,
+      "dependencies": [],
+      "assignee": "AI Agent",
+      "createdAt": "2026-08-21T23:00:00Z",
+      "updatedAt": "2026-08-22T00:00:00Z",
+      "automationBlueprint": {
+        "strategy": [
+          "1. Build Web Audio visualizer with glowing Siri-style particle canvas.",
+          "2. Integrate Web Speech STT and Cloud AI transcription.",
+          "3. Build intent parsing for emails, calendar appointments, calls, and task breakdown.",
+          "4. Render interactive action confirmation cards on phone HUD.",
+          "5. Connect bidirectional data sync with Monday.com-style Gantt dashboard."
+        ],
+        "toolsNeeded": [
+          "React 18",
+          "Tailwind CSS",
+          "Web Speech API",
+          "Web Audio API",
+          "Express Server"
+        ],
+        "executableCodeSample": "// Voice Assistant Speech Handler\nconst recognition = new webkitSpeechRecognition();\nrecognition.onresult = (e) => processVoiceIntent(e.results[0][0].transcript);",
+        "codeLanguage": "typescript",
+        "bestPractices": [
+          "Use tactile haptic feedback on mobile recording touch.",
+          "Provide instant audio preview and live streaming transcript."
+        ],
+        "webInspiration": [
+          {
+            "title": "Next-Gen Conversational Voice HUDs",
+            "keyTakeaway": "Fast visual response within 100ms keeps conversational flow natural."
+          }
+        ],
+        "executionReadiness": "ready",
+        "estimatedHoursToBuild": 6,
+        "recurringHoursSavedPerMonth": 20
+      }
+    },
+    {
+      "id": "task-106",
+      "memoId": "memo-3",
+      "title": "Client Onboarding Portal & Contract E-Signature Pipeline",
+      "description": "Streamline enterprise customer onboarding with automated intake forms, dynamic NDA generation, and webhook contract status tracking.",
+      "category": "Client Projects",
+      "userPriority": "high",
+      "aiPriority": "critical",
+      "priorityRationale": "Reduces enterprise client onboarding cycle time from 5 days to 45 minutes.",
+      "feasibility": "ai_automated",
+      "feasibilityReasoning": "100% solvable via Cloudflare Pages + DocuSign / SignNow API webhooks + Airtable / BigQuery ledger.",
+      "valueScore": 9,
+      "estimatedValue": "$3,500/client",
+      "manualHoursEstimate": 12,
+      "automationHoursInvested": 3,
+      "timeWonBackHours": 28,
+      "status": "in_progress",
+      "startDate": "2026-08-22",
+      "dueDate": "2026-08-28",
+      "durationDays": 6,
+      "progressPercent": 70,
+      "dependencies": [],
+      "assignee": "AI Agent",
+      "createdAt": "2026-08-21T11:00:00Z",
+      "updatedAt": "2026-08-22T08:00:00Z",
+      "automationBlueprint": {
+        "strategy": [
+          "1. Intake form collects client corporate metadata and signee details.",
+          "2. Template engine populates customized master services agreement (MSA).",
+          "3. Dispatch signature request via e-sign API webhook.",
+          "4. On signed event, provision tenant workspace and notify executive channel."
+        ],
+        "toolsNeeded": [
+          "SignNow / DocuSign API",
+          "Cloudflare Workers",
+          "Google BigQuery",
+          "Slack Bot"
+        ],
+        "executableCodeSample": "export async function handleSignWebhook(req: Request) {\n  const payload = await req.json();\n  if (payload.status === \"signed\") {\n    await provisionWorkspace(payload.clientId);\n  }\n}",
+        "codeLanguage": "typescript",
+        "bestPractices": [
+          "Validate webhook HMAC signatures to ensure payload authenticity."
+        ],
+        "webInspiration": [
+          {
+            "title": "Automated Client Onboarding Workflows",
+            "keyTakeaway": "Instant self-serve signing increases closing velocity by 40%."
+          }
+        ],
+        "executionReadiness": "ready",
+        "estimatedHoursToBuild": 3,
+        "recurringHoursSavedPerMonth": 15
+      }
+    },
+    {
+      "id": "task-107",
+      "memoId": "memo-3",
+      "title": "Personal Health Biomarker & Workout Schedule Sync",
+      "description": "Aggregate Apple Health and Garmin sleep, HRV, and daily workout logs into personal dashboard and adjust calendar focus blocks based on recovery score.",
+      "category": "Personal & Health",
+      "userPriority": "medium",
+      "aiPriority": "high",
+      "priorityRationale": "Ensures optimal executive energy management and prevents cognitive burnout.",
+      "feasibility": "hybrid",
+      "feasibilityReasoning": "AI processes Apple Health biometric exports and suggests daily calendar block adjustments.",
+      "valueScore": 8,
+      "estimatedValue": "Peak Executive Energy",
+      "manualHoursEstimate": 4,
+      "automationHoursInvested": 1.5,
+      "timeWonBackHours": 12,
+      "status": "completed",
+      "startDate": "2026-08-19",
+      "dueDate": "2026-08-23",
+      "durationDays": 4,
+      "progressPercent": 100,
+      "dependencies": [],
+      "assignee": "Hybrid",
+      "createdAt": "2026-08-19T07:00:00Z",
+      "updatedAt": "2026-08-22T08:00:00Z",
+      "automationBlueprint": {
+        "strategy": [
+          "1. Ingest daily recovery metrics from health export webhook.",
+          "2. If recovery score is below 50%, insert a 45-minute afternoon buffer block in Google Calendar.",
+          "3. Provide morning spoken reminder on hydration and focus blocks."
+        ],
+        "toolsNeeded": [
+          "Apple Health Auto-Export",
+          "Google Calendar API",
+          "TTS Spoken Briefing"
+        ],
+        "executableCodeSample": "export async function balanceCalendar(hrv: number) {\n  if (hrv < 40) {\n    await scheduleBufferBlock(\"Recovery Focus Time\", 45);\n  }\n}",
+        "codeLanguage": "typescript",
+        "bestPractices": [
+          "Keep health biometric database locally encrypted."
+        ],
+        "webInspiration": [
+          {
+            "title": "Biometric Executive Scheduling",
+            "keyTakeaway": "Aligning heavy creative work with HRV recovery spikes yields 2x throughput."
+          }
+        ],
+        "executionReadiness": "ready",
+        "estimatedHoursToBuild": 1.5,
+        "recurringHoursSavedPerMonth": 6
+      }
+    }
+  ],
+  "memos": [
+    {
+      "id": "memo-1",
+      "title": "Morning Commute: Invoice Processing & Competitor Tracking",
+      "durationSeconds": 48,
+      "recordedAt": "2026-08-21T08:15:00Z",
+      "transcript": "Hey assistant, I was thinking this morning—we spend way too much time every month dealing with supplier invoice PDFs and receipts. Let's build an automated pipeline that pulls them from the billing email, parses all line items with vision AI, and dumps them straight into the accounting sheet. Also, we really need to track competitor pricing on Sunday mornings so we are not caught by surprise when they update their tiers.",
+      "status": "analyzed",
+      "extractedTaskIds": [
+        "task-101",
+        "task-102"
+      ],
+      "extractedActionCardIds": [],
+      "summary": "Extracted 2 high-impact automation tasks: PDF Invoice OCR to Sheets & Competitor Pricing Scraper.",
+      "source": "ios_shortcut"
+    },
+    {
+      "id": "memo-2",
+      "title": "Quick Voice Memo: Cloud Renewal Negotiation & Weekly Investor Update",
+      "durationSeconds": 35,
+      "recordedAt": "2026-08-21T14:10:00Z",
+      "transcript": "Quick note for the priority list: I need to meet with our cloud account rep next week to negotiate our annual hosting agreement and lock in that eighteen thousand dollar discount. I should do that personally. Also, let's automate the weekly stakeholder update so it drafts the email automatically every Friday based on our Git and Stripe metrics.",
+      "status": "analyzed",
+      "extractedTaskIds": [
+        "task-103",
+        "task-104"
+      ],
+      "extractedActionCardIds": [],
+      "summary": "Extracted 1 human-only negotiation task and 1 hybrid automated weekly report task.",
+      "source": "browser_mic"
+    },
+    {
+      "id": "memo-3",
+      "title": "Strategy Session: Mobile Voice Assistant Interface",
+      "durationSeconds": 42,
+      "recordedAt": "2026-08-21T22:45:00Z",
+      "transcript": "I need you to be my personal executive assistant on my phone. Like Hello Google, where I can talk to you and tell you to draft emails, book appointments, move calendar events, and organize all my ideas into a Monday.com style dashboard with hours won back KPIs and Gantt timelines.",
+      "status": "analyzed",
+      "extractedTaskIds": [
+        "task-105",
+        "task-106",
+        "task-107"
+      ],
+      "extractedActionCardIds": [],
+      "summary": "Triggered full Personal Assistant AI System build with Mobile Voice HUD and Monday.com Work Hub.",
+      "source": "watch_memo"
+    }
+  ],
+  "actionCards": [
+    {
+      "id": "ac-1",
+      "intent": "email_draft",
+      "title": "Email Draft to Sarah Chen",
+      "description": "Follow-up on Q3 Growth Sprint and automated inbound qualification pipeline.",
+      "spokenResponse": "I have prepared a draft email to Sarah Chen regarding the Q3 growth sprint. You can review or send it directly.",
+      "status": "pending",
+      "createdAt": "2026-08-21T18:30:00Z",
+      "emailData": {
+        "id": "em-1",
+        "toName": "Sarah Chen",
+        "toEmail": "sarah.chen@innovate.co",
+        "subject": "Follow-up: Q3 Growth Sprint & Inbound Automation",
+        "body": "Hi Sarah,\n\nFollowing up on our discussion regarding the inbound lead pipeline. I have outlined the automated workflow to qualify inbound requests and route high-tier leads directly to our calendar.\n\nLet me know if you would like to review the draft blueprint ahead of our Tuesday sync.\n\nBest,\nAndrew",
+        "tone": "professional",
+        "status": "draft"
+      }
+    },
+    {
+      "id": "ac-2",
+      "intent": "calendar_booking",
+      "title": "Q3 Product Strategy & AI Roadmap",
+      "description": "Scheduled with David Miller for Tuesday, Aug 25 at 2:00 PM (1 hour).",
+      "spokenResponse": "I booked the Q3 Product Strategy session with David Miller for Tuesday, August 25th at 2 PM.",
+      "status": "confirmed",
+      "createdAt": "2026-08-21T19:00:00Z",
+      "calendarData": {
+        "id": "apt-1",
+        "title": "Q3 Product Strategy & AI Roadmap",
+        "startDateTime": "2026-08-25T14:00:00.000Z",
+        "endDateTime": "2026-08-25T15:00:00.000Z",
+        "location": "Google Meet / Virtual",
+        "attendees": [
+          {
+            "name": "David Miller",
+            "email": "david.m@cloudscale.io"
+          }
+        ],
+        "description": "Align on Cloudflare Workers AI pipeline and vector search performance benchmark.",
+        "status": "confirmed",
+        "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Q3+Product+Strategy"
+      }
+    }
+  ],
+  "wikiArticles": [
+    {
+      "id": "wiki-1",
+      "slug": "voice-ai-hud-mobile-pwa",
+      "title": "📱 Voice AI HUD & \"Hello Google\" Mobile PWA Experience",
+      "category": "Voice AI & Mobile",
+      "summary": "How to use real-time voice recognition, tactile push-to-talk, spoken TTS audio responses, and install the PWA onto iOS and Android home screens.",
+      "content": "## Overview\nThe **Voice AI HUD** brings a futuristic \"Hello Google / Siri\" conversational experience directly to your phone and desktop.\n\n### Key Features\n- **Fluid Audio Visualizer**: A dynamic canvas orb and reactive sine waveforms that pulse in sync with your speech amplitude.\n- **Continuous & Push-to-Talk Listening**: Web Speech API with Web Audio Voice Activity Detection.\n- **Natural Voice Feedback (TTS)**: Instant synthesized spoken confirmations for all commands.\n- **Interactive Action Cards**: Dynamic cards appearing on screen for 1-click execution (Send Email, Add to Calendar, Dial Contact).\n\n### Mobile PWA Installation\n1. Open `http://<host>:5173` in Safari (iOS) or Chrome (Android).\n2. Tap the **Share** button on iOS -> **Add to Home Screen**.\n3. The Assistant runs full-screen as a native standalone app with offline resilience.\n\n### iOS Shortcuts & Apple Watch Integration\n- Dedicated ingest endpoint: `POST /api/voice/ingest`\n- Create an iOS Shortcut with \"Record Audio\" -> \"URL: /api/voice/ingest\" -> \"Method: POST (Multipart)\" to capture voice memos directly from your lock screen Action Button!",
+      "tags": [
+        "Voice AI",
+        "PWA",
+        "iOS Shortcuts",
+        "VAD",
+        "Audio Visualizer"
+      ],
+      "lastUpdated": "2026-08-22T00:00:00Z",
+      "author": "AI Assistant",
+      "icon": "Mic"
+    },
+    {
+      "id": "wiki-2",
+      "slug": "autonomous-executive-actions",
+      "title": "⚡ Autonomous Executive Actions: Emails, Calendar & Calls",
+      "category": "Executive Actions",
+      "summary": "Natural language speech patterns for instant email drafting, conflict-aware meeting bookings, and contact communications.",
+      "content": "## Overview\nInstead of just taking notes, the Assistant directly executes executive tasks through natural voice intent parsing.\n\n### 1. Email Assistant\n- **Example Commands**: *\"Draft an email to Sarah regarding Q3 growth sprint\"*, *\"Send an email to David with our updated pricing plan\"*.\n- **Behavior**: Matches contacts, generates polished structured drafts with context-aware subjects, and provides 1-click **Send Email Now**.\n\n### 2. Calendar & Appointment Coordinator\n- **Example Commands**: *\"Book a strategy sync with David Miller next Tuesday at 2 PM\"*, *\"Schedule dentist appointment tomorrow at 10 AM\"*.\n- **Conflict Detection**: Automatically scans your calendar schedule and warns of overlaps.\n- **Google Calendar Sync**: Generates 1-tap Google Calendar web links and standard `.ics` event feeds.\n- **Rescheduling**: Say *\"Reschedule Friday sync to Monday 10 AM\"* or tap **Move +1 Day**.\n\n### 3. Contact Calls\n- **Example Commands**: *\"Call Sarah Chen\"*, *\"Dial David Miller\"*.\n- Automatically matches phone numbers and renders a 1-tap direct dialer button (`tel:`).",
+      "tags": [
+        "Email",
+        "Calendar",
+        "Appointments",
+        "Calls",
+        "Intent Parsing"
+      ],
+      "lastUpdated": "2026-08-22T00:00:00Z",
+      "author": "AI Assistant",
+      "icon": "Calendar"
+    },
+    {
+      "id": "wiki-3",
+      "slug": "monday-com-work-hub",
+      "title": "📊 Monday.com-Style Work Hub & Dual-Priority Framework",
+      "category": "Work Hub & Gantt",
+      "summary": "How speech transcripts are dissected into categorized tasks, evaluated with Dual Priority (User vs AI), and scored for Feasibility.",
+      "content": "## Overview\nThe Work Hub organizes all extracted ideas and action items into a clean, collapsible Monday.com-style spreadsheet.\n\n### 1. Multi-Dimensional Taxonomy\nTasks are categorized into 7 core business domains:\n- **Tech/Dev**, **Business & Strategy**, **Finance**, **Operations & Admin**, **Marketing & Sales**, **Client Projects**, and **Personal & Health**.\n\n### 2. Dual-Priority Comparison\n- **User Priority**: Your subjective urgency (Urgent, High, Medium, Low).\n- **AI Priority**: Objective leverage assessment based on recurring hours won back and automation feasibility.\n- **Eisenhower 2x2 Matrix**: Quadrants for Execute Now, Automate Blueprint, Human Action, and Backlog.\n\n### 3. Feasibility Classification\n- `🤖 AI-Automated`: Solvable via scripts, Cloudflare Workers, scrapers, or APIs.\n- `👤 Human-Only`: Requires physical presence, face-to-face negotiation, or legal signatures.\n- `⚡ Hybrid`: AI generates 90% of the draft/system; human provides review and final approval.\n\n### 4. Hours Won Back & ROI Metrics\n- Tracks cumulative recurring hours saved vs hours invested to automate, calculating your **Automation ROI Multiplier**.",
+      "tags": [
+        "Work Hub",
+        "Monday.com",
+        "Dual Priority",
+        "Eisenhower Matrix",
+        "ROI"
+      ],
+      "lastUpdated": "2026-08-22T00:00:00Z",
+      "author": "AI Assistant",
+      "icon": "Table2"
+    },
+    {
+      "id": "wiki-4",
+      "slug": "gantt-chart-dependency-engine",
+      "title": "📅 Interactive Gantt Timeline & Dependency Linking",
+      "category": "Work Hub & Gantt",
+      "summary": "Visual timeline with Day and Compact Week scales, progress overlays, and SVG dependency connector arrows.",
+      "content": "## Overview\nThe Gantt Timeline provides an executive bird's-eye view of your project horizon, critical paths, and execution milestones.\n\n### Features\n- **Dual View Scales**: Toggle between detailed **Day View** and compact **Week View**.\n- **Visual SVG Dependency Arrows**: Curved connector lines dynamically drawn between parent prerequisite tasks and child dependent tasks.\n- **Progress Percentage Overlay**: Visual shading inside task bars reflecting real completion progress.\n- **Feasibility & Category Indicators**: Color-coded gradients by category with instant hover tooltips.\n- **Interactive Launch**: Click any task bar to open its **Self-Teaching Automation Blueprint**!",
+      "tags": [
+        "Gantt Chart",
+        "Timeline",
+        "Dependencies",
+        "Critical Path",
+        "Milestones"
+      ],
+      "lastUpdated": "2026-08-22T00:00:00Z",
+      "author": "AI Assistant",
+      "icon": "GanttChartSquare"
+    },
+    {
+      "id": "wiki-5",
+      "slug": "self-teaching-automation-studio",
+      "title": "🤖 Self-Teaching Automation Studio & Web Research Hub",
+      "category": "Automation Studio",
+      "summary": "How the AI formulates step-by-step automation blueprints, generates starter code, and scans the web for best-practice solutions.",
+      "content": "## Overview\nEvery task tagged as AI-Automated or Hybrid automatically receives an **Automation Blueprint**.\n\n### Blueprint Components\n1. **Step-by-Step AI Strategy**: Concrete sequential plan to automate the task.\n2. **Tool & API Recommendations**: Headless browsers, Cloudflare Workers, Python scripts, OCR engines, etc.\n3. **Executable Code Generator**: Pre-built starter scripts in TypeScript, Python, or Bash with syntax highlighting and 1-click copy.\n4. **Web Research Best Practices**: Researched open-source repositories and architectural tips with direct documentation links.\n5. **Sandbox VM Execution Runner**: Test and validate automation scripts in the isolated Linux VM (`sandbox-vm`) before pushing live!",
+      "tags": [
+        "Automation Studio",
+        "Code Generator",
+        "Web Research",
+        "Best Practices",
+        "Blueprints"
+      ],
+      "lastUpdated": "2026-08-22T00:00:00Z",
+      "author": "AI Assistant",
+      "icon": "Sparkles"
+    },
+    {
+      "id": "wiki-6",
+      "slug": "system-architecture-sandbox-vm",
+      "title": "🔒 System Architecture & Parallels Sandbox VM (10.211.55.6)",
+      "category": "System Architecture",
+      "summary": "Security architecture, host protection rules, Parallels VM execution bridge, and cross-machine synchronization.",
+      "content": "## Overview\nThe system operates under a strict **Universal Operational Profile** to protect the host machine and ensure high performance.\n\n### Security & Environment Invariants\n- **macOS Host**: Low-privilege, strictly protected. No heavy dev servers, build tasks, or raw npm installs locally.\n- **Parallels Linux VM (`sandbox-vm`)**: Dedicated Ubuntu VM at `10.211.55.6` running builds, test runners, Docker, and terminal executions via SSH bridge.\n- **Command Execution Rule**: Terminal tasks run via `ssh sandbox-vm \"<command>\"`.\n- **Global Skills Hub**: Universal skills located in `~/.gemini/antigravity/skills/` and tracked on `main` branch.\n- **Project Memory (`AGENTS.md`)**: Persistent repository guidelines and invariant rules in project root.",
+      "tags": [
+        "Security",
+        "Sandbox VM",
+        "Architecture",
+        "SSH Bridge",
+        "AGENTS.md"
+      ],
+      "lastUpdated": "2026-08-22T00:00:00Z",
+      "author": "AI Assistant",
+      "icon": "ShieldCheck"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "name": "virtual-assistant",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "client": "vite --host 0.0.0.0 --port 5173",
+    "server": "tsx server/index.ts",
+    "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx tests/suite.test.ts",
+    "test:live": "tsx tests/e2e_live_test.ts",
+    "test:cloud": "tsx tests/google_cloud_suite.test.ts",
+    "test:exhaustive": "tsx tests/exhaustive_ui_suite.test.ts",
+    "test:flow": "tsx tests/clean_slate_and_flow_audit.test.ts",
+    "preview": "vite preview --host 0.0.0.0 --port 5173"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "lucide-react": "^0.468.0",
+    "multer": "^1.4.5-lts.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.5.5"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.10.1",
+    "@types/react": "^18.3.13",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.1.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.16",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3"
+  }
+}
