@@ -34,6 +34,15 @@ export class ClientDialogueManager {
     return this.session;
   }
 
+  public getTurns(): DialogueTurn[] {
+    return this.session.turns;
+  }
+
+  public clearTurns(): void {
+    this.session.turns = [];
+    this.session.updatedAt = new Date().toISOString();
+  }
+
   public addTurn(speaker: 'user' | 'assistant', text: string, intent?: any, spokenResponse?: string): DialogueTurn {
     const turn: DialogueTurn = {
       id: 'turn-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5),

@@ -387,6 +387,7 @@ export interface WakeWordConfig {
 export type AppView = 
   | 'thought_hub'
   | 'voice_hud'
+  | 'transcript'
   | 'gmail'
   | 'calendar'
   | 'comms'

@@ -6,6 +6,7 @@ import {
   MicOff, 
   Sparkles, 
   Volume2, 
+  VolumeX, 
   ArrowUpRight, 
   Clock, 
   Calendar, 
@@ -20,7 +21,8 @@ import {
   ShieldCheck,
   Flame,
   CheckCircle2,
-  Terminal
+  Terminal,
+  Send
 } from 'lucide-react';
 
 import { wakeWordService } from '../services/wakeWordService';
@@ -41,17 +43,28 @@ export const MobileVoiceHUD: React.FC = () => {
     toggleWakeWordListener,
     executeCustomSkill,
     setIsActivityLogOpen,
+    quietMode,
+    toggleQuietMode,
     kpi,
     setActiveView
   } = useAssistant();
 
   const [sensitivity, setSensitivityState] = React.useState<'high' | 'normal'>(() => wakeWordService.getSensitivity());
+  const [inlineChat, setInlineChat] = React.useState('');
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const toggleSensitivity = () => {
     const next = sensitivity === 'high' ? 'normal' : 'high';
     setSensitivityState(next);
     wakeWordService.setSensitivity(next);
+  };
+
+  const handleInlineChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const text = inlineChat.trim();
+    if (!text || isProcessingSpeech) return;
+    setInlineChat('');
+    await submitVoiceTranscript(text);
   };
 
   // Keyboard shortcut listener (Cmd+K or Spacebar to activate Assistant)
@@ -193,6 +206,20 @@ export const MobileVoiceHUD: React.FC = () => {
             {isWakeWordActive ? 'Disable Wake Word' : 'Enable Wake Word'}
           </button>
 
+          {/* Quiet Mode Switch Pill */}
+          <button
+            onClick={toggleQuietMode}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+              quietMode
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'
+                : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'
+            }`}
+            title="Toggle Quiet Mode (Silent Typing vs Spoken Voice Feedback)"
+          >
+            {quietMode ? <VolumeX className="w-3.5 h-3.5 text-amber-400" /> : <Volume2 className="w-3.5 h-3.5 text-teal-400" />}
+            <span>{quietMode ? '🤫 Quiet Mode' : '🔊 Spoken'}</span>
+          </button>
+
           {isWakeWordActive && (
             <button
               onClick={toggleSensitivity}
@@ -207,6 +234,15 @@ export const MobileVoiceHUD: React.FC = () => {
               <span>{sensitivity === 'high' ? 'High Sensitivity' : 'Standard'}</span>
             </button>
           )}
+
+          <button
+            onClick={() => setActiveView('transcript')}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 text-teal-300 text-xs font-semibold transition"
+            title="Open Live Interactive Transcript & Chat"
+          >
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>Chat & Transcript</span>
+          </button>
 
           <button
             onClick={() => setIsActivityLogOpen(true)}
@@ -357,6 +393,25 @@ export const MobileVoiceHUD: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* Inline Text Chat Bar */}
+          <form onSubmit={handleInlineChat} className="w-full mt-3 flex items-center gap-2 bg-slate-900/90 border border-slate-800 hover:border-slate-700 rounded-2xl p-2 shadow-lg">
+            <input
+              type="text"
+              value={inlineChat}
+              onChange={(e) => setInlineChat(e.target.value)}
+              placeholder={quietMode ? "Type silently to Eve (Quiet Mode is ON)..." : "Chat with Eve or type an executive command..."}
+              className="flex-1 bg-transparent border-none px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none"
+            />
+            <button
+              type="submit"
+              disabled={!inlineChat.trim() || isProcessingSpeech}
+              className="px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 disabled:opacity-40 text-slate-950 font-bold text-xs flex items-center space-x-1 transition shadow-sm cursor-pointer shrink-0"
+            >
+              <span>Send</span>
+              <Send className="w-3 h-3" />
+            </button>
+          </form>
         </div>
       </div>
 
@@ -399,7 +454,16 @@ export const MobileVoiceHUD: React.FC = () => {
               <MessageSquare className="w-4 h-4 text-teal-400" />
               <span>Conversational Dialogue History</span>
             </h3>
-            <span className="text-[11px] text-slate-400">{dialogueTurns.length} turns</span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] text-slate-400">{dialogueTurns.length} turns</span>
+              <button
+                onClick={() => setActiveView('transcript')}
+                className="text-xs text-teal-400 hover:text-teal-300 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+              >
+                <span>Full Transcript & Chat</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 space-y-3 max-h-72 overflow-y-auto">

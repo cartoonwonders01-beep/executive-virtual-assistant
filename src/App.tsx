@@ -2,6 +2,7 @@ import React from 'react';
 import { AssistantProvider, useAssistant } from './context/AssistantContext';
 import { Navigation } from './components/Navigation';
 import { MobileVoiceHUD } from './components/MobileVoiceHUD';
+import { LiveTranscriptView } from './components/LiveTranscriptView';
 import { ThoughtActionHub } from './components/ThoughtActionHub';
 import { KPIDashboard } from './components/KPIDashboard';
 import { TaskTableView } from './components/TaskTableView';
@@ -34,6 +35,7 @@ const AppContent: React.FC = () => {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {activeView === 'thought_hub' && <ThoughtActionHub />}
         {activeView === 'voice_hud' && <MobileVoiceHUD />}
+        {activeView === 'transcript' && <LiveTranscriptView />}
 
         {activeView === 'gmail' && (
           <div className="space-y-6">

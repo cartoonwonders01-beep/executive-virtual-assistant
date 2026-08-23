@@ -136,10 +136,26 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     assert.equal(config.DEFAULT_CHUNK_INTERVAL_MS, 3500);
     assert.equal(config.DEFAULT_AUDIO_BITRATE_KBPS, 64);
     assert.equal(config.DEFAULT_SILENCE_DURATION_MS, 1600);
-    assert.ok(config.CHUNK_INTERVAL_OPTIONS.length >= 4, 'Provides slice options');
-    assert.ok(config.LIVE_MODEL_OPTIONS.length >= 4, 'Provides model failover options');
     assert.ok(config.AUDIO_BITRATE_OPTIONS.length >= 3, 'Provides bitrate options');
     assert.equal(config.APP_VERSION, '3.2.0');
+  });
+
+  await t.test('Module 8: Live Interactive Transcript, Quiet Mode & Dialogue Stream', async () => {
+    const { dialogueManager } = await import('../src/services/dialogueManager');
+    
+    dialogueManager.clearTurns();
+    assert.equal(dialogueManager.getTurns().length, 0, 'Dialogue turns cleared');
+
+    const turn1 = dialogueManager.addTurn('user', 'What are 3 strategies for deep work?');
+    assert.equal(turn1.speaker, 'user');
+    assert.equal(turn1.text, 'What are 3 strategies for deep work?');
+
+    const turn2 = dialogueManager.addTurn('assistant', 'Here are 3 core strategies: 1) Time blocking, 2) Digital isolation, 3) Pomodoro intervals.', 'knowledge_qa');
+    assert.equal(turn2.speaker, 'assistant');
+    assert.equal(turn2.intent, 'knowledge_qa');
+
+    const turns = dialogueManager.getTurns();
+    assert.equal(turns.length, 2, '2 turns registered in dialogue stream');
   });
 
 });

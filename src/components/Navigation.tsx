@@ -18,7 +18,8 @@ import {
   Phone,
   Bot,
   Users,
-  Terminal
+  Terminal,
+  MessageSquare
 } from 'lucide-react';
 
 export const Navigation: React.FC = () => {
@@ -30,6 +31,9 @@ export const Navigation: React.FC = () => {
     stopVoiceListening, 
     voiceFeedbackEnabled, 
     setVoiceFeedbackEnabled,
+    quietMode,
+    toggleQuietMode,
+    dialogueTurns,
     setIsRecordModalOpen,
     startInteractiveTour,
     setIsSettingsOpen,
@@ -43,6 +47,7 @@ export const Navigation: React.FC = () => {
   const navItems: { id: AppView; label: string; icon: React.ReactNode; badge?: number; badgeColor?: string }[] = [
     { id: 'thought_hub', label: 'Thought Studio', icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
     { id: 'voice_hud', label: 'Voice AI HUD', icon: <Mic className="w-4 h-4" /> },
+    { id: 'transcript', label: 'Transcript & Chat', icon: <MessageSquare className="w-4 h-4 text-teal-400" />, badge: dialogueTurns.length },
     { id: 'gmail', label: 'Gmail Suite', icon: <Mail className="w-4 h-4" />, badge: unreadEmailCount, badgeColor: 'bg-red-500 text-white' },
     { id: 'calendar', label: 'Calendar Hub', icon: <CalendarDays className="w-4 h-4" /> },
     { id: 'comms', label: 'Comms & Calls', icon: <Phone className="w-4 h-4" /> },

@@ -56,6 +56,9 @@ interface AssistantContextType {
   isProcessingSpeech: boolean;
   voiceFeedbackEnabled: boolean;
   setVoiceFeedbackEnabled: (enabled: boolean) => void;
+  quietMode: boolean;
+  setQuietMode: (quiet: boolean) => void;
+  toggleQuietMode: () => void;
   startVoiceListening: () => Promise<void>;
   stopVoiceListening: () => void;
   submitVoiceTranscript: (text: string) => Promise<void>;
@@ -63,6 +66,7 @@ interface AssistantContextType {
 
   // Dialogue & Conversational Assistant
   dialogueTurns: DialogueTurn[];
+  clearDialogueTurns: () => void;
   customSkills: CustomSkill[];
   isWakeWordActive: boolean;
   setIsWakeWordActive: (active: boolean) => void;
@@ -199,12 +203,33 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try { localStorage.setItem('assistant_brain_provider', provider); } catch {}
   };
 
-  // Voice States
+  // Voice & Quiet Mode States
   const [isListening, setIsListening] = useState<boolean>(false);
   const [audioLevel, setAudioLevel] = useState<number>(0);
   const [liveTranscript, setLiveTranscript] = useState<string>('');
   const [isProcessingSpeech, setIsProcessingSpeech] = useState<boolean>(false);
-  const [voiceFeedbackEnabled, setVoiceFeedbackEnabled] = useState<boolean>(true);
+  const [quietMode, setQuietModeState] = useState<boolean>(() => {
+    try { return localStorage.getItem('assistant_quiet_mode') === 'true'; } catch { return false; }
+  });
+  const [voiceFeedbackEnabled, setVoiceFeedbackEnabled] = useState<boolean>(() => {
+    try { return localStorage.getItem('assistant_quiet_mode') !== 'true'; } catch { return true; }
+  });
+
+  const setQuietMode = (quiet: boolean) => {
+    setQuietModeState(quiet);
+    setVoiceFeedbackEnabled(!quiet);
+    try { localStorage.setItem('assistant_quiet_mode', String(quiet)); } catch {}
+    logger.log('info', 'tts_speech', quiet ? '🤫 Quiet Mode activated: Voice feedback muted.' : '🔊 Spoken Mode activated: Voice feedback enabled.');
+  };
+
+  const toggleQuietMode = () => {
+    setQuietMode(!quietMode);
+  };
+
+  const clearDialogueTurns = () => {
+    setDialogueTurns([]);
+    logger.log('info', 'speech_stt', '🗑️ Dialogue conversation history cleared.');
+  };
 
   // Modals & Selected
   const [selectedTaskForBlueprint, setSelectedTaskForBlueprint] = useState<TaskItem | null>(null);
@@ -1045,11 +1070,13 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           playChime('action_success');
         } catch {}
 
-        if (voiceFeedbackEnabled && actionCard.spokenResponse) {
+        if (!quietMode && voiceFeedbackEnabled && actionCard.spokenResponse) {
           logger.log('info', 'tts_speech', `🔊 Speaking response (Voice: Studio American Female, Speed: 1.05x): "${actionCard.spokenResponse}"`);
           speakResponse(actionCard.spokenResponse, () => {
             logger.log('success', 'tts_speech', '✅ Voice playback complete.');
           });
+        } else if (quietMode) {
+          logger.log('info', 'tts_speech', `🤫 [Quiet Mode] Rendered response silently without audio playback.`);
         }
 
         // Forward to Google Apps Script Webhook
@@ -1400,6 +1427,10 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         isProcessingSpeech,
         voiceFeedbackEnabled,
         setVoiceFeedbackEnabled,
+        quietMode,
+        setQuietMode,
+        toggleQuietMode,
+        clearDialogueTurns,
         startVoiceListening,
         stopVoiceListening,
         submitVoiceTranscript,
