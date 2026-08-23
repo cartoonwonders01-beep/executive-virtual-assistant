@@ -306,13 +306,13 @@ export const MobileVoiceHUD: React.FC = () => {
           <span className="text-[11px] text-slate-400">{actionCards.length} generated</span>
         </div>
 
-        {actionCards.length === 0 ? (
+        {(!Array.isArray(actionCards) || actionCards.length === 0) ? (
           <div className="bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl p-6 text-center text-slate-400 text-xs">
             No voice actions yet. Tap the microphone and tell me what you need done!
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {actionCards.slice(0, 4).map((card) => (
+            {(Array.isArray(actionCards) ? actionCards : []).slice(0, 4).map((card) => (
               <ActionCardRenderer key={card.id} card={card} />
             ))}
           </div>

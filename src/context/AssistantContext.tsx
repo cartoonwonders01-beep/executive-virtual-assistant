@@ -207,17 +207,17 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         api.getKPI(),
         api.getWikiArticles()
       ]);
-      setTasks(t);
-      setMemos(m);
-      setActionCards(ac);
-      setAppointments(apt);
-      setInboxEmails(emails);
-      setContacts(cont);
-      setChatMessages(msgs);
-      setCallLogs(calls);
-      setAutonomousJobs(jobs);
-      setKpi(k);
-      setWikiArticles(w);
+      setTasks(Array.isArray(t) ? t : []);
+      setMemos(Array.isArray(m) ? m : []);
+      setActionCards(Array.isArray(ac) ? ac : []);
+      setAppointments(Array.isArray(apt) ? apt : []);
+      setInboxEmails(Array.isArray(emails) ? emails : []);
+      setContacts(Array.isArray(cont) ? cont : []);
+      setChatMessages(Array.isArray(msgs) ? msgs : []);
+      setCallLogs(Array.isArray(calls) ? calls : []);
+      setAutonomousJobs(Array.isArray(jobs) ? jobs : []);
+      setKpi(k && typeof k === 'object' && 'totalHoursWonBack' in k ? k : null);
+      setWikiArticles(Array.isArray(w) ? w : []);
     } catch (err) {
       console.error('Failed to load assistant data:', err);
     } finally {

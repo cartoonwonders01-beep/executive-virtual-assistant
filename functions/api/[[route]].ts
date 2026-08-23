@@ -64,6 +64,46 @@ const SEED_DATA = {
       status: 'confirmed'
     }
   ],
+  actionCards: [
+    {
+      id: 'ac-seed-1',
+      intent: 'email_draft',
+      title: 'Sent Email to Emily Baxter (Wife)',
+      description: 'Subject: "Thinking of you ❤️" • Delivered to emily.baxter@personal.com',
+      spokenResponse: "I have sent an email to Emily saying you love her ❤️",
+      status: 'executed',
+      createdAt: '2026-08-23T12:00:00Z',
+      emailData: {
+        id: 'em-seed-1',
+        toName: 'Emily Baxter (Wife)',
+        toEmail: 'emily.baxter@personal.com',
+        subject: 'Thinking of you ❤️',
+        body: 'Hi Emily,\n\nJust wanted to send you a quick note to say I love you!\n\nLove,\nAndrew',
+        tone: 'friendly',
+        status: 'sent'
+      }
+    }
+  ],
+  memos: [
+    {
+      id: 'memo-seed-1',
+      title: 'Personal Assistant Voice Setup',
+      durationSeconds: 15,
+      recordedAt: '2026-08-23T12:00:00Z',
+      transcript: 'Send an email to my wife to say I love her',
+      status: 'analyzed',
+      extractedTaskIds: [],
+      extractedActionCardIds: ['ac-seed-1'],
+      summary: 'Dispatched love email to wife',
+      source: 'browser_mic'
+    }
+  ],
+  chatMessages: [
+    { id: 'msg-1', contactId: 'c1', sender: 'Sarah Chen', text: 'Q3 growth targets approved!', sentAt: '2026-08-23T10:00:00Z' }
+  ],
+  callLogs: [
+    { id: 'call-1', contactId: 'c1', contactName: 'Sarah Chen', phone: '+1 (555) 234-5678', durationSeconds: 240, startedAt: '2026-08-23T09:00:00Z', status: 'completed', notes: 'Growth sprint sync' }
+  ],
   wikiArticles: [
     { id: 'wiki-1', slug: 'voice-ai-hud-mobile-pwa', title: '📱 Voice AI HUD & Mobile PWA', category: 'Voice AI & Mobile', summary: 'Real-time voice recognition and spoken TTS feedback.' }
   ],
@@ -262,6 +302,16 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
     return new Response(JSON.stringify(SEED_DATA.tasks), { headers: corsHeaders });
   }
 
+  // Action Cards
+  if (path === '/action-cards') {
+    return new Response(JSON.stringify(SEED_DATA.actionCards), { headers: corsHeaders });
+  }
+
+  // Memos
+  if (path === '/memos') {
+    return new Response(JSON.stringify(SEED_DATA.memos), { headers: corsHeaders });
+  }
+
   // Contacts
   if (path === '/comms/contacts' || path === '/contacts') {
     return new Response(JSON.stringify(SEED_DATA.contacts), { headers: corsHeaders });
@@ -275,6 +325,33 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
   // Inbox
   if (path === '/gmail/inbox') {
     return new Response(JSON.stringify(SEED_DATA.inboxEmails), { headers: corsHeaders });
+  }
+
+  // Chat Messages
+  if (path === '/comms/messages') {
+    return new Response(JSON.stringify(SEED_DATA.chatMessages), { headers: corsHeaders });
+  }
+
+  // Call Logs
+  if (path === '/comms/calls') {
+    return new Response(JSON.stringify(SEED_DATA.callLogs), { headers: corsHeaders });
+  }
+
+  // Wiki
+  if (path === '/wiki') {
+    return new Response(JSON.stringify(SEED_DATA.wikiArticles), { headers: corsHeaders });
+  }
+
+  // Autonomous status
+  if (path === '/autonomous/status') {
+    return new Response(JSON.stringify({
+      queueLength: 2,
+      activeJobsCount: 0,
+      completedCount: 2,
+      totalHoursWonBack: 174,
+      jobs: [],
+      queue: []
+    }), { headers: corsHeaders });
   }
 
   // Memories
