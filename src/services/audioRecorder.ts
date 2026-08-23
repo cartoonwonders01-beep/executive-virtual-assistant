@@ -4,6 +4,7 @@
 export interface AudioRecorderConfig {
   onAudioLevel: (level: number) => void;
   onRecordingComplete: (blob: Blob, mimeType: string, liveTranscript?: string) => void;
+  onChunkSlice?: (chunkBlob: Blob, chunkIndex: number, isFinal: boolean) => void;
   onLiveTranscript?: (text: string) => void;
   onError: (error: string) => void;
   onVADSilenceCountdown?: (secondsRemaining: number) => void;
@@ -14,15 +15,18 @@ export interface VADOptions {
   silenceThreshold: number; // 0.0 to 1.0 (default: 0.06)
   silenceDurationMs: number; // milliseconds of silence before trigger (default: 1600ms)
   speechTriggerThreshold: number; // minimum level to consider speech started (default: 0.12)
+  chunkIntervalMs?: number; // duration of each standalone slice (default: 3500ms)
 }
 
 export class AudioRecorderService {
   private mediaStream: MediaStream | null = null;
-  private mediaRecorder: MediaRecorder | null = null;
+  private currentSegmentRecorder: MediaRecorder | null = null;
+  private segmentTimer: any = null;
   private audioContext: AudioContext | null = null;
   private analyser: AnalyserNode | null = null;
   private animFrameId: number | null = null;
-  private chunks: Blob[] = [];
+  private masterChunks: Blob[] = [];
+  private chunkCounter = 0;
   private wakeLock: any = null;
   private isRecordingActive = false;
 
@@ -30,12 +34,13 @@ export class AudioRecorderService {
   private speechRecognition: any = null;
   private capturedLiveTranscript = '';
 
-  // VAD State
+  // VAD & Slicing State
   private vadOptions: VADOptions = {
     autoStopOnSilence: true,
     silenceThreshold: 0.06,
     silenceDurationMs: 1600,
     speechTriggerThreshold: 0.12,
+    chunkIntervalMs: 3500
   };
   private hasDetectedSpeech = false;
   private silenceStartTime: number | null = null;
@@ -60,7 +65,8 @@ export class AudioRecorderService {
 
   public async start(config: AudioRecorderConfig): Promise<boolean> {
     try {
-      this.chunks = [];
+      this.masterChunks = [];
+      this.chunkCounter = 0;
       this.hasDetectedSpeech = false;
       this.silenceStartTime = null;
       this.configRef = config;
@@ -164,32 +170,66 @@ export class AudioRecorderService {
         this.animFrameId = requestAnimationFrame(checkAudioFrame);
       }
 
-      const mimeType = this.resolveMimeType();
-      this.mediaRecorder = new MediaRecorder(this.mediaStream, {
-        mimeType: mimeType || undefined,
-        audioBitsPerSecond: 64000
-      });
-
-      this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          this.chunks.push(event.data);
-        }
-      };
-
-      this.mediaRecorder.onstop = () => {
-        this.cleanupAudioMonitoring();
-        const liveText = this.capturedLiveTranscript;
-        if (this.chunks.length > 0) {
-          const finalBlob = new Blob(this.chunks, { type: mimeType || 'audio/webm' });
-          config.onRecordingComplete(finalBlob, mimeType || 'audio/webm', liveText);
-        } else if (liveText) {
-          // If no chunks but we got live text, trigger with empty blob
-          config.onRecordingComplete(new Blob([], { type: 'audio/webm' }), 'audio/webm', liveText);
-        }
-      };
-
-      this.mediaRecorder.start(250);
+      const resolvedMimeType = this.resolveMimeType();
       this.isRecordingActive = true;
+
+      // Relay Segment Recording Loop (Standalone lightweight ~15-25 KB slices)
+      const startNextSegment = () => {
+        if (!this.isRecordingActive || !this.mediaStream) return;
+        const segmentBlobs: Blob[] = [];
+        let segRecorder: MediaRecorder;
+
+        try {
+          segRecorder = new MediaRecorder(this.mediaStream, {
+            mimeType: resolvedMimeType || undefined,
+            audioBitsPerSecond: 64000
+          });
+        } catch (err) {
+          console.error('Segment recorder creation failed:', err);
+          return;
+        }
+
+        segRecorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            segmentBlobs.push(event.data);
+            this.masterChunks.push(event.data);
+          }
+        };
+
+        segRecorder.onstop = () => {
+          if (segmentBlobs.length > 0) {
+            this.chunkCounter++;
+            const standaloneBlob = new Blob(segmentBlobs, { type: resolvedMimeType || 'audio/webm' });
+            if (standaloneBlob.size > 300 && config.onChunkSlice) {
+              config.onChunkSlice(standaloneBlob, this.chunkCounter, !this.isRecordingActive);
+            }
+          }
+
+          if (this.isRecordingActive) {
+            startNextSegment();
+          } else {
+            // Final recording cleanup & completion callback
+            this.cleanupAudioMonitoring();
+            const liveText = this.capturedLiveTranscript;
+            const finalBlob = this.masterChunks.length > 0 
+              ? new Blob(this.masterChunks, { type: resolvedMimeType || 'audio/webm' }) 
+              : new Blob([], { type: resolvedMimeType || 'audio/webm' });
+            config.onRecordingComplete(finalBlob, resolvedMimeType || 'audio/webm', liveText);
+          }
+        };
+
+        segRecorder.start();
+        this.currentSegmentRecorder = segRecorder;
+
+        const sliceMs = this.vadOptions.chunkIntervalMs || 3500;
+        this.segmentTimer = setTimeout(() => {
+          if (segRecorder.state === 'recording') {
+            segRecorder.stop();
+          }
+        }, sliceMs);
+      };
+
+      startNextSegment();
       return true;
     } catch (err: any) {
       console.error('Failed to start audio recording:', err);
@@ -200,15 +240,31 @@ export class AudioRecorderService {
   }
 
   public stop(): void {
+    if (!this.isRecordingActive) return;
     this.isRecordingActive = false;
+
+    if (this.segmentTimer) {
+      clearTimeout(this.segmentTimer);
+      this.segmentTimer = null;
+    }
+
     if (this.speechRecognition) {
       try { this.speechRecognition.stop(); } catch {}
       this.speechRecognition = null;
     }
-    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-      this.mediaRecorder.stop();
+
+    if (this.currentSegmentRecorder && this.currentSegmentRecorder.state === 'recording') {
+      this.currentSegmentRecorder.stop();
+    } else {
+      this.cleanup();
+      if (this.configRef) {
+        const resolvedMimeType = this.resolveMimeType();
+        const finalBlob = this.masterChunks.length > 0 
+          ? new Blob(this.masterChunks, { type: resolvedMimeType || 'audio/webm' }) 
+          : new Blob([], { type: resolvedMimeType || 'audio/webm' });
+        this.configRef.onRecordingComplete(finalBlob, resolvedMimeType || 'audio/webm', this.capturedLiveTranscript);
+      }
     }
-    this.cleanup();
   }
 
   public isActive(): boolean {

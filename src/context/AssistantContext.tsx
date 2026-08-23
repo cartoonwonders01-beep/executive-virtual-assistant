@@ -1071,12 +1071,14 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  // Real Audio Streaming with Full Relay-Style Telemetry & Groq Whisper Relay
+  // Real Audio Streaming with Relay-Style Segmented Slices & Groq Whisper Relay
   const startVoiceListening = async () => {
     stopSpeaking();
     setLiveTranscript('');
     setIsListening(true);
-    logger.log('info', 'audio', '🎙️ Active microphone stream started (WebM Opus / 64kbps). Speak to Eve now...');
+    logger.log('info', 'audio', '🎙️ Active microphone stream started (WebM Opus / 64kbps, 3.5s slices). Speak to Eve now...');
+
+    const streamedSegmentTranscripts: string[] = [];
 
     const started = await audioRecorder.start({
       onAudioLevel: (level) => setAudioLevel(level),
@@ -1086,44 +1088,66 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           logger.log('info', 'speech_stt', `🎙️ Live STT: "${text}"`);
         }
       },
+      onChunkSlice: async (chunkBlob, chunkIndex, isFinal) => {
+        const sliceKb = (chunkBlob.size / 1024).toFixed(1);
+        const startWhisper = Date.now();
+        logger.log('info', 'groq_whisper', `📦 Sliced audio segment #${chunkIndex} (${sliceKb} KB). Dispatching to Groq Whisper...`);
+        try {
+          const res = await api.transcribeRecordedAudio(chunkBlob, 'audio/webm', groqApiKey);
+          const elapsedMs = Date.now() - startWhisper;
+          if (res?.transcript && res.transcript.trim()) {
+            const segText = res.transcript.trim();
+            streamedSegmentTranscripts.push(segText);
+            logger.log('success', 'groq_whisper', `⚡ Segment #${chunkIndex} (${sliceKb} KB) transcribed in ${elapsedMs}ms: "${segText}" (HTTP 200)`);
+          } else {
+            logger.log('info', 'groq_whisper', `Segment #${chunkIndex} (${sliceKb} KB) processed in ${elapsedMs}ms.`);
+          }
+        } catch (wErr: any) {
+          logger.log('warn', 'groq_whisper', `Segment #${chunkIndex} (${sliceKb} KB) upload notice: ${wErr?.message || wErr}`);
+        }
+      },
       onRecordingComplete: async (blob, mimeType, liveTranscript) => {
         setIsProcessingSpeech(true);
         const sizeKb = (blob.size / 1024).toFixed(1);
-        logger.log('info', 'audio', `💾 Audio buffer captured: ${sizeKb} KB (${blob.size} bytes, MIME: ${mimeType || 'audio/webm'})`);
+        logger.log('info', 'audio', `💾 Audio session concluded: ${sizeKb} KB (${blob.size} bytes, MIME: ${mimeType || 'audio/webm'})`);
         
         try {
-          let textToProcess = (liveTranscript || '').trim();
+          // Combine streamed segment transcripts
+          let textToProcess = streamedSegmentTranscripts.join(' ').trim();
 
-          // 1. Send Audio Blob to Groq Whisper
-          if (blob.size > 200) {
+          // If segmented streaming didn't catch anything, check live transcript or transcribe final blob
+          if (!textToProcess) {
+            textToProcess = (liveTranscript || '').trim();
+          }
+
+          if (!textToProcess && blob.size > 200) {
             const startWhisper = Date.now();
-            logger.log('info', 'groq_whisper', `🚀 Sending ${sizeKb} KB audio slice to Groq Whisper (whisper-large-v3-turbo)...`);
+            const sliceKb = (blob.size / 1024).toFixed(1);
+            logger.log('info', 'groq_whisper', `🚀 Final audio slice (${sliceKb} KB) dispatched to Groq Whisper...`);
             try {
               const res = await api.transcribeRecordedAudio(blob, mimeType, groqApiKey);
               const elapsedMs = Date.now() - startWhisper;
               if (res?.transcript && res.transcript.trim()) {
                 textToProcess = res.transcript.trim();
-                logger.log('success', 'groq_whisper', `⚡ Groq Whisper returned in ${elapsedMs}ms: "${textToProcess}" (HTTP 200)`);
-              } else {
-                logger.log('warn', 'groq_whisper', `Groq Whisper completed in ${elapsedMs}ms but returned empty transcript. Checking fallback stream...`);
+                logger.log('success', 'groq_whisper', `⚡ Final slice (${sliceKb} KB) transcribed in ${elapsedMs}ms: "${textToProcess}" (HTTP 200)`);
               }
             } catch (wErr: any) {
-              logger.log('warn', 'groq_whisper', `Groq Whisper relay notice: ${wErr?.message || wErr}. Falling back to browser speech stream.`);
+              logger.log('warn', 'groq_whisper', `Final slice Groq notice: ${wErr?.message || wErr}.`);
             }
           }
 
-          // 2. If still empty, check passive speech buffer from right before recording
+          // If still empty, check passive speech buffer from right before recording
           if (!textToProcess && lastHeardPassiveSpeechRef.current.text && (Date.now() - lastHeardPassiveSpeechRef.current.ts < 12000)) {
             textToProcess = lastHeardPassiveSpeechRef.current.text;
             logger.log('info', 'speech_stt', `🎙️ Recovered speech from passive audio stream: "${textToProcess}"`);
           }
 
-          // 3. Dispatch to AI Reasoning Core
+          // Dispatch to AI Reasoning Core
           if (textToProcess) {
             logger.log('success', 'speech_stt', `🎯 Final speech transcript ready for AI reasoning: "${textToProcess}"`);
             await submitVoiceTranscript(textToProcess);
           } else {
-            logger.log('warn', 'audio', `⚠️ No spoken speech detected in ${sizeKb} KB buffer. Speak into microphone or tap a quick prompt.`);
+            logger.log('warn', 'audio', `⚠️ No spoken speech detected in ${sizeKb} KB session. Speak into microphone or tap a quick prompt.`);
           }
         } catch (err: any) {
           logger.log('error', 'audio', `Audio processing pipeline error: ${err?.message || err}`);
