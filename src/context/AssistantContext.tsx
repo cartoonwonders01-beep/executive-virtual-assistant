@@ -30,6 +30,15 @@ import { playChime } from '../services/soundEffects';
 import { intelligentAdvisor } from '../services/intelligentAdvisor';
 import { logger } from '../services/loggerService';
 import { selfLearningEngine } from '../services/selfLearningEngine';
+import {
+  getStoredContinuousTimeoutSeconds,
+  storeContinuousTimeoutSeconds,
+  getStoredPersonaStyle,
+  storePersonaStyle,
+  getStoredPersonaPrompt,
+  storePersonaPrompt,
+  PERSONA_PRESETS
+} from '../config';
 
 export type AIBrainProvider = 'gemini_ultra' | 'groq';
 
@@ -64,6 +73,15 @@ interface AssistantContextType {
   stopVoiceListening: () => void;
   submitVoiceTranscript: (text: string) => Promise<void>;
   uploadAudioFile: (file: File) => Promise<void>;
+
+  // Continuous Listening & Persona Framing
+  continuousTimeoutSeconds: number;
+  setContinuousTimeoutSeconds: (sec: number) => void;
+  personaStyle: string;
+  setPersonaStyle: (style: string) => void;
+  personaPrompt: string;
+  setPersonaPrompt: (prompt: string) => void;
+  isContinuousSessionActive: boolean;
 
   // Dialogue & Conversational Assistant
   dialogueTurns: DialogueTurn[];
@@ -226,6 +244,52 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const toggleQuietMode = () => {
     setQuietMode(!quietMode);
   };
+
+  // Continuous Listening & Persona Framing States
+  const [continuousTimeoutSeconds, setContinuousTimeoutSecondsState] = useState<number>(() => getStoredContinuousTimeoutSeconds());
+  const [personaStyle, setPersonaStyleState] = useState<string>(() => getStoredPersonaStyle());
+  const [personaPrompt, setPersonaPromptState] = useState<string>(() => getStoredPersonaPrompt());
+  const [isContinuousSessionActive, setIsContinuousSessionActive] = useState<boolean>(false);
+
+  const isContinuousSessionActiveRef = useRef<boolean>(false);
+  const sessionInactivityTimerRef = useRef<any>(null);
+
+  const setContinuousTimeoutSeconds = (sec: number) => {
+    setContinuousTimeoutSecondsState(sec);
+    storeContinuousTimeoutSeconds(sec);
+    logger.log('info', 'audio', `⚙️ Continuous listening session timeout set to: ${sec === 0 ? 'Manual Only' : sec + 's'}`);
+  };
+
+  const setPersonaStyle = (style: string) => {
+    setPersonaStyleState(style);
+    storePersonaStyle(style);
+    if (PERSONA_PRESETS[style]?.prompt) {
+      setPersonaPromptState(PERSONA_PRESETS[style].prompt);
+      storePersonaPrompt(PERSONA_PRESETS[style].prompt);
+    }
+    logger.log('info', 'ai_reasoning', `🎭 Persona framing updated to: "${style}"`);
+  };
+
+  const setPersonaPrompt = (prompt: string) => {
+    setPersonaPromptState(prompt);
+    storePersonaPrompt(prompt);
+    logger.log('info', 'ai_reasoning', `✍️ Custom persona framing prompt saved (${prompt.length} chars).`);
+  };
+
+  const resetSessionInactivityTimer = useCallback(() => {
+    if (sessionInactivityTimerRef.current) {
+      clearTimeout(sessionInactivityTimerRef.current);
+      sessionInactivityTimerRef.current = null;
+    }
+
+    if (continuousTimeoutSeconds > 0 && isContinuousSessionActiveRef.current) {
+      sessionInactivityTimerRef.current = setTimeout(() => {
+        logger.log('warn', 'audio', `⏱️ Continuous listening session timed out after ${continuousTimeoutSeconds}s of inactivity.`);
+        try { playChime('listen_stop'); } catch {}
+        stopVoiceListeningInternal(true);
+      }, continuousTimeoutSeconds * 1000);
+    }
+  }, [continuousTimeoutSeconds]);
 
   const clearDialogueTurns = () => {
     setDialogueTurns([]);
@@ -742,17 +806,37 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         // Intelligent Strategic Q&A & Advice Engine (Answers any question)
         if (!isExplicitTaskCommand && intelligentAdvisor.isQuestionOrInquiry(text)) {
           const solution = intelligentAdvisor.solve(text);
-          const formattedDesc = [
-            solution.summary,
-            '',
-            '**Strategic Insights:**',
-            ...solution.keyInsights.map(k => `• ${k}`),
-            '',
-            '**Execution Steps:**',
-            ...solution.actionSteps.map((s, i) => `${i + 1}. ${s}`),
-            solution.proTip ? `\n💡 **Executive Pro-Tip:** ${solution.proTip}` : '',
-            solution.formulaOrCode ? `\n\`\`\`\n${solution.formulaOrCode}\n\`\`\`` : ''
-          ].filter(Boolean).join('\n');
+          const currentStyle = personaStyle || getStoredPersonaStyle();
+
+          let formattedDesc = '';
+          if (currentStyle === 'pm_director') {
+            formattedDesc = [
+              solution.summary,
+              '',
+              '**Strategic Insights:**',
+              ...solution.keyInsights.map(k => `• ${k}`),
+              '',
+              '**Execution Steps:**',
+              ...solution.actionSteps.map((s, i) => `${i + 1}. ${s}`),
+              solution.proTip ? `\n💡 **Executive Pro-Tip:** ${solution.proTip}` : '',
+              solution.formulaOrCode ? `\n\`\`\`\n${solution.formulaOrCode}\n\`\`\`` : ''
+            ].filter(Boolean).join('\n');
+          } else if (currentStyle === 'concise_operator') {
+            formattedDesc = solution.spokenResponse || solution.summary;
+          } else {
+            // High-IQ Executive Peer (Default) & Strategic Co-Founder & Custom
+            // Direct, conversational, intelligent dialogue without rigid PM headers
+            const paragraphs = [
+              solution.spokenResponse || solution.summary,
+              solution.summary && solution.summary !== solution.spokenResponse ? solution.summary : null,
+              solution.keyInsights && solution.keyInsights.length > 0
+                ? solution.keyInsights.map(k => `• ${k}`).join('\n')
+                : null,
+              solution.proTip ? `💡 **Pro-Tip:** ${solution.proTip}` : null,
+              solution.formulaOrCode ? `\`\`\`\n${solution.formulaOrCode}\n\`\`\`` : null
+            ].filter(Boolean).join('\n\n');
+            formattedDesc = paragraphs;
+          }
 
           actionCard = {
             id: cardId,
@@ -1089,9 +1173,24 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           logger.log('info', 'tts_speech', `🔊 Speaking response (Voice: Studio American Female, Speed: 1.05x): "${actionCard.spokenResponse}"`);
           speakResponse(actionCard.spokenResponse, () => {
             logger.log('success', 'tts_speech', '✅ Voice playback complete.');
+            // Re-arm continuous listening if session is still active!
+            if (isContinuousSessionActiveRef.current) {
+              setTimeout(() => {
+                if (isContinuousSessionActiveRef.current) {
+                  startVoiceListening();
+                }
+              }, 300);
+            }
           });
         } else if (quietMode) {
           logger.log('info', 'tts_speech', `🤫 [Quiet Mode] Rendered response silently without audio playback.`);
+          if (isContinuousSessionActiveRef.current) {
+            setTimeout(() => {
+              if (isContinuousSessionActiveRef.current) {
+                startVoiceListening();
+              }
+            }, 500);
+          }
         }
 
         // Forward to Google Apps Script Webhook
@@ -1118,15 +1217,25 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     stopSpeaking();
     setLiveTranscript('');
     setIsListening(true);
-    logger.log('info', 'audio', '🎙️ Active microphone stream started (WebM Opus / 64kbps, 3.5s slices). Speak to Eve now...');
+    setIsContinuousSessionActive(true);
+    isContinuousSessionActiveRef.current = true;
+    resetSessionInactivityTimer();
+
+    logger.log('info', 'audio', `🎙️ Active microphone stream started (Continuous Mode: ${continuousTimeoutSeconds === 0 ? 'Manual Toggle' : continuousTimeoutSeconds + 's timeout'}). Speak to Eve now...`);
 
     const streamedSegmentTranscripts: string[] = [];
 
     const started = await audioRecorder.start({
-      onAudioLevel: (level) => setAudioLevel(level),
+      onAudioLevel: (level) => {
+        setAudioLevel(level);
+        if (level > 0.08) {
+          resetSessionInactivityTimer();
+        }
+      },
       onLiveTranscript: (text) => {
         setLiveTranscript(text);
         if (text) {
+          resetSessionInactivityTimer();
           logger.log('info', 'speech_stt', `🎙️ Live STT: "${text}"`);
         }
       },
@@ -1140,6 +1249,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           if (res?.transcript && res.transcript.trim()) {
             const segText = res.transcript.trim();
             streamedSegmentTranscripts.push(segText);
+            resetSessionInactivityTimer();
             logger.log('success', 'groq_whisper', `⚡ Segment #${chunkIndex} (${sliceKb} KB) transcribed in ${elapsedMs}ms: "${segText}" (HTTP 200)`);
           } else {
             logger.log('info', 'groq_whisper', `Segment #${chunkIndex} (${sliceKb} KB) processed in ${elapsedMs}ms.`);
@@ -1189,7 +1299,15 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             logger.log('success', 'speech_stt', `🎯 Final speech transcript ready for AI reasoning: "${textToProcess}"`);
             await submitVoiceTranscript(textToProcess);
           } else {
-            logger.log('warn', 'audio', `⚠️ No spoken speech detected in ${sizeKb} KB session. Speak into microphone or tap a quick prompt.`);
+            logger.log('warn', 'audio', `⚠️ No spoken speech detected in ${sizeKb} KB session.`);
+            // If continuous mode is active, restart listening for user speech!
+            if (isContinuousSessionActiveRef.current) {
+              setTimeout(() => {
+                if (isContinuousSessionActiveRef.current) {
+                  startVoiceListening();
+                }
+              }, 400);
+            }
           }
         } catch (err: any) {
           logger.log('error', 'audio', `Audio processing pipeline error: ${err?.message || err}`);
@@ -1210,11 +1328,23 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
-  const stopVoiceListening = () => {
+  const stopVoiceListeningInternal = (isTimeout: boolean = false) => {
+    if (!isTimeout) {
+      isContinuousSessionActiveRef.current = false;
+      setIsContinuousSessionActive(false);
+    }
+    if (sessionInactivityTimerRef.current) {
+      clearTimeout(sessionInactivityTimerRef.current);
+      sessionInactivityTimerRef.current = null;
+    }
     logger.log('info', 'audio', '⏹️ Stopping active microphone listening.');
     audioRecorder.stop();
     setIsListening(false);
     setAudioLevel(0);
+  };
+
+  const stopVoiceListening = () => {
+    stopVoiceListeningInternal(false);
   };
 
   const uploadAudioFile = async (file: File) => {
@@ -1450,6 +1580,13 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         stopVoiceListening,
         submitVoiceTranscript,
         uploadAudioFile,
+        continuousTimeoutSeconds,
+        setContinuousTimeoutSeconds,
+        personaStyle,
+        setPersonaStyle,
+        personaPrompt,
+        setPersonaPrompt,
+        isContinuousSessionActive,
         selectedTaskForBlueprint,
         setSelectedTaskForBlueprint,
         selectedTaskForEdit,

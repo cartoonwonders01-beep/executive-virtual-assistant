@@ -1,5 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+
+if (typeof (global as any).localStorage === 'undefined') {
+  const store: Record<string, string> = {};
+  (global as any).localStorage = {
+    getItem: (k: string) => store[k] ?? null,
+    setItem: (k: string, v: string) => { store[k] = String(v); },
+    removeItem: (k: string) => { delete store[k]; },
+    clear: () => { Object.keys(store).forEach(k => delete store[k]); }
+  };
+}
+
 import { googleEcosystem } from '../server/googleEcosystem';
 import { antigravityBridge } from '../server/antigravityBridge';
 import { skillRegistry, parseSkillFromSpeech } from '../server/skillRegistry';
@@ -137,7 +148,7 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     assert.equal(config.DEFAULT_AUDIO_BITRATE_KBPS, 64);
     assert.equal(config.DEFAULT_SILENCE_DURATION_MS, 1600);
     assert.ok(config.AUDIO_BITRATE_OPTIONS.length >= 3, 'Provides bitrate options');
-    assert.equal(config.APP_VERSION, '3.3.0');
+    assert.equal(config.APP_VERSION, '3.4.0');
     assert.ok(config.LANGUAGE_OPTIONS.length >= 8, 'Provides European language options');
   });
 
@@ -207,6 +218,41 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     selfLearningEngine.recordFeedback('turn-test-2', false, 'Too verbose');
     const insights = selfLearningEngine.getInsights();
     assert.ok(insights.length >= 4, 'Learned insights tracked');
+  });
+
+  await t.test('Module 11: Continuous Listening Inactivity Timeout & Persona Framing Architecture', async () => {
+    const { 
+      getStoredContinuousTimeoutSeconds, 
+      storeContinuousTimeoutSeconds, 
+      getStoredPersonaStyle, 
+      storePersonaStyle, 
+      getStoredPersonaPrompt, 
+      storePersonaPrompt, 
+      PERSONA_PRESETS,
+      CONTINUOUS_TIMEOUT_OPTIONS
+    } = await import('../src/config');
+
+    // Continuous listening timeout defaults to 60s
+    assert.equal(getStoredContinuousTimeoutSeconds(), 60);
+    storeContinuousTimeoutSeconds(120);
+    assert.equal(getStoredContinuousTimeoutSeconds(), 120);
+    storeContinuousTimeoutSeconds(60); // reset
+
+    // Continuous timeout options include 30s, 60s, 120s, 300s, and manual only (0)
+    assert.ok(CONTINUOUS_TIMEOUT_OPTIONS.some(o => o.value === 60));
+    assert.ok(CONTINUOUS_TIMEOUT_OPTIONS.some(o => o.value === 0));
+
+    // Persona presets & high-IQ executive peer default
+    assert.equal(getStoredPersonaStyle(), 'executive_peer');
+    assert.ok(PERSONA_PRESETS.executive_peer.prompt.includes('executive advisor'));
+    assert.ok(PERSONA_PRESETS.strategic_cofounder.prompt.includes('co-founder'));
+    assert.ok(PERSONA_PRESETS.concise_operator.prompt.includes('1 to 3 punchy sentences'));
+    assert.ok(PERSONA_PRESETS.pm_director.prompt.includes('technical director'));
+
+    // Custom prompt persistence
+    const testCustomPrompt = 'You are Eve, speaking with executive clarity and zero corporate boilerplate.';
+    storePersonaPrompt(testCustomPrompt);
+    assert.equal(getStoredPersonaPrompt(), testCustomPrompt);
   });
 
 });

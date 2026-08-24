@@ -48,7 +48,9 @@ export const LiveChatView: React.FC = () => {
     setIsActivityLogOpen,
     setIsSettingsOpen,
     activeView,
-    setActiveView
+    setActiveView,
+    continuousTimeoutSeconds,
+    isContinuousSessionActive
   } = useAssistant();
 
   const [inputMessage, setInputMessage] = useState('');
@@ -170,9 +172,13 @@ export const LiveChatView: React.FC = () => {
             </div>
             <p className="text-[10px] text-slate-400 flex items-center gap-1">
               {isListening ? (
-                <span className="text-rose-400 font-semibold animate-pulse">🎙️ Listening...</span>
+                <span className="text-rose-400 font-semibold animate-pulse">
+                  🎙️ Listening {continuousTimeoutSeconds > 0 ? `(${continuousTimeoutSeconds}s)` : '(Live)'}...
+                </span>
               ) : isProcessingSpeech ? (
                 <span className="text-purple-400 font-semibold animate-pulse">🧠 Thinking...</span>
+              ) : isContinuousSessionActive ? (
+                <span className="text-teal-400 font-semibold">🎙️ Ready for next turn...</span>
               ) : (
                 <span className="text-emerald-400">● Online</span>
               )}

@@ -23,9 +23,11 @@ import {
   AUDIO_BITRATE_OPTIONS,
   MIME_TYPE_OPTIONS,
   SILENCE_DURATION_OPTIONS,
+  CONTINUOUS_TIMEOUT_OPTIONS,
   LIVE_MODEL_OPTIONS,
   LANGUAGE_OPTIONS,
   PAYLOAD_FORMAT_OPTIONS,
+  PERSONA_PRESETS,
   getStoredChunkIntervalMs,
   storeChunkIntervalMs,
   getStoredAudioBitrateKbps,
@@ -34,6 +36,12 @@ import {
   storeMimeType,
   getStoredSilenceDurationMs,
   storeSilenceDurationMs,
+  getStoredContinuousTimeoutSeconds,
+  storeContinuousTimeoutSeconds,
+  getStoredPersonaStyle,
+  storePersonaStyle,
+  getStoredPersonaPrompt,
+  storePersonaPrompt,
   getStoredLanguage,
   storeLanguage,
   getStoredPurgeAudio,
@@ -82,7 +90,13 @@ export const SettingsModal: React.FC = () => {
     setGoogleAppsScriptUrl,
     aiBrainProvider,
     setAiBrainProvider,
-    syncAllToGoogleDataWarehouse
+    syncAllToGoogleDataWarehouse,
+    continuousTimeoutSeconds,
+    setContinuousTimeoutSeconds,
+    personaStyle,
+    setPersonaStyle,
+    personaPrompt,
+    setPersonaPrompt
   } = useAssistant();
 
   const [groqKeyInput, setGroqKeyInput] = useState(groqApiKey);
@@ -100,11 +114,16 @@ export const SettingsModal: React.FC = () => {
   const [audioBitrateKbps, setAudioBitrateKbps] = useState<number>(() => getStoredAudioBitrateKbps());
   const [mimeType, setMimeType] = useState<string>(() => getStoredMimeType());
   const [silenceDurationMs, setSilenceDurationMs] = useState<number>(() => getStoredSilenceDurationMs());
+  const [continuousTimeoutInput, setContinuousTimeoutInput] = useState<number>(() => getStoredContinuousTimeoutSeconds());
   const [purgeAudio, setPurgeAudio] = useState<boolean>(() => getStoredPurgeAudio());
   const [debugMode, setDebugMode] = useState<boolean>(() => getStoredDebugMode());
   const [liveModel, setLiveModel] = useState<string>(() => getStoredLiveModel());
   const [payloadFormat, setPayloadFormat] = useState<string>(() => getStoredPayloadFormat());
   const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
+
+  // Persona & Custom Prompt State
+  const [selectedPersonaStyle, setSelectedPersonaStyle] = useState<string>(() => getStoredPersonaStyle());
+  const [customPersonaPromptInput, setCustomPersonaPromptInput] = useState<string>(() => getStoredPersonaPrompt());
 
   // Voice Persona State
   const [persona, setPersona] = useState<VoicePersona>(getVoicePersona());
@@ -119,24 +138,25 @@ export const SettingsModal: React.FC = () => {
   const [newTopic, setNewTopic] = useState('');
   const [newFact, setNewFact] = useState('');
 
+  // Hydrate settings
   useEffect(() => {
     if (isSettingsOpen) {
       setGroqKeyInput(groqApiKey);
       setGeminiKeyInput(geminiApiKey);
       setGasUrlInput(googleAppsScriptUrl);
       setBrain(aiBrainProvider);
-      setPersona(getVoicePersona());
-      setRate(getVoiceRate());
-      setPitch(getVoicePitch());
       setLanguage(getStoredLanguage());
       setChunkIntervalMs(getStoredChunkIntervalMs());
       setAudioBitrateKbps(getStoredAudioBitrateKbps());
       setMimeType(getStoredMimeType());
       setSilenceDurationMs(getStoredSilenceDurationMs());
+      setContinuousTimeoutInput(getStoredContinuousTimeoutSeconds());
       setPurgeAudio(getStoredPurgeAudio());
       setDebugMode(getStoredDebugMode());
       setLiveModel(getStoredLiveModel());
       setPayloadFormat(getStoredPayloadFormat());
+      setSelectedPersonaStyle(getStoredPersonaStyle());
+      setCustomPersonaPromptInput(getStoredPersonaPrompt());
       setInsights(selfLearningEngine.getInsights());
       const voice = resolveBestVoice(getVoicePersona());
       if (voice) setDetectedVoiceName(voice.name);
@@ -160,6 +180,19 @@ export const SettingsModal: React.FC = () => {
     setLanguage(newLang);
     storeLanguage(newLang);
     setPreferredLanguage(newLang as any);
+  };
+
+  const handlePersonaStyleSelect = (styleKey: string) => {
+    setSelectedPersonaStyle(styleKey);
+    const preset = PERSONA_PRESETS[styleKey];
+    if (preset && preset.prompt) {
+      setCustomPersonaPromptInput(preset.prompt);
+    }
+  };
+
+  const handleResetPersonaPrompt = () => {
+    const preset = PERSONA_PRESETS[selectedPersonaStyle] || PERSONA_PRESETS.executive_peer;
+    setCustomPersonaPromptInput(preset.prompt);
   };
 
   const handleAddMemory = (e: React.FormEvent) => {
@@ -214,6 +247,13 @@ export const SettingsModal: React.FC = () => {
     setVoicePersona(persona);
     setVoiceRate(rate);
     setVoicePitch(pitch);
+    
+    // Store Persona Framing Settings
+    setPersonaStyle(selectedPersonaStyle);
+    setPersonaPrompt(customPersonaPromptInput.trim());
+
+    // Store Continuous Listening Timeout
+    setContinuousTimeoutSeconds(continuousTimeoutInput);
     
     // Store Relay Tuning Settings
     storeChunkIntervalMs(chunkIntervalMs);
@@ -278,13 +318,13 @@ export const SettingsModal: React.FC = () => {
               stopSpeaking();
               setIsSettingsOpen(false);
             }}
-            className="p-1.5 text-slate-400 hover:text-white bg-slate-800 rounded-xl"
+            className="p-1.5 text-slate-400 hover:text-white bg-slate-800 rounded-xl cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="space-y-4 text-xs max-h-[70vh] overflow-y-auto pr-1">
+        <div className="space-y-4 text-xs max-h-[70vh] overflow-y-auto pr-1 custom-scrollbar">
           
           {/* Hybrid Architecture Badge */}
           <div className="bg-gradient-to-r from-brand-950/60 to-indigo-950/60 border border-brand-500/30 p-3.5 rounded-2xl space-y-2">
@@ -296,6 +336,96 @@ export const SettingsModal: React.FC = () => {
               <strong className="text-brand-300 font-semibold">1. Groq Whisper</strong> transcribes your voice with ultra-low latency (&lt;250ms) and maximum phonetic accuracy.
               <br />
               <strong className="text-amber-300 font-semibold">2. Google Gemini AI Ultra</strong> receives the text to execute all deep reasoning, email/calendar drafting, task classification, and blueprint synthesis.
+            </p>
+          </div>
+
+          {/* Persona & Interaction Framing (Skills-Like Custom Instructions) */}
+          <div className="space-y-3 bg-slate-950 p-4 rounded-2xl border border-teal-500/40 shadow-sm">
+            <div className="flex items-center justify-between">
+              <label className="text-slate-200 font-semibold flex items-center gap-1.5 text-xs">
+                <Sparkles className="w-4 h-4 text-teal-400" />
+                <span>Conversational Persona & Framing</span>
+              </label>
+              <span className="text-[10px] font-mono text-teal-300 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/20 font-bold">
+                {PERSONA_PRESETS[selectedPersonaStyle]?.label.split(' ')[0]} {selectedPersonaStyle.replace('_', ' ')}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              Define how Eve reasons, converses, and interacts with you. Switch presets or write custom behavioral instructions (like skills).
+            </p>
+
+            {/* Persona Preset Options */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              {Object.entries(PERSONA_PRESETS).map(([key, item]) => (
+                <div
+                  key={key}
+                  onClick={() => handlePersonaStyleSelect(key)}
+                  className={`p-2.5 rounded-xl border cursor-pointer transition ${
+                    selectedPersonaStyle === key
+                      ? 'bg-teal-500/15 border-teal-500 text-teal-200 shadow-sm'
+                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-700'
+                  }`}
+                >
+                  <p className="font-semibold text-slate-200 text-xs">{item.label}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">{item.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Editable Custom System Prompt */}
+            <div className="space-y-1.5 pt-2 border-t border-slate-900">
+              <div className="flex items-center justify-between text-[11px] text-slate-400">
+                <span className="font-semibold text-slate-300">Custom Interaction Prompt:</span>
+                <button
+                  type="button"
+                  onClick={handleResetPersonaPrompt}
+                  className="text-[10px] text-teal-400 hover:underline cursor-pointer"
+                >
+                  Reset to Preset Default ↺
+                </button>
+              </div>
+              <textarea
+                rows={4}
+                value={customPersonaPromptInput}
+                onChange={(e) => {
+                  setCustomPersonaPromptInput(e.target.value);
+                  if (selectedPersonaStyle !== 'custom') {
+                    setSelectedPersonaStyle('custom');
+                  }
+                }}
+                placeholder="Write detailed instructions for how Eve should frame responses and interact with you..."
+                className="w-full bg-slate-900 border border-slate-800 focus:border-teal-500 rounded-xl p-2.5 text-slate-100 placeholder-slate-600 focus:outline-none font-sans text-xs leading-relaxed custom-scrollbar"
+              />
+              <p className="text-[10px] text-slate-500">
+                {customPersonaPromptInput.length} characters • Applied directly to live reasoning core.
+              </p>
+            </div>
+          </div>
+
+          {/* Continuous Listening Session Inactivity Timeout */}
+          <div className="space-y-2 bg-slate-950 p-3.5 rounded-2xl border border-teal-500/30">
+            <div className="flex items-center justify-between">
+              <label className="text-slate-200 font-semibold flex items-center gap-1.5">
+                <Radio className="w-4 h-4 text-teal-400" />
+                <span>Continuous Listening Inactivity Timeout</span>
+              </label>
+              <span className="text-[10px] font-mono text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/20 font-bold">
+                {continuousTimeoutInput === 0 ? '♾️ Manual Only' : `${continuousTimeoutInput}s`}
+              </span>
+            </div>
+            <select
+              value={continuousTimeoutInput}
+              onChange={(e) => setContinuousTimeoutInput(parseInt(e.target.value, 10))}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-slate-100 text-xs focus:outline-none focus:border-teal-500 cursor-pointer"
+            >
+              {CONTINUOUS_TIMEOUT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-slate-400">
+              Eve stays listening across multiple conversation turns until turned off or until this inactivity timeout expires (default: 60s).
             </p>
           </div>
 
@@ -379,7 +509,7 @@ export const SettingsModal: React.FC = () => {
             </p>
 
             {/* Existing Memories List */}
-            <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+            <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
               {insights.map((ins) => (
                 <div key={ins.id} className="p-2 rounded-xl bg-slate-900 border border-slate-800 flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
@@ -518,7 +648,7 @@ export const SettingsModal: React.FC = () => {
                 type="button"
                 onClick={handleManualGoogleSync}
                 disabled={isSyncingGoogle}
-                className="w-full mt-1.5 flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-brand-300 border border-slate-800 transition text-xs font-semibold"
+                className="w-full mt-1.5 flex items-center justify-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-brand-300 border border-slate-800 transition text-xs font-semibold cursor-pointer"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isSyncingGoogle ? 'animate-spin' : ''}`} />
                 <span>{syncSuccess ? 'Synced to BigQuery & Sheets! ✅' : isSyncingGoogle ? 'Syncing...' : '1-Click Sync Work Hub to Google'}</span>
@@ -583,7 +713,7 @@ export const SettingsModal: React.FC = () => {
                 type="button"
                 onClick={playVoiceSample}
                 disabled={isPlayingSample}
-                className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 text-brand-300 border border-brand-500/30 transition text-[11px] font-semibold"
+                className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 text-brand-300 border border-brand-500/30 transition text-[11px] font-semibold cursor-pointer"
               >
                 <Play className={`w-3 h-3 ${isPlayingSample ? 'animate-spin' : ''}`} />
                 <span>{isPlayingSample ? 'Speaking...' : 'Test Voice'}</span>
@@ -648,27 +778,24 @@ export const SettingsModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-900 transition"
+              className="w-full p-3.5 flex items-center justify-between text-left hover:bg-slate-900/60 transition cursor-pointer"
             >
-              <div className="flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-purple-400" />
-                <span className="font-semibold text-purple-200 text-xs">Relay Audio Slicing & AI Pipeline Tuning</span>
+              <div className="flex items-center space-x-2">
+                <SlidersHorizontal className="w-4 h-4 text-purple-400" />
+                <span className="font-semibold text-purple-300 text-xs">Relay Audio Slicing & Engine Tuning</span>
               </div>
               {showAdvanced ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
             </button>
 
             {showAdvanced && (
-              <div className="p-3.5 border-t border-slate-800 space-y-3.5 bg-slate-950/70">
-                {/* Audio Slice Duration */}
+              <div className="p-3.5 pt-0 space-y-3.5 border-t border-slate-900">
+                {/* Slicing Chunk Interval */}
                 <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300 font-semibold flex items-center justify-between">
-                    <span>Audio Slice Duration (Groq Whisper Streaming)</span>
-                    <span className="text-[10px] text-purple-400 font-mono">{(chunkIntervalMs / 1000).toFixed(1)}s</span>
-                  </label>
+                  <label className="text-slate-300 font-semibold text-[11px]">Audio Slice Interval (ms)</label>
                   <select
                     value={chunkIntervalMs}
                     onChange={(e) => setChunkIntervalMs(Number(e.target.value))}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500 cursor-pointer"
                   >
                     {CHUNK_INTERVAL_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -676,21 +803,32 @@ export const SettingsModal: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  <p className="text-[10px] text-slate-400">
-                    Controls the size of lightweight audio chunks streamed to Whisper in the background.
-                  </p>
+                  <p className="text-[10px] text-slate-500">Slices live audio into small rolling packets sent to Groq Whisper.</p>
+                </div>
+
+                {/* Audio Bitrate */}
+                <div className="space-y-1">
+                  <label className="text-slate-300 font-semibold text-[11px]">Audio Bitrate (kbps)</label>
+                  <select
+                    value={audioBitrateKbps}
+                    onChange={(e) => setAudioBitrateKbps(Number(e.target.value))}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500 cursor-pointer"
+                  >
+                    {AUDIO_BITRATE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* VAD Silence Duration */}
                 <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300 font-semibold flex items-center justify-between">
-                    <span>Voice Activity Detection (VAD) Silence Hold</span>
-                    <span className="text-[10px] text-purple-400 font-mono">{(silenceDurationMs / 1000).toFixed(1)}s</span>
-                  </label>
+                  <label className="text-slate-300 font-semibold text-[11px]">Voice Activity Silence Threshold</label>
                   <select
                     value={silenceDurationMs}
                     onChange={(e) => setSilenceDurationMs(Number(e.target.value))}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500 cursor-pointer"
                   >
                     {SILENCE_DURATION_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -699,152 +837,38 @@ export const SettingsModal: React.FC = () => {
                     ))}
                   </select>
                 </div>
-
-                {/* Audio Bitrate & MIME Type */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-300 font-semibold">Audio Bitrate</label>
-                    <select
-                      value={audioBitrateKbps}
-                      onChange={(e) => setAudioBitrateKbps(Number(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500"
-                    >
-                      {AUDIO_BITRATE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] text-slate-300 font-semibold">MIME Codec Format</label>
-                    <select
-                      value={mimeType}
-                      onChange={(e) => setMimeType(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500"
-                    >
-                      {MIME_TYPE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Live Model Selection */}
-                <div className="space-y-1">
-                  <label className="text-[11px] text-slate-300 font-semibold">Primary Live Reasoning Model</label>
-                  <select
-                    value={liveModel}
-                    onChange={(e) => setLiveModel(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-slate-200 text-xs focus:outline-none focus:border-purple-500"
-                  >
-                    {LIVE_MODEL_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Developer Diagnostic Debug Mode */}
-                <div className="flex items-center justify-between pt-2 border-t border-slate-900">
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold text-slate-200 font-mono">Developer Diagnostic Mode</span>
-                    <span className="text-[10px] text-slate-400">Stream raw Whisper latency & byte payloads to activity logs</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={debugMode}
-                    onChange={(e) => setDebugMode(e.target.checked)}
-                    className="w-4 h-4 rounded text-purple-600 bg-slate-900 border-slate-800 cursor-pointer"
-                  />
-                </div>
-
-                {/* Version Inspector Badge */}
-                <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-[10px] font-mono">
-                  <span className="text-slate-400">Relay Engine Build:</span>
-                  <span className="text-purple-300 font-bold bg-purple-950/80 px-2 py-0.5 rounded border border-purple-800">
-                    v{APP_VERSION} Live
-                  </span>
-                </div>
               </div>
             )}
-          </div>
-
-          {/* Workspace Hygiene & System Reset */}
-          <div className="space-y-2 bg-slate-950 p-3.5 rounded-2xl border border-rose-500/30">
-            <div className="flex items-center justify-between">
-              <label className="text-rose-300 font-semibold flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-rose-400" />
-                <span>Workspace Hygiene & Clean Slate Initialization</span>
-              </label>
-            </div>
-            <p className="text-[10px] text-slate-400">
-              Clear test/dummy data and initialize your workspace into a pristine production state.
-            </p>
-
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <button
-                type="button"
-                onClick={async () => {
-                  if (confirm('Initialize workspace to Pristine Clean Slate (0 dummy tasks, 0 test memos)?')) {
-                    await fetch('/api/system/reset', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ mode: 'pristine' })
-                    });
-                    window.location.reload();
-                  }
-                }}
-                className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition text-left"
-              >
-                <p className="font-semibold text-white text-xs">✨ Pristine Clean Slate</p>
-                <p className="text-[9px] text-slate-500 mt-0.5">0 tasks, 0 memos, clean slate for your voice</p>
-              </button>
-
-              <button
-                type="button"
-                onClick={async () => {
-                  if (confirm('Reset workspace to canonical Executive Starter Pack?')) {
-                    await fetch('/api/system/reset', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ mode: 'executive_starter' })
-                    });
-                    window.location.reload();
-                  }
-                }}
-                className="p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-brand-300 hover:text-brand-200 transition text-left"
-              >
-                <p className="font-semibold text-brand-300 text-xs">🌟 Executive Starter Pack</p>
-                <p className="text-[9px] text-slate-500 mt-0.5">7 canonical tasks across all categories</p>
-              </button>
-            </div>
           </div>
 
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-end space-x-2 pt-3 border-t border-slate-800">
-          <button
-            onClick={() => {
-              stopSpeaking();
-              setIsSettingsOpen(false);
-            }}
-            className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            className="flex items-center space-x-1.5 px-5 py-2 rounded-xl text-xs font-semibold bg-brand-500 hover:bg-brand-600 text-slate-950 shadow-md transition"
-          >
-            {saved ? <Check className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
-            <span>{saved ? 'Saved!' : 'Save Settings'}</span>
-          </button>
+        <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+          <span className="text-[10px] text-slate-500 font-mono">Eve Virtual Assistant v{APP_VERSION}</span>
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => setIsSettingsOpen(false)}
+              className="px-3.5 py-1.5 rounded-xl text-xs text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 transition cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="px-4 py-1.5 rounded-xl text-xs font-bold text-slate-950 bg-teal-400 hover:bg-teal-300 transition flex items-center space-x-1.5 cursor-pointer active:scale-95 shadow-md"
+            >
+              {saved ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-slate-950" />
+                  <span>Saved!</span>
+                </>
+              ) : (
+                <span>Save Changes</span>
+              )}
+            </button>
+          </div>
         </div>
 
       </div>

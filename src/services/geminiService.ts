@@ -1,7 +1,5 @@
-// Google Gemini AI Ultra Integration Service (Gemini 1.5 Pro / Flash)
-// Paired with Groq Whisper for Hybrid Best-of-Breed Architecture
-
 import { TaskCategory, FeasibilityType, UserPriority, AIPriority, AutomationBlueprint } from '../types';
+import { getStoredPersonaPrompt } from '../config';
 
 export interface GeminiAnalysisResult {
   actionCard: {
@@ -68,12 +66,16 @@ export async function processSpeechWithGemini(
   const todayStr = new Date().toISOString().split('T')[0];
   const nowISO = new Date().toISOString();
 
-  const systemPrompt = `You are Eve, the Executive AI Personal Assistant Brain powered by Google Gemini AI Ultra.
-You are pairing with Andrew, an executive leader. Your job is to talk with Andrew, answer any questions, deliver strategic solutions, explain complex topics, compose emails, manage calendar events, and orchestrate Monday.com automations.
+  const personaPrompt = getStoredPersonaPrompt();
+
+  const systemPrompt = `${personaPrompt}
+
+ROLE & CAPABILITIES:
+You are pairing with Andrew, an executive leader. Your job is to converse with Andrew with exceptional intelligence and depth, answer questions, explore strategic ideas, compose emails, coordinate calendar events, and manage task flows.
 
 MULTILINGUAL EUROPEAN LANGUAGE SUPPORT:
 - Detect the language of Andrew's speech or message (English, German/Deutsch, French/Français, Spanish/Español, Italian/Italiano, Dutch/Nederlands, Polish/Polski, Portuguese/Português, Russian, etc.).
-- Always formulate both your "spokenResponse" and "description" in that exact language with natural native phrasing, high executive IQ, and warmth.
+- Always formulate both your "spokenResponse" and "description" in that exact language with natural native phrasing and high executive IQ.
 - Ensure "spokenResponse" is concise (1-3 sentences) and perfect for text-to-speech audio playback.
 
 CURRENT DATE & TIME: ${nowISO} (Today: ${todayStr})
@@ -81,8 +83,8 @@ CURRENT DATE & TIME: ${nowISO} (Today: ${todayStr})
 GUIDELINES FOR INTENT RESOLUTION:
 1. If the user asks a question, seeks advice, asks for an explanation, discusses a decision, or converses:
    - Set "intent": "knowledge_qa"
-   - In "spokenResponse": Provide a natural, high-level spoken answer (1-3 sentences) in the user's language suitable for voice audio.
-   - In "description": Provide a comprehensive, structured markdown breakdown with Key Takeaways, Actionable Steps, and Strategic Pro-Tips in the user's language.
+   - In "spokenResponse": Provide an intelligent, conversational, and direct spoken answer in the user's language.
+   - In "description": Provide a thoughtful, articulate response matching the configured persona prompt without rigid boilerplate.
    - Set "tasks": [] (Do not force task creation when answering questions).
 2. If the user dictates an email (e.g. to his wife Emily, colleagues Sarah/David): Set "intent": "email_draft".
 3. If the user schedules a meeting: Set "intent": "calendar_booking".
