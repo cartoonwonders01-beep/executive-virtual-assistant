@@ -146,9 +146,9 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     
     assert.equal(config.DEFAULT_CHUNK_INTERVAL_MS, 2000);
     assert.equal(config.DEFAULT_AUDIO_BITRATE_KBPS, 64);
-    assert.equal(config.DEFAULT_SILENCE_DURATION_MS, 2200);
+    assert.equal(config.DEFAULT_SILENCE_DURATION_MS, 600);
     assert.ok(config.AUDIO_BITRATE_OPTIONS.length >= 3, 'Provides bitrate options');
-    assert.equal(config.APP_VERSION, '3.7.0');
+    assert.equal(config.APP_VERSION, '4.1.0');
     assert.ok(config.LANGUAGE_OPTIONS.length >= 8, 'Provides European language options');
   });
 
@@ -328,27 +328,30 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     } = await import('../src/config');
 
     // Family profiles exist
-    assert.ok(DEFAULT_LLM_PROFILES.some(p => p.id === 'prof-emily'), 'Emily family profile exists');
-    assert.ok(DEFAULT_LLM_PROFILES.some(p => p.id === 'prof-family-kids'), 'Family & Kids profile exists');
+    assert.ok(DEFAULT_LLM_PROFILES.some(p => p.id === 'prof-celine'), 'Celine family profile exists');
+    assert.ok(DEFAULT_LLM_PROFILES.some(p => p.id === 'prof-elizabeth'), 'Elizabeth profile exists');
+    assert.ok(DEFAULT_LLM_PROFILES.some(p => p.id === 'prof-alexander'), 'Alexander profile exists');
+    assert.ok(DEFAULT_LLM_PROFILES.some(p => p.id === 'prof-eleonore'), 'Eleonore profile exists');
+    assert.ok(DEFAULT_LLM_PROFILES.some(p => p.id === 'prof-angelina'), 'Angelina profile exists');
 
     // Speaker auto-detection
-    const detectedEmily = detectSpeakerFromTranscript("Hi Eve, it's Emily, could you help me with weekend plans?", DEFAULT_LLM_PROFILES);
-    assert.ok(detectedEmily, 'Recognized Emily from voice greeting');
-    assert.equal(detectedEmily?.userContext.userName, 'Emily');
+    const detectedCeline = detectSpeakerFromTranscript("Bonjour Eve, c'est Celine, pourrais-tu vérifier le planning familial?", DEFAULT_LLM_PROFILES);
+    assert.ok(detectedCeline, 'Recognized Celine from voice greeting');
+    assert.equal(detectedCeline?.userContext.userName, 'Celine');
 
     const detectedAndrew = detectSpeakerFromTranscript("Hey Eve, Andrew here, what are my morning priorities?", DEFAULT_LLM_PROFILES);
     assert.ok(detectedAndrew, 'Recognized Andrew from voice greeting');
     assert.equal(detectedAndrew?.userContext.userName, 'Andrew');
 
-    const detectedFamily = detectSpeakerFromTranscript("Hello Eve, this is the kids, tell us a bedtime story", DEFAULT_LLM_PROFILES);
-    assert.ok(detectedFamily, 'Recognized Family/Kids from voice greeting');
-    assert.equal(detectedFamily?.userContext.userName, 'Family');
+    const detectedLiz = detectSpeakerFromTranscript("Hi Eve, this is Elizabeth, help me with creative writing", DEFAULT_LLM_PROFILES);
+    assert.ok(detectedLiz, 'Recognized Elizabeth from voice greeting');
+    assert.equal(detectedLiz?.userContext.userName, 'Elizabeth');
 
     // Partitioned storage keys
-    const emilyStorageKey = getProfileDialogueStorageKey('prof-emily');
+    const celineStorageKey = getProfileDialogueStorageKey('prof-celine');
     const andrewStorageKey = getProfileDialogueStorageKey('prof-executive-lead');
-    assert.notEqual(emilyStorageKey, andrewStorageKey, 'Different users have isolated conversation histories');
-    assert.equal(emilyStorageKey, 'assistant_dialogue_turns_prof-emily');
+    assert.notEqual(celineStorageKey, andrewStorageKey, 'Different users have isolated conversation histories');
+    assert.equal(celineStorageKey, 'assistant_dialogue_turns_prof-celine');
   });
 
 });

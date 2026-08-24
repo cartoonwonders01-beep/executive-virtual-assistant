@@ -57,10 +57,8 @@ function recordTasksToSheets(tasks, spreadsheet) {
     const status = t.status || "in_progress";
     const hoursInvested = t.automationHoursInvested || t.hoursInvested || 2;
     const hoursWonBack = t.timeWonBackHours || t.hoursWonBack || 10;
-    const financialValueWon = hoursWonBack * hourlyRate;
-    const startDate = t.startDate || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd");
-    const dueDate = t.dueDate || Utilities.formatDate(new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), Session.getScriptTimeZone(), "yyyy-MM-dd");
-    const assignee = t.assignee || (feasibility === "ai_automated" ? "AI Agent" : "Andrew");
+    const assignee = t.assignee || (feasibility === "ai_automated" ? "AI Agent" : (t.speaker || "Andrew"));
+    const speaker = t.speaker || t.userName || payload?.userName || payload?.speaker || "Andrew";
     const createdAt = t.createdAt || new Date().toISOString();
     const description = t.description || title;
 
@@ -68,10 +66,10 @@ function recordTasksToSheets(tasks, spreadsheet) {
       taskId, title, category, userPriority, aiPriority,
       feasibility, status, hoursInvested, hoursWonBack,
       financialValueWon, startDate, dueDate, assignee,
-      createdAt, description
+      createdAt, description, speaker
     ]);
 
-    created.push({ id: taskId, title, category, feasibility, hoursWonBack, financialValueWon });
+    created.push({ id: taskId, title, category, feasibility, hoursWonBack, financialValueWon, speaker });
   });
 
   return created;

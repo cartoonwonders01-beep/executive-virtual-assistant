@@ -284,13 +284,13 @@ export function parseIntentFromSpeech(speechText: string): ActionCard {
   // -------------------------------------------------------------------------
   if (/(write|send|draft|compose)\s+([\w\s]+\s+)?(email|mail|message)\s+to/i.test(textLower) ||
       /^email\s+/i.test(textLower) ||
-      (/(wife|emily|sarah|david)/i.test(textLower) && /love|loved|saying|tell/i.test(textLower))) {
+      (/(wife|celine|emily|sarah|david)/i.test(textLower) && /love|loved|saying|tell/i.test(textLower))) {
     const emailDraft = draftEmailFromSpeech(text);
     db.saveToDisk();
 
-    const isWife = emailDraft.toName.toLowerCase().includes('emily') || emailDraft.toName.toLowerCase().includes('wife');
+    const isWife = emailDraft.toName.toLowerCase().includes('celine') || emailDraft.toName.toLowerCase().includes('emily') || emailDraft.toName.toLowerCase().includes('wife');
     const spoken = isWife
-      ? `I've prepared and sent an email to Emily saying you love her ❤️.`
+      ? `I've prepared and sent an email to ${emailDraft.toName} saying you love her ❤️.`
       : `I've prepared a draft email to ${emailDraft.toName} regarding ${emailDraft.subject}. You can review it on your screen.`;
 
     return {

@@ -1322,21 +1322,17 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       },
       onRecordingComplete: async (blob, mimeType, liveTranscript) => {
-        setIsProcessingSpeech(true);
         const sizeKb = (blob.size / 1024).toFixed(1);
-        logger.log('info', 'audio', `💾 Audio session concluded: ${sizeKb} KB (${blob.size} bytes, MIME: ${mimeType || 'audio/webm'})`);
-        
         try {
-          // Combine streamed segment transcripts
-          let textToProcess = streamedSegmentTranscripts.join(' ').trim();
-
-          // If segmented streaming didn't catch anything, check live transcript or transcribe final blob
-          if (!textToProcess) {
-            textToProcess = (liveTranscript || '').trim();
-          }
+          // Optimistic Zero-Latency STT: Prioritize instant real-time live transcript first!
+          let textToProcess = (liveTranscript || '').trim();
 
           if (!textToProcess) {
             textToProcess = (audioRecorder.getCapturedTranscript() || '').trim();
+          }
+
+          if (!textToProcess) {
+            textToProcess = streamedSegmentTranscripts.join(' ').trim();
           }
 
           if (!textToProcess && blob.size > 200) {

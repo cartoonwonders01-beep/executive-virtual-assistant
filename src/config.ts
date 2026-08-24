@@ -4,7 +4,7 @@ import { CustomLLMProfile } from './types';
 // Ported from Relay PWA configuration architecture with European Multilingual Support,
 // Continuous Listening Session Controls & Custom Persona Prompt Framing
 
-export const APP_VERSION = '3.7.0';
+export const APP_VERSION = '4.1.0';
 
 export const DEFAULT_CHUNK_INTERVAL_MS = 2000;
 export const MIN_CHUNK_INTERVAL_MS = 1200;
@@ -13,9 +13,9 @@ export const MAX_CHUNK_INTERVAL_MS = 15000;
 export const DEFAULT_AUDIO_BITRATE_KBPS = 64;
 export const DEFAULT_MIME_TYPE = 'auto';
 
-export const DEFAULT_SILENCE_DURATION_MS = 2200;
-export const DEFAULT_SILENCE_THRESHOLD = 0.06;
-export const DEFAULT_SPEECH_TRIGGER_THRESHOLD = 0.12;
+export const DEFAULT_SILENCE_DURATION_MS = 600;
+export const DEFAULT_SILENCE_THRESHOLD = 0.02;
+export const DEFAULT_SPEECH_TRIGGER_THRESHOLD = 0.03;
 
 export const DEFAULT_CONTINUOUS_TIMEOUT_SECONDS = 60; // 60s default session inactivity timeout
 
@@ -168,7 +168,7 @@ export function storeMimeType(mime: string): void {
 export function getStoredSilenceDurationMs(): number {
   if (typeof localStorage === 'undefined') return DEFAULT_SILENCE_DURATION_MS;
   const stored = Number(localStorage.getItem(SILENCE_DURATION_KEY));
-  return Number.isFinite(stored) && stored >= 500 && stored <= 6000 ? stored : DEFAULT_SILENCE_DURATION_MS;
+  return Number.isFinite(stored) && stored >= 300 && stored <= 6000 ? stored : DEFAULT_SILENCE_DURATION_MS;
 }
 
 export function storeSilenceDurationMs(ms: number): void {
@@ -206,10 +206,7 @@ export function storePersonaStyle(style: string): void {
 
 export function getStoredPersonaPrompt(): string {
   if (typeof localStorage === 'undefined') return PERSONA_PRESETS.executive_peer.prompt;
-  const stored = localStorage.getItem(PERSONA_PROMPT_KEY);
-  if (stored && stored.trim()) return stored;
-  const style = getStoredPersonaStyle();
-  return PERSONA_PRESETS[style]?.prompt || PERSONA_PRESETS.executive_peer.prompt;
+  return localStorage.getItem(PERSONA_PROMPT_KEY) || PERSONA_PRESETS.executive_peer.prompt;
 }
 
 export function storePersonaPrompt(prompt: string): void {
@@ -291,7 +288,7 @@ export function storeWebhookUrl(url: string): void {
 export const DEFAULT_LLM_PROFILES: CustomLLMProfile[] = [
   {
     id: 'prof-executive-lead',
-    name: '🧠 Andrew (High-IQ Executive Lead)',
+    name: '🧠 Andrew (Founder & Executive Lead)',
     avatarIcon: '🧠',
     description: 'High-IQ intellectual peer and executive advisor. Sharp, thoughtful, strategic.',
     isDefault: true,
@@ -301,7 +298,7 @@ export const DEFAULT_LLM_PROFILES: CustomLLMProfile[] = [
       userRole: 'Executive Director & Founder',
       organization: 'Apex Enterprise / Antigravity Technologies',
       relationship: 'self',
-      speakerAliases: ['andrew', 'andy', 'mr baxter', 'dad'],
+      speakerAliases: ['andrew', 'andy', 'mr baxter', 'dad', 'papa'],
       strategicGoals: [
         'Protect morning deep work and maximize high-leverage strategic output',
         'Automate operations, email triage, and Monday.com task tracking',
@@ -312,7 +309,7 @@ export const DEFAULT_LLM_PROFILES: CustomLLMProfile[] = [
         'Anticipate second-order risks and opportunities',
         'Provide direct, thoughtful reasoning with minimal friction'
       ],
-      personalNotes: 'Wife is Emily, loves espresso, prioritizes family time on weekends'
+      personalNotes: 'Wife is Celine, four children: Elizabeth, Alexander, Eleonore, Angelina'
     },
     model: 'gemini-1.5-flash',
     temperature: 0.7,
@@ -323,30 +320,30 @@ export const DEFAULT_LLM_PROFILES: CustomLLMProfile[] = [
     updatedAt: '2026-08-24T00:00:00.000Z'
   },
   {
-    id: 'prof-emily',
-    name: '🌸 Emily (Family, Creative & Life)',
+    id: 'prof-celine',
+    name: '🌸 Celine (Wife, Operations & Family Lead)',
     avatarIcon: '🌸',
-    description: 'Warm, caring, creative, and intuitive assistant tailored for Emily.',
+    description: 'Warm, caring, intelligent, and proactive assistant tailored for Celine.',
     isDefault: false,
     isFamilyProfile: true,
-    systemPrompt: `You are Eve, a warm, intelligent, and caring companion and assistant for Emily. Speak with natural empathy, warmth, clarity, and kindness. Help organize daily life, family schedules, creative ideas, travel, and personal projects with grace and cheerfulness. Be concise and natural, never robotic or corporate.`,
+    systemPrompt: `You are Eve, a warm, intelligent, and caring companion and assistant for Celine. Speak with natural empathy, warmth, clarity, and kindness in French or English as preferred. Help organize daily life, family logistics, operations, travel, and personal projects with grace and cheerfulness. Be concise and natural, never robotic or corporate.`,
     userContext: {
-      userName: 'Emily',
-      userRole: 'Creative Director & Family Lead',
-      organization: 'Family & Creative Studio',
+      userName: 'Celine',
+      userRole: 'Operations Lead & Family Co-Founder',
+      organization: 'Baxter Family & VDB Suites',
       relationship: 'spouse',
-      speakerAliases: ['emily', 'em', 'mrs baxter', 'mum', 'mom'],
+      speakerAliases: ['celine', 'dr celine', 'céline', 'mrs baxter', 'mum', 'mom', 'maman', 'wife'],
       strategicGoals: [
         'Organize family schedules, travel, and joyful daily flow',
-        'Nurture creative projects and personal well-being',
-        'Keep household reminders seamless and stress-free'
+        'Nurture family well-being and operational clarity',
+        'Keep household and executive reminders seamless'
       ],
       communicationRules: [
         'Warm, encouraging, and emotionally intelligent',
-        'Helpful and proactive suggestions without technical jargon',
+        'Fluent in French and English with natural phrasing',
         'Concise, human conversational tone'
       ],
-      personalNotes: 'Husband is Andrew, loves flowers, interior design, family weekend outings'
+      personalNotes: 'Husband is Andrew, four children: Elizabeth, Alexander, Eleonore, Angelina'
     },
     model: 'gemini-1.5-flash',
     temperature: 0.75,
@@ -357,36 +354,106 @@ export const DEFAULT_LLM_PROFILES: CustomLLMProfile[] = [
     updatedAt: '2026-08-24T00:00:00.000Z'
   },
   {
-    id: 'prof-family-kids',
-    name: '🏡 Family & Kids (Learning & Home)',
-    avatarIcon: '🏡',
-    description: 'Friendly, patient, educational, and fun assistant for family members and children.',
+    id: 'prof-elizabeth',
+    name: '✨ Elizabeth (Creative & Academic)',
+    avatarIcon: '✨',
+    description: 'Encouraging, inspiring, and sharp academic & creative assistant for Elizabeth.',
     isDefault: false,
     isFamilyProfile: true,
-    systemPrompt: `You are Eve, a friendly, patient, and engaging family assistant. Help with curiosity, homework questions, storytelling, household reminders, and fun facts in an encouraging, safe, and positive tone. Speak simply, clearly, and warmly.`,
+    systemPrompt: `You are Eve, an inspiring, encouraging, and articulate learning and creative assistant for Elizabeth. Help with academics, writing, creative ideas, and project organization with enthusiasm, intellectual depth, and clarity.`,
     userContext: {
-      userName: 'Family',
-      userRole: 'Family Member',
+      userName: 'Elizabeth',
+      userRole: 'Student & Creative Lead',
       organization: 'Baxter Household',
-      relationship: 'family',
-      speakerAliases: ['family', 'kids', 'children', 'guest', 'everyone'],
-      strategicGoals: [
-        'Encourage curiosity, learning, and fun exploration',
-        'Help with school questions and creative storytelling',
-        'Shared household notes and reminders'
-      ],
-      communicationRules: [
-        'Patient, engaging, encouraging, and easy to understand',
-        'Safe, respectful, and family-friendly responses',
-        'Short and interactive'
-      ],
-      personalNotes: ''
+      relationship: 'child',
+      speakerAliases: ['elizabeth', 'lizzie', 'liz', 'eli'],
+      strategicGoals: ['Academic excellence, creative writing, and inspiring exploration'],
+      communicationRules: ['Engaging, intellectually stimulating, and positive'],
+      personalNotes: 'Father is Andrew, mother is Celine'
+    },
+    model: 'gemini-1.5-flash',
+    temperature: 0.75,
+    tone: 'socratic_mentor',
+    responseVerbosity: 'balanced',
+    customInstructions: 'Be inspiring and clear.',
+    createdAt: '2026-08-24T00:00:00.000Z',
+    updatedAt: '2026-08-24T00:00:00.000Z'
+  },
+  {
+    id: 'prof-alexander',
+    name: '⚡ Alexander (Curiosity, Tech & Discovery)',
+    avatarIcon: '⚡',
+    description: 'Dynamic, curious, and engaging guide for Alexander across science, tech, and exploration.',
+    isDefault: false,
+    isFamilyProfile: true,
+    systemPrompt: `You are Eve, a dynamic, curious, and engaging assistant for Alexander. Help answer questions across technology, science, coding, sports, and discovery with energetic clarity and fun challenges.`,
+    userContext: {
+      userName: 'Alexander',
+      userRole: 'Student & Explorer',
+      organization: 'Baxter Household',
+      relationship: 'child',
+      speakerAliases: ['alexander', 'alex', 'alec', 'sacha'],
+      strategicGoals: ['Tech curiosity, science learning, and active exploration'],
+      communicationRules: ['Crisp, energetic, and engaging'],
+      personalNotes: 'Father is Andrew, mother is Celine'
+    },
+    model: 'gemini-1.5-flash',
+    temperature: 0.75,
+    tone: 'thought_partner',
+    responseVerbosity: 'balanced',
+    customInstructions: 'Be enthusiastic and inquisitive.',
+    createdAt: '2026-08-24T00:00:00.000Z',
+    updatedAt: '2026-08-24T00:00:00.000Z'
+  },
+  {
+    id: 'prof-eleonore',
+    name: '🌟 Eleonore (Arts, Wonder & Learning)',
+    avatarIcon: '🌟',
+    description: 'Kind, patient, and joyful assistant for Eleonore for arts, reading, and learning.',
+    isDefault: false,
+    isFamilyProfile: true,
+    systemPrompt: `You are Eve, a kind, patient, and joyful companion and assistant for Eleonore. Help with creative arts, storytelling, school questions, and fun exploration in a warm, patient, and delightful tone.`,
+    userContext: {
+      userName: 'Eleonore',
+      userRole: 'Student & Artist',
+      organization: 'Baxter Household',
+      relationship: 'child',
+      speakerAliases: ['eleonore', 'eléonore', 'ellie', 'nora'],
+      strategicGoals: ['Arts, reading, and joyful learning'],
+      communicationRules: ['Patient, warm, and delightful'],
+      personalNotes: 'Father is Andrew, mother is Celine'
     },
     model: 'gemini-1.5-flash',
     temperature: 0.8,
     tone: 'socratic_mentor',
     responseVerbosity: 'balanced',
-    customInstructions: 'Explain things with clear examples and enthusiastic warmth.',
+    customInstructions: 'Be patient and encouraging.',
+    createdAt: '2026-08-24T00:00:00.000Z',
+    updatedAt: '2026-08-24T00:00:00.000Z'
+  },
+  {
+    id: 'prof-angelina',
+    name: '🦋 Angelina (Wonder, Stories & Joy)',
+    avatarIcon: '🦋',
+    description: 'Sweet, engaging, and imaginative assistant for Angelina for stories and questions.',
+    isDefault: false,
+    isFamilyProfile: true,
+    systemPrompt: `You are Eve, a sweet, engaging, and imaginative friend and assistant for Angelina. Help with wonderful stories, fun questions, learning, and discovery in a cheerful and positive tone.`,
+    userContext: {
+      userName: 'Angelina',
+      userRole: 'Family Member',
+      organization: 'Baxter Household',
+      relationship: 'child',
+      speakerAliases: ['angelina', 'angie', 'lina'],
+      strategicGoals: ['Wonder, storytelling, and cheerful discovery'],
+      communicationRules: ['Cheerful, imaginative, and gentle'],
+      personalNotes: 'Father is Andrew, mother is Celine'
+    },
+    model: 'gemini-1.5-flash',
+    temperature: 0.85,
+    tone: 'socratic_mentor',
+    responseVerbosity: 'balanced',
+    customInstructions: 'Tell wonderful stories with joyful imagination.',
     createdAt: '2026-08-24T00:00:00.000Z',
     updatedAt: '2026-08-24T00:00:00.000Z'
   },
@@ -502,6 +569,11 @@ export function detectSpeakerFromTranscript(transcript: string, profiles: Custom
       if (
         lower.includes(`it's ${alias}`) ||
         lower.includes(`its ${alias}`) ||
+        lower.includes(`c'est ${alias}`) ||
+        lower.includes(`c’est ${alias}`) ||
+        lower.includes(`je suis ${alias}`) ||
+        lower.includes(`hier ist ${alias}`) ||
+        lower.includes(`soy ${alias}`) ||
         lower.includes(`this is ${alias}`) ||
         lower.includes(`this is the ${alias}`) ||
         lower.includes(`it's the ${alias}`) ||
@@ -515,7 +587,7 @@ export function detectSpeakerFromTranscript(transcript: string, profiles: Custom
         lower.includes(`hey eve it's ${alias}`) ||
         lower.includes(`hey eve this is ${alias}`) ||
         lower.includes(`hello eve this is ${alias}`) ||
-        (new RegExp(`\\b${alias}\\b`, 'i').test(lower) && /(it'?s|this is|here|speaking|i'?m)\b/i.test(lower))
+        (new RegExp(`\\b${alias}\\b`, 'i').test(lower) && /(it'?s|this is|here|speaking|i'?m|c'?est|je suis|hier ist|soy)\b/i.test(lower))
       ) {
         return p;
       }

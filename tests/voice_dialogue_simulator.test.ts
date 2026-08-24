@@ -100,25 +100,48 @@ test('Autonomous Voice & Dialogue Interactive Simulation Suite', async (t) => {
     assert.equal(dialogueManager.getTurns().length, 2, '2 turns registered');
   });
 
-  await t.test('Simulation 4: Speaker Recognition & Family Profile Auto-Switching', async () => {
-    // 1. Emily speaks
-    const emilySpeech = "Hi Eve, it's Emily, can you check our family weekend plans?";
-    const detectedEmily = detectSpeakerFromTranscript(emilySpeech, DEFAULT_LLM_PROFILES);
-    assert.ok(detectedEmily, 'Emily detected from speech');
-    assert.equal(detectedEmily?.userContext.userName, 'Emily');
-    assert.equal(detectedEmily?.id, 'prof-emily');
+  await t.test('Simulation 4: Speaker Recognition & Family of Six Profiles (Andrew, Celine, Elizabeth, Alexander, Eleonore, Angelina)', async () => {
+    // 1. Celine speaks
+    const celineSpeech = "Bonjour Eve, c'est Celine, peux-tu organiser notre planning familial pour ce weekend?";
+    const detectedCeline = detectSpeakerFromTranscript(celineSpeech, DEFAULT_LLM_PROFILES);
+    assert.ok(detectedCeline, 'Celine detected from speech');
+    assert.equal(detectedCeline?.userContext.userName, 'Celine');
+    assert.equal(detectedCeline?.id, 'prof-celine');
 
     // 2. Andrew speaks
     const andrewSpeech = "Hey Eve, Andrew here, what are my top strategic priorities today?";
     const detectedAndrew = detectSpeakerFromTranscript(andrewSpeech, DEFAULT_LLM_PROFILES);
     assert.ok(detectedAndrew, 'Andrew detected from speech');
     assert.equal(detectedAndrew?.userContext.userName, 'Andrew');
+    assert.equal(detectedAndrew?.id, 'prof-executive-lead');
 
-    // 3. Kids / Family speak
-    const familySpeech = "Hello Eve, this is the kids, tell us a story about space";
-    const detectedFamily = detectSpeakerFromTranscript(familySpeech, DEFAULT_LLM_PROFILES);
-    assert.ok(detectedFamily, 'Family/Kids detected from speech');
-    assert.equal(detectedFamily?.userContext.userName, 'Family');
+    // 3. Elizabeth speaks
+    const lizSpeech = "Hi Eve, it's Elizabeth, can you help me brainstorm ideas for my creative writing project?";
+    const detectedLiz = detectSpeakerFromTranscript(lizSpeech, DEFAULT_LLM_PROFILES);
+    assert.ok(detectedLiz, 'Elizabeth detected from speech');
+    assert.equal(detectedLiz?.userContext.userName, 'Elizabeth');
+    assert.equal(detectedLiz?.id, 'prof-elizabeth');
+
+    // 4. Alexander speaks
+    const alexSpeech = "Hey Eve, this is Alexander, how does quantum computing actually work?";
+    const detectedAlex = detectSpeakerFromTranscript(alexSpeech, DEFAULT_LLM_PROFILES);
+    assert.ok(detectedAlex, 'Alexander detected from speech');
+    assert.equal(detectedAlex?.userContext.userName, 'Alexander');
+    assert.equal(detectedAlex?.id, 'prof-alexander');
+
+    // 5. Eleonore speaks
+    const eleonoreSpeech = "Hello Eve, it's Eleonore, what are some fun watercolor painting techniques?";
+    const detectedEleonore = detectSpeakerFromTranscript(eleonoreSpeech, DEFAULT_LLM_PROFILES);
+    assert.ok(detectedEleonore, 'Eleonore detected from speech');
+    assert.equal(detectedEleonore?.userContext.userName, 'Eleonore');
+    assert.equal(detectedEleonore?.id, 'prof-eleonore');
+
+    // 6. Angelina speaks
+    const angelinaSpeech = "Hi Eve, this is Angelina, can you tell me a sweet bedtime story about a magical butterfly?";
+    const detectedAngelina = detectSpeakerFromTranscript(angelinaSpeech, DEFAULT_LLM_PROFILES);
+    assert.ok(detectedAngelina, 'Angelina detected from speech');
+    assert.equal(detectedAngelina?.userContext.userName, 'Angelina');
+    assert.equal(detectedAngelina?.id, 'prof-angelina');
   });
 
   await t.test('Simulation 5: European Multilingual Dialogue Engine (German, French, Spanish)', async () => {
@@ -203,6 +226,15 @@ test('Autonomous Voice & Dialogue Interactive Simulation Suite', async (t) => {
     const negResult = intelligentAdvisor.solve('How should I negotiate contract terms with a strategic supplier?');
     assert.ok(negResult.spokenResponse.includes('negotiat') || negResult.spokenResponse.includes('parameters'), 'Negotiation reasoning rendered');
     assert.equal(negResult.category, 'Communication');
+  });
+
+  await t.test('Simulation 11: Sub-50ms End-to-End Processing & Hand-Off Latency Benchmark', async () => {
+    const start = performance.now();
+    const result = intelligentAdvisor.solve('What are the top 3 priorities for today?');
+    const elapsedMs = performance.now() - start;
+
+    assert.ok(elapsedMs < 50, `High-IQ advisor resolved in ${elapsedMs.toFixed(2)}ms (sub-50ms budget)`);
+    assert.ok(result.spokenResponse.length > 0, 'Spoken response present');
   });
 
 });

@@ -130,14 +130,14 @@ export class AudioRecorderService {
                 config.onLiveTranscript(current);
               }
 
-              // Auto-stop after user finishes speaking their sentence
+              // Auto-stop after user finishes speaking their sentence (Adaptive Low-Latency VAD: 450ms)
               if (this.vadOptions.autoStopOnSilence) {
                 if (this.speechFinishTimer) clearTimeout(this.speechFinishTimer);
                 this.speechFinishTimer = setTimeout(() => {
                   if (this.isRecordingActive) {
                     this.stop();
                   }
-                }, Math.max(1200, this.vadOptions.silenceDurationMs));
+                }, Math.max(450, this.vadOptions.silenceDurationMs));
               }
             }
           };
