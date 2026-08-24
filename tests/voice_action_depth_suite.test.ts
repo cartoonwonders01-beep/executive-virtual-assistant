@@ -171,4 +171,20 @@ test('Comprehensive Multi-Turn Voice Action Depth Suite', async (t) => {
     assert.ok(archives.some(a => a.id === archive.id), 'Archive is retrievable via getArchivedSessions');
   });
 
+  await t.test('11. Granular Background Debug Telemetry Tracing', async () => {
+    const { logger } = await import('../src/services/loggerService');
+
+    logger.debug('vad_mic', 'Testing VAD audio threshold capture', { decibels: -24, isSpeech: true });
+    logger.debug('gemini_llm', 'Testing Gemini payload tracing', { model: 'gemini-1.5-flash', tokens: 120 });
+    logger.debug('tts_speech', 'Testing Journey TTS MP3 payload', { voice: 'en-US-Journey-F', rate: 1.02 });
+
+    const entries = logger.getEntries();
+    const debugEntries = entries.filter(e => e.level === 'debug');
+
+    assert.ok(debugEntries.length >= 3, 'Debug telemetry records are captured');
+    assert.ok(debugEntries.some(e => e.category === 'vad_mic'), 'VAD Mic telemetry captured');
+    assert.ok(debugEntries.some(e => e.category === 'gemini_llm'), 'Gemini LLM telemetry captured');
+    assert.ok(debugEntries.some(e => e.category === 'tts_speech'), 'TTS Speech telemetry captured');
+  });
+
 });

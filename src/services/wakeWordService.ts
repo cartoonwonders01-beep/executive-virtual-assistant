@@ -115,15 +115,44 @@ export class WakeWordService {
       this.recognition.lang = 'en-US';
 
       logger.log('info', 'wake_word', `Passive wake-word listener activated. Listening for "${this.primaryWakeWord}" & direct voice input...`);
+      logger.debug('wake_word', `SpeechRecognition initialized`, {
+        continuous: true,
+        interimResults: true,
+        lang: 'en-US',
+        triggers: this.wakeTriggers
+      });
+
+      this.recognition.onaudiostart = () => {
+        logger.debug('audio', '🎤 Audio hardware capturing stream');
+      };
+
+      this.recognition.onspeechstart = () => {
+        logger.debug('vad_mic', '🗣️ Speech detected by VAD threshold');
+      };
+
+      this.recognition.onspeechend = () => {
+        logger.debug('vad_mic', '🤫 Speech pause detected by VAD');
+      };
 
       this.recognition.onresult = (event: any) => {
         let fullTranscript = '';
+        let isFinal = false;
+        let confidence = 1.0;
+
         for (let i = 0; i < event.results.length; ++i) {
           fullTranscript += ' ' + event.results[i][0].transcript;
+          if (event.results[i].isFinal) isFinal = true;
+          if (event.results[i][0].confidence) confidence = event.results[i][0].confidence;
         }
 
         const lower = fullTranscript.toLowerCase().trim();
         if (lower) {
+          logger.debug('speech_stt', `Interim speech buffer: "${lower}"`, {
+            isFinal,
+            confidence: Math.round(confidence * 100) + '%',
+            resultCount: event.results.length
+          });
+
           if (isVerbalStopCommand(lower)) {
             stopSpeaking();
             logger.log('info', 'wake_word', `🛑 Verbal stop command recognized: "${lower}". Silencing assistant.`);
@@ -132,7 +161,10 @@ export class WakeWordService {
 
           // Full-Duplex Acoustic Isolation Protocol (FDAIP) & AEC: Ignore speaker feedback & echo
           if (isCurrentlySpeaking() || isAcousticEcho(lower)) {
-            logger.log('info', 'audio', `🔇 Acoustic Echo / Self-Hearing Suppressed: "${lower}"`);
+            logger.debug('audio', `🔇 Acoustic Echo / Self-Hearing Suppressed: "${lower}"`, {
+              isCurrentlySpeaking: isCurrentlySpeaking(),
+              isAcousticEcho: isAcousticEcho(lower)
+            });
             return;
           }
 
@@ -153,6 +185,7 @@ export class WakeWordService {
             matchedTrigger = trigger;
             const triggerIdx = lower.indexOf(trigger);
             command = lower.substring(triggerIdx + trigger.length).replace(/^[,.\s]+/, '').trim();
+            logger.debug('wake_word', `Matched trigger keyword: "${trigger}"`, { trailingCommand: command });
             break;
           }
         }
@@ -165,6 +198,7 @@ export class WakeWordService {
               matchedTrigger = match[0];
               const matchIdx = lower.indexOf(matchedTrigger);
               command = lower.substring(matchIdx + matchedTrigger.length).replace(/^[,.\s]+/, '').trim();
+              logger.debug('wake_word', `Matched phonetic pattern: "${pattern.source}"`, { matched: matchedTrigger, trailingCommand: command });
               break;
             }
           }
@@ -176,6 +210,7 @@ export class WakeWordService {
           if (directIntentRegex.test(lower) || lower.split(' ').length >= 3) {
             matchedTrigger = 'Direct Voice Command';
             command = lower;
+            logger.debug('wake_word', `Matched direct conversational intent: "${lower}"`);
           }
         }
 
@@ -188,6 +223,7 @@ export class WakeWordService {
           this.debounceTimer = setTimeout(() => {
             if (this.isPaused || !this.isListening) return;
             logger.log('success', 'wake_word', `🎯 Voice Command DETECTED: "${capturedTrigger}"`, { command: capturedCommand || 'none' });
+            logger.debug('state_machine', `Transitioning from passive wake listening to active reasoning`, { command: capturedCommand });
 
             // Play Google-style double-tone wake chime
             this.playGoogleAssistantChime();

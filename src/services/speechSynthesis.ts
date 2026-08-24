@@ -1,3 +1,5 @@
+import { logger } from './loggerService';
+
 export type VoicePersona = 
   | 'google_journey_female' // en-US-Journey-F (Studio Conversational Human Female - Podcast Quality)
   | 'google_journey_british' // en-GB-Journey-F (Studio Executive British Female)
@@ -488,9 +490,16 @@ export function speakResponse(text: string, onEnd?: () => void, persona?: VoiceP
     if (selectedPersona === 'google_journey_british') journeyVoice = 'en-GB-Journey-F';
     if (selectedPersona === 'google_journey_male') journeyVoice = 'en-US-Journey-D';
 
+    logger.debug('tts_speech', `Requesting Google Cloud Journey TTS`, {
+      voiceName: journeyVoice,
+      textLength: cleanText.length,
+      rate: speechRate
+    });
+
     const ttsAbort = new AbortController();
     const fetchTimeout = setTimeout(() => {
       ttsAbort.abort();
+      logger.debug('tts_speech', `Journey TTS 350ms race timeout expired, triggering instant browser neural fallback`);
       fallbackBrowserSynthesis();
     }, 350);
 
@@ -504,20 +513,24 @@ export function speakResponse(text: string, onEnd?: () => void, persona?: VoiceP
       .then((data: any) => {
         clearTimeout(fetchTimeout);
         if (data.success && data.audioBase64) {
+          logger.debug('tts_speech', `Journey TTS MP3 received successfully (${Math.round(data.audioBase64.length / 1024)} KB)`);
           isSpeakingState = true;
           const audio = new Audio(`data:audio/mp3;base64,${data.audioBase64}`);
           activeAudioElement = audio;
           audio.onended = finish;
           audio.onerror = finish;
           audio.play().catch(() => {
+            logger.debug('tts_speech', `Audio element play error, falling back to browser synthesis`);
             fallbackBrowserSynthesis();
           });
           return;
         }
+        logger.debug('tts_speech', `Journey TTS returned non-success, using browser fallback`, { data });
         fallbackBrowserSynthesis();
       })
-      .catch(() => {
+      .catch((err) => {
         clearTimeout(fetchTimeout);
+        logger.debug('tts_speech', `Journey TTS fetch caught exception, falling back to browser`, { error: String(err) });
         fallbackBrowserSynthesis();
       });
     return;

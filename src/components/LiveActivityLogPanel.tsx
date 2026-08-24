@@ -21,7 +21,8 @@ import {
   Send,
   Zap,
   Layers,
-  Database
+  Database,
+  Bug
 } from 'lucide-react';
 
 interface LiveActivityLogPanelProps {
@@ -33,7 +34,8 @@ const LEVEL_STYLES: Record<LogLevel, { text: string; bg: string; border: string;
   error: { text: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/30', icon: <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" /> },
   warn: { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/30', icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" /> },
   success: { text: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> },
-  info: { text: 'text-slate-300', bg: 'bg-slate-900/60', border: 'border-slate-800', icon: <Info className="w-3.5 h-3.5 text-teal-400 shrink-0" /> }
+  info: { text: 'text-slate-300', bg: 'bg-slate-900/60', border: 'border-slate-800', icon: <Info className="w-3.5 h-3.5 text-teal-400 shrink-0" /> },
+  debug: { text: 'text-sky-300', bg: 'bg-sky-950/30', border: 'border-sky-800/40', icon: <Bug className="w-3.5 h-3.5 text-sky-400 shrink-0" /> }
 };
 
 const CATEGORY_BADGES: Record<string, { label: string; bg: string; text: string }> = {
@@ -43,6 +45,10 @@ const CATEGORY_BADGES: Record<string, { label: string; bg: string; text: string 
   wake_word: { label: '⚡ Wake', bg: 'bg-amber-950/60 border-amber-800/60', text: 'text-amber-300' },
   tts_speech: { label: '🗣️ TTS', bg: 'bg-indigo-950/60 border-indigo-800/60', text: 'text-indigo-300' },
   google_sync: { label: '☁️ Google', bg: 'bg-emerald-950/60 border-emerald-800/60', text: 'text-emerald-300' },
+  gemini_llm: { label: '🤖 Gemini', bg: 'bg-blue-950/60 border-blue-800/60', text: 'text-blue-300' },
+  rag_vector: { label: '🔍 RAG', bg: 'bg-emerald-950/60 border-emerald-800/60', text: 'text-emerald-300' },
+  vad_mic: { label: '🎙️ VAD', bg: 'bg-cyan-950/60 border-cyan-800/60', text: 'text-cyan-300' },
+  state_machine: { label: '⚙️ State', bg: 'bg-orange-950/60 border-orange-800/60', text: 'text-orange-300' },
   system: { label: '⚙️ System', bg: 'bg-slate-900 border-slate-800', text: 'text-slate-400' }
 };
 
@@ -53,7 +59,7 @@ export const LiveActivityLogPanel: React.FC<LiveActivityLogPanelProps> = ({ onCl
   const [archivedSessions, setArchivedSessions] = useState<ArchivedLogSession[]>(() => logger.getArchivedSessions());
   const [selectedArchive, setSelectedArchive] = useState<ArchivedLogSession | null>(null);
   
-  const [filter, setFilter] = useState<'all' | 'ai_reasoning' | 'speech_stt' | 'audio' | 'error'>('all');
+  const [filter, setFilter] = useState<'all' | 'debug' | 'ai_reasoning' | 'speech_stt' | 'audio' | 'gemini_llm' | 'error'>('all');
   const [autoScroll, setAutoScroll] = useState(true);
   const [copied, setCopied] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -106,6 +112,8 @@ export const LiveActivityLogPanel: React.FC<LiveActivityLogPanelProps> = ({ onCl
 
   const filteredLogs = filter === 'all'
     ? currentDisplayLogs
+    : filter === 'debug'
+    ? currentDisplayLogs.filter(e => e.level === 'debug')
     : filter === 'error'
     ? currentDisplayLogs.filter(e => e.level === 'error')
     : currentDisplayLogs.filter(e => e.category === filter);
@@ -210,17 +218,25 @@ export const LiveActivityLogPanel: React.FC<LiveActivityLogPanelProps> = ({ onCl
 
         {/* Filter Pills */}
         <div className="flex items-center space-x-1 overflow-x-auto no-scrollbar">
-          {(['all', 'ai_reasoning', 'speech_stt', 'audio', 'error'] as const).map((f) => (
+          {([
+            { id: 'all', label: 'All' },
+            { id: 'debug', label: '🔍 Debug' },
+            { id: 'ai_reasoning', label: '🧠 Brain' },
+            { id: 'speech_stt', label: '🎙️ STT' },
+            { id: 'audio', label: '🔊 Audio' },
+            { id: 'gemini_llm', label: '🤖 Gemini' },
+            { id: 'error', label: '❌ Error' }
+          ] as const).map((f) => (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-2 py-0.5 rounded-lg text-[10px] font-mono transition border ${
-                filter === f
+              key={f.id}
+              onClick={() => setFilter(f.id as any)}
+              className={`px-2 py-0.5 rounded-lg text-[10px] font-mono transition border whitespace-nowrap cursor-pointer ${
+                filter === f.id
                   ? 'bg-slate-800 text-teal-300 border-teal-500/40 font-bold'
                   : 'bg-slate-900/60 text-slate-500 border-slate-800 hover:text-slate-300'
               }`}
             >
-              {f === 'all' ? 'All' : f.replace('_', ' ')}
+              {f.label}
             </button>
           ))}
         </div>

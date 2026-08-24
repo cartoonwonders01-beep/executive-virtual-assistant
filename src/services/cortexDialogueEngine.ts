@@ -43,10 +43,20 @@ export class CortexDialogueEngine {
     const nowStr = new Date().toISOString();
 
     logger.log('info', 'ai_reasoning', `🧠 Cortex Ingesting: "${textTrimmed}"`);
+    logger.debug('ai_reasoning', `Cortex ReAct cycle started`, {
+      rawInput: textTrimmed,
+      historyDepth: history.length,
+      activeProfile: activeProfile?.name || 'Default'
+    });
 
     // 1. If live Gemini API key is available, leverage Live Gemini LLM with Family Context & Tool Schemas
     if (apiKey) {
       try {
+        logger.debug('gemini_llm', `Dispatching to Gemini Cloud API (gemini-1.5-flash)...`, {
+          apiKeyPresent: true,
+          profile: activeProfile?.name
+        });
+        const startTime = Date.now();
         const geminiResult = await processSpeechWithGemini(
           textTrimmed,
           apiKey,
@@ -54,6 +64,8 @@ export class CortexDialogueEngine {
           activeProfile,
           history.slice(-6).map(h => ({ speaker: h.speaker, text: h.text }))
         );
+        const duration = Date.now() - startTime;
+        logger.debug('gemini_llm', `Gemini Cloud API returned in ${duration}ms`, { geminiResult });
 
         if (geminiResult && geminiResult.actionCard) {
           const gCard = geminiResult.actionCard;
@@ -90,6 +102,7 @@ export class CortexDialogueEngine {
         }
       } catch (err) {
         logger.log('warn', 'ai_reasoning', `Gemini remote call failed, falling back to local Cortex ReAct reasoning: ${err}`);
+        logger.debug('gemini_llm', `Gemini API error details:`, { error: String(err) });
       }
     }
 
@@ -102,6 +115,8 @@ export class CortexDialogueEngine {
       .replace(/^(?:hey\s+eve|hi\s+eve|eve|eeve|if\s+i\s+want\s+you\s+to|if\s+you\s+can|if|ok\s+eve|okay\s+eve|please\s+eve|please)[,\s:]+/i, '')
       .trim();
     const cleanLower = cleanedText.toLowerCase();
+
+    logger.debug('ai_reasoning', `Cleaned ReAct transcript payload: "${cleanedText}"`, { cleanLower });
 
     // A. Tool: Web Search & Weather Grounding (Prioritized over calendar)
     if (/weather|forecast|rain|temperature|degrees|meteo|hot\b|cold\b|sunny|outside/i.test(textLower) || webSearchService.isWebSearchQuery(cleanedText || textTrimmed)) {

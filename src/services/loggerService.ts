@@ -2,7 +2,21 @@
 // Captures real-time audio states, wake word triggers, AI thinking, and execution logs
 // Modeled on Relay PWA meeting logging engine with localStorage persistence
 
-export type LogLevel = 'info' | 'success' | 'warn' | 'error';
+export type LogLevel = 'info' | 'success' | 'warn' | 'error' | 'debug';
+
+export type LogCategory = 
+  | 'audio' 
+  | 'wake_word' 
+  | 'speech_stt' 
+  | 'groq_whisper' 
+  | 'ai_reasoning' 
+  | 'tts_speech' 
+  | 'google_sync' 
+  | 'system'
+  | 'rag_vector'
+  | 'gemini_llm'
+  | 'vad_mic'
+  | 'state_machine';
 
 export interface LogEntry {
   id: string;
@@ -10,7 +24,7 @@ export interface LogEntry {
   sessionId: string;
   userId: string;
   level: LogLevel;
-  category: 'audio' | 'wake_word' | 'speech_stt' | 'groq_whisper' | 'ai_reasoning' | 'tts_speech' | 'google_sync' | 'system';
+  category: LogCategory;
   msg: string;
   details?: any;
 }
@@ -127,7 +141,7 @@ class LoggerService {
     this.userId = uid;
   }
 
-  public log(level: LogLevel, category: LogEntry['category'], msg: string, details?: any): void {
+  public log(level: LogLevel, category: LogCategory, msg: string, details?: any): void {
     // Deduplicate & throttle rapid interim STT entries to prevent log flooding
     if (category === 'speech_stt' && level === 'info' && this.entries.length > 0) {
       const top = this.entries[0];
@@ -165,6 +179,7 @@ class LoggerService {
     if (level === 'error') console.error(prefix, msg, details || '');
     else if (level === 'warn') console.warn(prefix, msg, details || '');
     else if (level === 'success') console.log(`%c${prefix} ${msg}`, 'color: #10b981; font-weight: bold;', details || '');
+    else if (level === 'debug') console.log(`%c${prefix} ${msg}`, 'color: #38bdf8; font-style: italic;', details || '');
     else console.log(prefix, msg, details || '');
 
     // Notify UI subscribers
@@ -175,6 +190,10 @@ class LoggerService {
         console.error('Log listener callback error:', err);
       }
     });
+  }
+
+  public debug(category: LogCategory, msg: string, details?: any): void {
+    this.log('debug', category, msg, details);
   }
 
   /**
