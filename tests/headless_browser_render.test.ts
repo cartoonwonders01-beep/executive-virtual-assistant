@@ -56,15 +56,19 @@ export async function runHeadlessBrowserRenderAudit() {
     const rootHtml = await page.evaluate(() => document.getElementById('root')?.innerHTML || '');
     assert(rootHtml.length > 500, `H2.1: #root contains rendered DOM tree (${rootHtml.length} characters)`);
 
-    const hasHeader = await page.evaluate(() => {
-      return document.body.innerText.includes('Eve') || document.body.innerText.includes('Assistant');
+    const headerVisibility = await page.evaluate(() => {
+      const header = document.querySelector('header');
+      if (!header) return false;
+      const rect = header.getBoundingClientRect();
+      return rect.top >= 0 && rect.bottom > 30 && rect.width > 200;
     });
-    assert(hasHeader, 'H2.2: Page contains Eve Assistant branding');
+    assert(headerVisibility, 'H2.2: Header is strictly visible at the top of the viewport (not scrolled out)');
 
-    const hasVoiceOrb = await page.evaluate(() => {
-      return document.querySelector('button') !== null;
+    const hasControls = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return text.includes('Eve') && (text.includes('Quiet') || text.includes('Logs') || text.includes('Config'));
     });
-    assert(hasVoiceOrb, 'H2.3: Push-to-talk microphone and action controls mounted');
+    assert(hasControls, 'H2.3: Header controls (Quiet Mode / Logs / Config) are rendered');
 
     const quickPromptsRendered = await page.evaluate(() => {
       const text = document.body.innerText;
@@ -72,9 +76,26 @@ export async function runHeadlessBrowserRenderAudit() {
     });
     assert(quickPromptsRendered, 'H2.4: Natural quick prompts rendered on screen');
 
-    console.log('\n--- [Step 3] Error-Free Execution Verification ---');
-    assert(browserErrors.length === 0, `H3.1: Zero uncaught browser runtime exceptions (found ${browserErrors.length})`, browserErrors);
-    assert(consoleErrors.length === 0, `H3.2: Zero browser console.error logs (found ${consoleErrors.length})`, consoleErrors);
+    console.log('\n--- [Step 3] Interactive Chat Verification ---');
+    // Test typing a message and submitting
+    const inputFound = await page.$('input[type="text"]');
+    assert(inputFound !== null, 'H3.1: Chat text input found on page');
+
+    if (inputFound) {
+      await page.type('input[type="text"]', 'What are 3 strategies for deep work?');
+      await page.click('button[type="submit"]');
+      await new Promise(r => setTimeout(r, 1500));
+
+      const chatUpdated = await page.evaluate(() => {
+        const text = document.body.innerText;
+        return text.includes('What are 3 strategies for deep work?') || text.includes('Time') || text.includes('Pomodoro') || text.includes('Block');
+      });
+      assert(chatUpdated, 'H3.2: Message submitted and rendered in conversation stream');
+    }
+
+    console.log('\n--- [Step 4] Error-Free Execution Verification ---');
+    assert(browserErrors.length === 0, `H4.1: Zero uncaught browser runtime exceptions (found ${browserErrors.length})`, browserErrors);
+    assert(consoleErrors.length === 0, `H4.2: Zero browser console.error logs (found ${consoleErrors.length})`, consoleErrors);
 
   } finally {
     await browser.close();

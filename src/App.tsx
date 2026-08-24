@@ -27,7 +27,7 @@ const AppContent: React.FC = () => {
   // If in pure chat mode (default), render LiveChatView exclusively for a 100% clean experience
   if (activeView === 'transcript' || !activeView) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-teal-500 selection:text-slate-950">
+      <div className="fixed inset-0 w-full h-full bg-slate-950 text-slate-100 font-sans flex flex-col overflow-hidden selection:bg-teal-500 selection:text-slate-950">
         <LiveChatView />
 
         {/* Global Modals */}

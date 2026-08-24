@@ -58,13 +58,15 @@ export const LiveChatView: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState<string>(() => getPreferredLanguage());
 
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto scroll to bottom
+  // Auto scroll chat container directly without affecting window scroll
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [dialogueTurns, liveTranscript, isProcessingSpeech]);
 
   // Close menu on click outside
@@ -143,14 +145,14 @@ export const LiveChatView: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col h-screen max-w-4xl mx-auto bg-slate-950 text-slate-100 font-sans">
+    <div className="w-full h-full flex flex-col overflow-hidden bg-slate-950 text-slate-100 font-sans">
       
-      {/* Clean Top Navigation Bar */}
-      <header className="px-4 py-3 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md flex items-center justify-between shrink-0">
+      {/* Top Header Bar — Always pinned, strictly visible */}
+      <header className="w-full shrink-0 border-b border-slate-800/80 bg-slate-950/95 backdrop-blur-md px-3 sm:px-4 py-2.5 sm:py-3 z-30 flex items-center justify-between">
         
-        {/* Left: Brand / Title */}
-        <div className="flex items-center space-x-3">
-          <div className="relative flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 via-teal-500 to-emerald-400 shadow-md shadow-teal-500/20">
+        {/* Left: Brand / Status */}
+        <div className="flex items-center space-x-2.5 sm:space-x-3">
+          <div className="relative flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-teal-600 via-teal-500 to-emerald-400 shadow-md shadow-teal-500/20">
             <Sparkles className="w-4 h-4 text-slate-950 animate-pulse" />
             {isListening && (
               <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
@@ -178,7 +180,7 @@ export const LiveChatView: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Actions (Language, Quiet Mode, Logs, Config, Menu) */}
+        {/* Right: Controls (Language, Quiet Mode, Logs, Config, Menu) */}
         <div className="flex items-center space-x-1.5 sm:space-x-2">
           
           {/* Quick Language Toggle */}
@@ -245,7 +247,7 @@ export const LiveChatView: React.FC = () => {
             </button>
           )}
 
-          {/* Minimal More Tools Menu */}
+          {/* Secondary Tools Menu */}
           <div className="relative" ref={menuRef}>
             <button
               type="button"
@@ -261,7 +263,7 @@ export const LiveChatView: React.FC = () => {
                 <div className="px-3 py-1.5 border-b border-slate-800 text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">
                   Additional Views
                 </div>
-                <div className="max-h-80 overflow-y-auto py-1 space-y-0.5">
+                <div className="max-h-80 overflow-y-auto py-1 space-y-0.5 custom-scrollbar">
                   {secondaryViews.map((item) => (
                     <button
                       key={item.id}
@@ -284,27 +286,27 @@ export const LiveChatView: React.FC = () => {
 
       </header>
 
-      {/* Main Conversational Message Stream */}
-      <main className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Main Conversation Stream */}
+      <main ref={chatContainerRef} className="flex-1 w-full max-w-4xl mx-auto overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar">
         {dialogueTurns.length === 0 && !isListening && !liveTranscript && !isProcessingSpeech ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-16 space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600/20 to-teal-500/20 border border-brand-500/30 flex items-center justify-center text-teal-300">
+          <div className="flex flex-col items-center justify-center min-h-full text-center py-12 space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-600/20 to-emerald-500/20 border border-teal-500/30 flex items-center justify-center text-teal-300 shadow-lg shadow-teal-500/10">
               <Bot className="w-7 h-7" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">How can I help you today?</h2>
-              <p className="text-xs text-slate-400 max-w-sm mt-1">
-                Say <strong className="text-teal-300">"Hey Eve"</strong>, tap the microphone, or type a message in English, German, French, Spanish, and more.
+              <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">How can I help you today?</h2>
+              <p className="text-xs text-slate-400 max-w-sm mt-1 mx-auto leading-relaxed">
+                Say <strong className="text-teal-300">"Hey Eve"</strong>, tap the microphone, or type a message in English, German, French, Spanish, or Italian.
               </p>
             </div>
 
             {/* Multilingual Starter Suggestion Chips */}
-            <div className="flex flex-wrap items-center justify-center gap-2 max-w-lg pt-4">
+            <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl pt-4">
               {starterChips.map((chip, idx) => (
                 <button
                   key={idx}
                   onClick={() => submitVoiceTranscript(chip.prompt)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-brand-500/40 text-xs text-slate-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/40 text-xs text-slate-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
                 >
                   <Sparkles className="w-3 h-3 text-amber-400" />
                   <span>{chip.label}</span>
@@ -326,7 +328,7 @@ export const LiveChatView: React.FC = () => {
                   className={`flex items-start gap-3 ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in duration-200`}
                 >
                   {!isUser && (
-                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center text-white shrink-0 mt-1 shadow-sm">
+                    <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center text-white shrink-0 mt-1 shadow-sm">
                       <Bot className="w-4 h-4" />
                     </div>
                   )}
@@ -335,7 +337,7 @@ export const LiveChatView: React.FC = () => {
                     className={`max-w-[85%] sm:max-w-xl rounded-2xl p-3.5 text-xs sm:text-sm leading-relaxed shadow-sm border ${
                       isUser
                         ? 'bg-slate-900 border-slate-800 text-slate-100 rounded-tr-sm'
-                        : 'bg-slate-900/90 border-slate-800 text-slate-100 rounded-tl-sm'
+                        : 'bg-slate-900/95 border-slate-800 text-slate-100 rounded-tl-sm'
                     }`}
                   >
                     {/* Speaker Header */}
@@ -440,74 +442,76 @@ export const LiveChatView: React.FC = () => {
             {/* Thinking / Analyzing Indicator */}
             {isProcessingSpeech && (
               <div className="flex items-start gap-3 justify-start animate-fadeIn">
-                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center text-white shrink-0 mt-1">
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-teal-600 to-emerald-600 flex items-center justify-center text-white shrink-0 mt-1">
                   <Sparkles className="w-4 h-4 animate-spin" />
                 </div>
-                <div className="rounded-2xl p-3 bg-slate-900 border border-brand-500/40 text-xs text-brand-300 flex items-center space-x-2">
-                  <span className="w-2 h-2 rounded-full bg-brand-400 animate-ping" />
+                <div className="rounded-2xl p-3 bg-slate-900 border border-teal-500/40 text-xs text-teal-300 flex items-center space-x-2">
+                  <span className="w-2 h-2 rounded-full bg-teal-400 animate-ping" />
                   <span>Eve is thinking...</span>
                 </div>
               </div>
             )}
-
-            <div ref={messagesEndRef} />
           </div>
         )}
       </main>
 
-      {/* Suggestion Chips Bar */}
-      {dialogueTurns.length > 0 && (
-        <div className="px-4 py-1 flex items-center gap-2 overflow-x-auto text-xs no-scrollbar shrink-0">
-          {starterChips.slice(0, 4).map((chip, idx) => (
+      {/* Bottom Input & Action Bar — Always pinned, strictly visible */}
+      <footer className="w-full shrink-0 border-t border-slate-800/80 bg-slate-950/95 backdrop-blur-md p-3 sm:p-4 z-30">
+        <div className="max-w-4xl mx-auto flex flex-col gap-2">
+          
+          {/* Quick Starter Chips Row (if dialogue is active) */}
+          {dialogueTurns.length > 0 && (
+            <div className="flex items-center gap-2 overflow-x-auto text-xs no-scrollbar pb-1">
+              {starterChips.slice(0, 4).map((chip, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => submitVoiceTranscript(chip.prompt)}
+                  className="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/40 text-[11px] text-slate-400 hover:text-white transition whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Form with Mic & Text Box */}
+          <form onSubmit={handleSend} className="bg-slate-900 border border-slate-800 focus-within:border-teal-500/60 rounded-2xl p-1.5 sm:p-2 flex items-center gap-2 shadow-xl transition">
+            {/* Push-to-talk mic button */}
             <button
-              key={idx}
               type="button"
-              onClick={() => submitVoiceTranscript(chip.prompt)}
-              className="px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-brand-500/40 text-[11px] text-slate-400 hover:text-white transition whitespace-nowrap shrink-0 cursor-pointer"
+              onClick={isListening ? stopVoiceListening : startVoiceListening}
+              className={`p-2.5 sm:p-3 rounded-xl transition flex items-center justify-center shrink-0 cursor-pointer ${
+                isListening
+                  ? 'bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-500/40'
+                  : 'bg-slate-800 hover:bg-slate-700 text-teal-400 hover:text-teal-300'
+              }`}
+              title={isListening ? 'Stop Listening' : 'Speak to Eve'}
             >
-              {chip.label}
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-teal-400" />}
             </button>
-          ))}
+
+            {/* Text Input */}
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder={quietMode ? "Message Eve (Quiet Mode is ON)..." : "Message Eve or hold mic to speak..."}
+              className="flex-1 bg-transparent border-none px-2 py-1.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none"
+            />
+
+            {/* Send Button */}
+            <button
+              type="submit"
+              disabled={!inputMessage.trim() || isProcessingSpeech}
+              className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-teal-500 hover:bg-teal-600 disabled:opacity-40 disabled:hover:bg-teal-500 text-slate-950 font-bold text-xs flex items-center space-x-1 transition shadow-md shrink-0 cursor-pointer active:scale-95"
+            >
+              <span>Send</span>
+              <Send className="w-3.5 h-3.5" />
+            </button>
+          </form>
         </div>
-      )}
-
-      {/* Clean Bottom Chat & Voice Input Bar */}
-      <footer className="p-4 border-t border-slate-800/80 bg-slate-950/90 backdrop-blur-md shrink-0">
-        <form onSubmit={handleSend} className="bg-slate-900 border border-slate-800 focus-within:border-teal-500/50 rounded-2xl p-2 flex items-center gap-2 shadow-lg transition">
-          {/* Push-to-talk mic button */}
-          <button
-            type="button"
-            onClick={isListening ? stopVoiceListening : startVoiceListening}
-            className={`p-2.5 rounded-xl transition flex items-center justify-center shrink-0 cursor-pointer ${
-              isListening
-                ? 'bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-500/30'
-                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white'
-            }`}
-            title={isListening ? 'Stop Listening' : 'Speak to Eve'}
-          >
-            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4 text-teal-400" />}
-          </button>
-
-          {/* Text Input */}
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder={quietMode ? "Message Eve (Quiet Mode is ON)..." : "Message Eve or hold mic to speak..."}
-            className="flex-1 bg-transparent border-none px-2 py-1.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none"
-          />
-
-          {/* Send Button */}
-          <button
-            type="submit"
-            disabled={!inputMessage.trim() || isProcessingSpeech}
-            className="px-3.5 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 disabled:opacity-40 disabled:hover:bg-teal-500 text-slate-950 font-bold text-xs flex items-center space-x-1 transition shadow-md shrink-0 cursor-pointer"
-          >
-            <span>Send</span>
-            <Send className="w-3.5 h-3.5" />
-          </button>
-        </form>
       </footer>
 
     </div>
