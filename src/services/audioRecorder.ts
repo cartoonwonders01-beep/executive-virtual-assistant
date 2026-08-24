@@ -108,18 +108,12 @@ export class AudioRecorderService {
           this.speechRecognition.lang = 'en-US';
 
           this.speechRecognition.onresult = (event: any) => {
-            let interimTranscript = '';
-            let finalTranscript = '';
-
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-              if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript;
-              } else {
-                interimTranscript += event.results[i][0].transcript;
-              }
+            let fullAccumulated = '';
+            for (let i = 0; i < event.results.length; ++i) {
+              fullAccumulated += ' ' + event.results[i][0].transcript;
             }
 
-            const current = (finalTranscript || interimTranscript).trim();
+            const current = fullAccumulated.trim();
             if (current) {
               this.capturedLiveTranscript = current;
               if (config.onLiveTranscript) {

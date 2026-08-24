@@ -1275,6 +1275,10 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             textToProcess = (liveTranscript || '').trim();
           }
 
+          if (!textToProcess) {
+            textToProcess = (audioRecorder.getCapturedTranscript() || '').trim();
+          }
+
           if (!textToProcess && blob.size > 200) {
             const startWhisper = Date.now();
             const sliceKb = (blob.size / 1024).toFixed(1);
@@ -1292,7 +1296,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           }
 
           // If still empty, check passive speech buffer from right before recording
-          if (!textToProcess && lastHeardPassiveSpeechRef.current.text && (Date.now() - lastHeardPassiveSpeechRef.current.ts < 12000)) {
+          if (!textToProcess && lastHeardPassiveSpeechRef.current.text && (Date.now() - lastHeardPassiveSpeechRef.current.ts < 30000)) {
             textToProcess = lastHeardPassiveSpeechRef.current.text;
             logger.log('info', 'speech_stt', `🎙️ Recovered speech from passive audio stream: "${textToProcess}"`);
           }

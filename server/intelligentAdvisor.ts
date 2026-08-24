@@ -77,12 +77,8 @@ export class IntelligentAdvisor {
       return true;
     }
 
-    if (lower.endsWith('?') || lower.startsWith('¿')) {
-      return true;
-    }
-
-    // Conversational greetings
-    if (/^(hello|hi|hey|good morning|guten morgen|bonjour|hola|buongiorno|goedemorgen|dzień dobry|bom dia|who are you|wer bist du|qui es-tu|quién eres)\b/i.test(lower)) {
+    // Conversational greetings & direct inquiries
+    if (/\b(?:hello|hi|hey|good morning|guten morgen|bonjour|hola|buongiorno|goedemorgen|dzień dobry|bom dia|who are you|wer bist du|qui es-tu|quién eres|tell me|tell a joke|joke|what's going on|how are you|witze|blague|chiste|barzelletta|grappig|żart|piada)\b/i.test(lower)) {
       return true;
     }
 

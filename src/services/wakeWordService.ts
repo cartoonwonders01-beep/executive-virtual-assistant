@@ -139,8 +139,17 @@ export class WakeWordService {
           }
         }
 
+        // 3. Direct Conversational Question & Intent Auto-Triggering (e.g. "tell me a joke", "what is X")
+        if (!matchedTrigger && this.sensitivity === 'high') {
+          const directQuestionRegex = /\b(?:tell\s+me|tell\s+a\s+joke|can\s+you|could\s+you|what\s+is|what\s+are|what's\s+going\s+on|how\s+do|how\s+can|how\s+to|why\s+is|who\s+is|explain|give\s+me|joke|was\s+ist|wie\s+geht|sag\s+mir|erkläre|raconte|dime|puedes)\b/i;
+          if (directQuestionRegex.test(lower) && lower.split(' ').length >= 3) {
+            matchedTrigger = 'Direct Voice Command';
+            command = lower;
+          }
+        }
+
         if (matchedTrigger) {
-          logger.log('success', 'wake_word', `🎯 Wake-Word DETECTED: "${matchedTrigger}"`, { trailingCommand: command || 'none' });
+          logger.log('success', 'wake_word', `🎯 Voice Command/Trigger DETECTED: "${matchedTrigger}"`, { trailingCommand: command || 'none' });
 
           // Play Google-style double-tone wake chime
           this.playGoogleAssistantChime();
