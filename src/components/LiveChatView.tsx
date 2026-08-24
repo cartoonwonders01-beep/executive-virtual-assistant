@@ -530,7 +530,7 @@ export const LiveChatView: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-4 max-w-3xl mx-auto pb-4">
-                {dialogueTurns.map((turn) => {
+                {dialogueTurns.slice().reverse().map((turn) => {
                   const isUser = turn.speaker === 'user';
                   const isSpeakingThis = playingTurnId === turn.id;
 
