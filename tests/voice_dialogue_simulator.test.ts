@@ -185,4 +185,24 @@ test('Autonomous Voice & Dialogue Interactive Simulation Suite', async (t) => {
     assert.ok(t2.spokenResponse.includes('3-phase'), 'Generated plan for prior turn topic');
   });
 
+  await t.test('Simulation 10: Dynamic Semantic Multi-Domain Reasoning & Negotiation Dialogues', async () => {
+    // 1. Pricing Strategy
+    const priceResult = intelligentAdvisor.solve('How should I price our new enterprise SaaS tier?');
+    assert.ok(priceResult.spokenResponse.includes('value-metric') || priceResult.spokenResponse.includes('pricing'), 'Pricing reasoning rendered');
+    assert.equal(priceResult.category, 'Finance');
+
+    // 2. Growth & Retention
+    const growthResult = intelligentAdvisor.solve('Why is user retention dropping after signup?');
+    assert.ok(growthResult.spokenResponse.includes('retention') || growthResult.spokenResponse.includes('acquisition'), 'Growth reasoning rendered');
+
+    // 3. Delegation & Leadership
+    const delegationResult = intelligentAdvisor.solve('How do I delegate this engineering project effectively?');
+    assert.ok(delegationResult.spokenResponse.includes('delegation') || delegationResult.spokenResponse.includes('outcomes'), 'Delegation reasoning rendered');
+
+    // 4. Negotiations
+    const negResult = intelligentAdvisor.solve('How should I negotiate contract terms with a strategic supplier?');
+    assert.ok(negResult.spokenResponse.includes('negotiat') || negResult.spokenResponse.includes('parameters'), 'Negotiation reasoning rendered');
+    assert.equal(negResult.category, 'Communication');
+  });
+
 });

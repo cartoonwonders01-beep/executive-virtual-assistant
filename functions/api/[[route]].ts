@@ -296,10 +296,16 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
         } else if (/who\s+are\s+you|what\s+can\s+you\s+do|introduce/i.test(textLower)) {
           title = 'Eve — Executive Assistant';
           spokenResponse = 'I am Eve, your Executive AI Assistant. I manage your emails, calendar, Monday.com work hub, and voice automations, and answer any strategic questions you have.';
+        } else if (/pricing|price/i.test(textLower)) {
+          title = 'Strategic Pricing & Margins';
+          spokenResponse = 'Value-metric pricing tied directly to customer ROI yields the highest expansion revenue and gross margins.';
+        } else if (/growth|retention|churn/i.test(textLower)) {
+          title = 'Growth & Retention Strategy';
+          spokenResponse = 'Focus on cohort retention before accelerating marketing spend to ensure users reach their activation milestone.';
         } else {
-          const cleanTopic = text.replace(/^(what\s+is|what\s+are|how\s+do\s+i|explain|tell\s+me\s+about)\s+/i, '').replace(/[?.]+$/, '');
-          title = `Solution: ${cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1)}`;
-          spokenResponse = `Regarding ${cleanTopic}: The recommended executive approach is to establish clear success criteria, eliminate low-value operational friction, and execute a 3-step action plan.`;
+          const cleanTopic = text.replace(/^(what\s+is|what\s+are|how\s+do\s+i|explain|tell\s+me\s+about|what\s+about)\s+/i, '').replace(/[?.]+$/, '');
+          title = `Strategic Insight: ${cleanTopic ? cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1) : 'Analysis'}`;
+          spokenResponse = `Looking at ${cleanTopic || 'this'}: The core strategic priority is to identify the primary point of leverage, eliminate friction, and test assumptions in rapid iterations.`;
         }
       }
 

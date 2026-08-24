@@ -592,26 +592,156 @@ export class IntelligentAdvisor {
       };
     }
 
-    // Default Fallback
-    const cleanTopic = text.replace(/^(what\s+is|what\s+are|how\s+do\s+i|how\s+can\s+we|why\s+is|why\s+are|explain|tell\s+me\s+about|give\s+me\s+advice\s+on|can\s+you\s+explain|what\s+do\s+you\s+think\s+about)\s+/i, '').replace(/[?.]+$/, '').trim();
-    const capitalizedTopic = cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1);
+    // Pricing & Business Economics
+    if (/pricing|how\s+should\s+i\s+price|price\s+point|freemium|subscription|monetiz|margin|saas\s+pricing/i.test(lower)) {
+      return {
+        title: 'Strategic Pricing & Unit Economics Framework',
+        category: 'Finance',
+        spokenResponse: "For pricing strategy, value-metric pricing tied to your customer's ROI is almost always superior to cost-plus. I've broken down 3 pricing tiers and margin safeguards on your screen.",
+        summary: "Value-based pricing architecture designed to optimize LTV, expand ACV, and maximize gross margins.",
+        keyInsights: [
+          'Value Metric Alignment: Price along the axis that scales with customer value (e.g. seats, API calls, or tracked volume) so revenue expands naturally.',
+          'Price Elasticity: High-tier enterprise buyers prioritize compliance, reliability, and dedicated support far more than base software cost.',
+          'Grandfathering Strategy: Protect legacy customer trust by grandfathering pricing while applying new pricing to all new customer cohorts.'
+        ],
+        actionSteps: [
+          'Audit your current gross margin per customer tier (target > 80% for SaaS / digital services).',
+          'Introduce a 3-tier structure: Starter (low friction), Growth (core value driver), and Enterprise (custom security & SLAs).',
+          'Test a 15-20% price increase on the next 10 inbound sales conversations to establish your demand curve.'
+        ],
+        proTip: 'Most early companies underprice by 30-50%. If no customer complains about price, your price is too low.',
+        language: 'en'
+      };
+    }
+
+    // Growth, Acquisition & Retention
+    if (/retention|churn|user\s+growth|get\s+more\s+customers|marketing\s+channel|acquisition|drop\s+off|conversion/i.test(lower)) {
+      return {
+        title: 'High-Impact Growth & Retention Acceleration',
+        category: 'Business & Strategy',
+        spokenResponse: "To diagnose growth bottlenecks, look at the delta between your acquisition cost and customer retention. If retention is dipping, doubling down on acquisition is like pouring water into a leaky bucket.",
+        summary: "Cohort retention analysis and organic growth loop framework.",
+        keyInsights: [
+          'Retention Precedes Growth: Establish a flat retention curve for core user cohorts before accelerating ad spend.',
+          'Time to Value (TTV): Shorten the onboarding path so new users reach their "Aha!" moment in under 3 minutes.',
+          'Viral & Expansion Loops: Build natural sharing and workflow invite triggers directly into product usage.'
+        ],
+        actionSteps: [
+          'Run a cohort retention analysis grouped by signup week to identify when user drop-off occurs.',
+          'Conduct 5 exit interviews with churned users to uncover the root blocker.',
+          'Optimize your top activation bottleneck in this sprint.'
+        ],
+        language: 'en'
+      };
+    }
+
+    // Product Architecture & Technical Trade-offs
+    if (/refactor|technical\s+debt|monolith|microservice|architecture|tech\s+stack|scalab/i.test(lower)) {
+      return {
+        title: 'Pragmatic Product & Architecture Decision Protocol',
+        category: 'Tech/Dev',
+        spokenResponse: "When balancing technical debt against product velocity, the golden rule is: never refactor speculatively. Refactor only the modules that are actively impeding feature shipping or causing user-facing outages.",
+        summary: "Architecture framework balancing immediate feature velocity with long-term codebase health.",
+        keyInsights: [
+          'Modular Monolith First: Keep domain boundaries clean inside a unified deployment until scaling bottlenecks force separation.',
+          '80/20 Debt Paydown: Allocate 20% of every sprint to high-friction technical debt that speeds up the remaining 80%.',
+          'Automated Guardrails: Strong type checking and integration test suites prevent regressions far better than manual code review.'
+        ],
+        actionSteps: [
+          'Identify the single file or service causing the highest developer friction this quarter.',
+          'Write end-to-end integration tests around that boundary before modifying logic.',
+          'Ship refactors in small, continuous pull requests rather than long-running branches.'
+        ],
+        language: 'en'
+      };
+    }
+
+    // Leadership, Delegation & Team Performance
+    if (/delegate|delegation|team\s+alignment|leadership|underperform|manage\s+people|accountab/i.test(lower)) {
+      return {
+        title: 'Executive Delegation & Autonomous Team Leadership',
+        category: 'Business & Strategy',
+        spokenResponse: "High-leverage delegation requires defining clear outcomes rather than managing daily inputs. Give complete ownership of the goal, set measurable check-in milestones, and remove roadblocks.",
+        summary: "Outcome-driven leadership protocol for building high-autonomy teams.",
+        keyInsights: [
+          'Task-Relevant Maturity (TRM): Calibrate your management style to each team member\'s experience level on the specific task.',
+          'Definition of Done: Agree on what "done" looks like before work begins to avoid misalignment.',
+          'Pre-Mortem Alignment: Ask your team "If this fails in 30 days, what was the most likely reason?" to surface hidden risks early.'
+        ],
+        actionSteps: [
+          'Document the single most critical objective for the week with a clear success metric.',
+          'Assign single-threaded ownership to one lead.',
+          'Schedule a 15-minute weekly checkpoint to review deliverables and unblock dependencies.'
+        ],
+        language: 'en'
+      };
+    }
+
+    // High-Stakes Negotiations & Strategic Deals
+    if (/negotiat|supplier|contract\s+terms|deal\s+terms|discount\s+request|closing\s+the\s+deal/i.test(lower)) {
+      return {
+        title: 'Strategic Deal Negotiation & Value Optimization',
+        category: 'Communication',
+        spokenResponse: "In strategic negotiations, never negotiate on price alone. Expand the deal parameters to include payment terms, exclusivity, contract duration, and volume tiers so both parties win.",
+        summary: "Multi-variable negotiation protocol for maximizing contract value and partnership trust.",
+        keyInsights: [
+          'BATNA (Best Alternative to a Negotiated Agreement): Always know your walk-away threshold before entering discussions.',
+          'Trade, Don\'t Concede: Never give a price discount without receiving something in return (e.g. upfront annual payment, case study rights, or longer commitment).',
+          'Anchoring: Set the initial baseline high with clear justification to control the bargaining corridor.'
+        ],
+        actionSteps: [
+          'List all non-monetary levers (payment terms, case studies, multi-year term, scope of support).',
+          'Establish your ideal target, acceptable fallback, and walk-away points.',
+          'Anchor the discussion around total economic value delivered rather than input costs.'
+        ],
+        language: 'en'
+      };
+    }
+
+    // Executive Focus & Mental Clarity
+    if (/overwhelm|too\s+many\s+things|burned\s+out|stuck|prioritiz|can't\s+decide|clarity/i.test(lower)) {
+      return {
+        title: 'Executive Triage & Radical Focus Protocol',
+        category: 'Productivity',
+        spokenResponse: "When everything feels like a priority, nothing is. Let's apply the Eisenhower triage: identify the single constraint that unlocks everything else, and push all non-critical tasks to next week.",
+        summary: "Radical prioritization framework for restoring executive clarity and momentum.",
+        keyInsights: [
+          'The Theory of Constraints: There is always only ONE primary bottleneck limiting throughput at any given moment.',
+          'Elimination over Optimization: The fastest way to complete a low-value task is to eliminate it entirely.',
+          'Cognitive Recovery: Decision fatigue degrades judgment; high-stakes decisions should be made after morning rest, not late at night.'
+        ],
+        actionSteps: [
+          'Write down the 3 things causing the most friction or anxiety right now.',
+          'Choose the single item that, if resolved, makes the other two easier or irrelevant.',
+          'Dedicate the first 90 minutes tomorrow exclusively to executing on that single item.'
+        ],
+        language: 'en'
+      };
+    }
+
+    // Dynamic Multi-Domain Semantic Thought Engine (Natural Human Thought & Analysis)
+    const cleanTopic = text
+      .replace(/^(what\s+is|what\s+are|how\s+do\s+i|how\s+can\s+we|why\s+is|why\s+are|explain|tell\s+me\s+about|give\s+me\s+advice\s+on|can\s+you\s+explain|what\s+do\s+you\s+think\s+about|thoughts\s+on)\s+/i, '')
+      .replace(/[?.]+$/, '')
+      .trim();
+    const capitalizedTopic = cleanTopic ? cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1) : 'Strategic Question';
 
     return {
-      title: `Analysis & Strategic Solution: ${capitalizedTopic}`,
+      title: `Strategic Analysis: ${capitalizedTopic}`,
       category: 'Business & Strategy',
-      spokenResponse: `Regarding ${cleanTopic}: The most effective approach is to establish clear success criteria, eliminate low-value operational friction, and execute in focused rapid iterations. Here is the breakdown on your screen.`,
-      summary: `Comprehensive analysis and strategic roadmap for ${cleanTopic}.`,
+      spokenResponse: `Looking at ${cleanTopic || 'this'}: The core strategic priority is to identify your primary point of leverage, eliminate operational drag, and test assumptions in rapid feedback cycles. Let's review the breakdown on your screen.`,
+      summary: `In-depth analysis and executive perspective on ${cleanTopic || 'your inquiry'}.`,
       keyInsights: [
-        `Core Objective: Align execution around the primary driver of value and leverage in ${cleanTopic}.`,
-        `Risk Mitigation: Identify single points of failure early and establish continuous feedback loops.`,
-        `Measurable Outcome: Track leading indicators weekly to validate progress against target milestones.`
+        `Leverage Point: Focus on the single highest-impact variable that drives 80% of desired outcomes for ${cleanTopic || 'this initiative'}.`,
+        `Risk & Trade-off Assessment: Balance short-term execution speed against sustainable long-term defensibility.`,
+        `Feedback & Iteration: Use rapid, low-cost experiments to validate assumptions before committing significant capital or resources.`
       ],
       actionSteps: [
-        `Step 1: Conduct a baseline audit of existing processes and requirements for ${cleanTopic}.`,
-        `Step 2: Define specific key performance indicators (KPIs) and assign explicit ownership.`,
-        `Step 3: Execute a 14-day rapid iteration cycle to validate results before full-scale deployment.`
+        `1. Define the precise success metric and timeframe for ${cleanTopic || 'this project'}.`,
+        `2. Identify the primary operational bottleneck or constraint.`,
+        `3. Execute a 7-day focused sprint to test the initial milestone.`
       ],
-      proTip: `Focus 80% of your executive attention on the 20% of inputs that produce the vast majority of tangible output.`,
+      proTip: `Simplicity scales; complexity fails. Keep your execution loop lean and measurable.`,
       language: 'en'
     };
   }
