@@ -1,4 +1,5 @@
 import { logger } from './loggerService';
+import { stopSpeaking } from './speechSynthesis';
 
 export interface WakeWordListenerConfig {
   onWakeWord?: (detectedTrigger: string, trailingSpeech?: string) => void;
@@ -106,6 +107,7 @@ export class WakeWordService {
 
         const lower = fullTranscript.toLowerCase().trim();
         if (lower) {
+          stopSpeaking(); // Immediate barge-in on user speech
           logger.log('info', 'speech_stt', `Passive Audio Stream: "${lower}"`);
         }
 

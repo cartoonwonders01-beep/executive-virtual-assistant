@@ -4,16 +4,16 @@ import { CustomLLMProfile } from './types';
 // Ported from Relay PWA configuration architecture with European Multilingual Support,
 // Continuous Listening Session Controls & Custom Persona Prompt Framing
 
-export const APP_VERSION = '3.5.0';
+export const APP_VERSION = '3.6.0';
 
-export const DEFAULT_CHUNK_INTERVAL_MS = 3500;
-export const MIN_CHUNK_INTERVAL_MS = 1500;
+export const DEFAULT_CHUNK_INTERVAL_MS = 2000;
+export const MIN_CHUNK_INTERVAL_MS = 1200;
 export const MAX_CHUNK_INTERVAL_MS = 15000;
 
 export const DEFAULT_AUDIO_BITRATE_KBPS = 64;
 export const DEFAULT_MIME_TYPE = 'auto';
 
-export const DEFAULT_SILENCE_DURATION_MS = 1600;
+export const DEFAULT_SILENCE_DURATION_MS = 1500;
 export const DEFAULT_SILENCE_THRESHOLD = 0.06;
 export const DEFAULT_SPEECH_TRIGGER_THRESHOLD = 0.12;
 
@@ -24,11 +24,11 @@ export const DEFAULT_PAYLOAD_FORMAT = 'json';
 export const DEFAULT_LANGUAGE = 'auto';
 
 export const CHUNK_INTERVAL_OPTIONS = [
-  { value: 2500, label: '⚡ 2.5 Seconds (Ultra-Fast Assistant Slices)' },
-  { value: 3500, label: '⏱️ 3.5 Seconds (Default — Recommended)' },
-  { value: 5000, label: '⏱️ 5.0 Seconds (Balanced)' },
-  { value: 7000, label: '⏱️ 7.0 Seconds (Relay Meeting Standard)' },
-  { value: 10000, label: '⏱️ 10.0 Seconds (Extended Recording)' },
+  { value: 1500, label: '⚡ 1.5 Seconds (Ultra-Fast Slices — Minimal Latency)' },
+  { value: 2000, label: '⏱️ 2.0 Seconds (Default — Relay Recommended)' },
+  { value: 3500, label: '⏱️ 3.5 Seconds (Balanced)' },
+  { value: 5000, label: '⏱️ 5.0 Seconds (Extended)' },
+  { value: 10000, label: '⏱️ 10.0 Seconds (High Latency Mode)' },
 ];
 
 export const AUDIO_BITRATE_OPTIONS = [

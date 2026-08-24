@@ -60,6 +60,21 @@ class LoggerService {
   }
 
   public log(level: LogLevel, category: LogEntry['category'], msg: string, details?: any): void {
+    // Deduplicate & throttle rapid interim STT entries to prevent log flooding
+    if (category === 'speech_stt' && level === 'info' && this.entries.length > 0) {
+      const top = this.entries[0];
+      if (top.category === 'speech_stt' && top.level === 'info' && (Date.now() - top.ts < 1800)) {
+        top.msg = msg;
+        top.ts = Date.now();
+        top.details = details;
+        saveStoredLogs(this.entries);
+        this.listeners.forEach(listener => {
+          try { listener(top); } catch {}
+        });
+        return;
+      }
+    }
+
     const entry: LogEntry = {
       id: 'log-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5),
       ts: Date.now(),

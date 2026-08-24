@@ -1,0 +1,11 @@
+{
+  "project_name": "Virtual Assistant",
+  "domain": "Autonomous Executive Workhub & Voice Assistant",
+  "stack": {
+    "frontend": "React, TypeScript, Tailwind CSS, Vite, Web Speech API",
+    "backend": "Express Node.js, Gemini API Intent Engine, Google Apps Script (Calendar/Gmail/Sheets), BigQuery",
+    "cloud": "Cloudflare Pages, Cloudflare Functions"
+  },
+  "dev_ports": { "client": 5173, "server": 3000 },
+  "test_commands": { "unit_tests": "npm run test", "visual_qa": "python3 /home/andy/tools/sandbox_inspector.py http://localhost:5173" }
+}

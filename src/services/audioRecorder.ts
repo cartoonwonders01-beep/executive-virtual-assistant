@@ -4,6 +4,7 @@ import {
   getStoredSilenceDurationMs, 
   getStoredMimeType 
 } from '../config';
+import { stopSpeaking } from './speechSynthesis';
 
 // Production MediaRecorder & Web Audio monitoring with intelligent Voice Activity Detection (VAD)
 // and Concurrent Web Speech API Real-Time Speech Recognition
@@ -157,6 +158,8 @@ export class AudioRecorderService {
           if (normalized >= this.vadOptions.speechTriggerThreshold) {
             this.hasDetectedSpeech = true;
             this.silenceStartTime = null;
+            // Full-duplex barge-in: silence assistant if user interrupts
+            stopSpeaking();
           } else if (this.hasDetectedSpeech && normalized <= this.vadOptions.silenceThreshold) {
             if (!this.silenceStartTime) {
               this.silenceStartTime = now;

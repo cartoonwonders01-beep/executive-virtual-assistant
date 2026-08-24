@@ -18,7 +18,7 @@ export type SupportedLanguage = 'en' | 'de' | 'fr' | 'es' | 'it' | 'nl' | 'pl' |
 
 let cachedVoices: SpeechSynthesisVoice[] = [];
 let activePersona: VoicePersona = 'studio_american_female';
-let speechRate = 0.98;
+let speechRate = 1.02;
 let speechPitch = 1.0;
 let preferredLanguage: SupportedLanguage | 'auto' = 'auto';
 
