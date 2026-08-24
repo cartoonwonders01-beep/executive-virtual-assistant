@@ -86,6 +86,7 @@ interface AssistantContextType {
   toggleQuietMode: () => void;
   startVoiceListening: () => Promise<void>;
   stopVoiceListening: () => void;
+  emergencyHaltAssistant: () => void;
   submitVoiceTranscript: (text: string) => Promise<void>;
   uploadAudioFile: (file: File) => Promise<void>;
 
@@ -1594,6 +1595,48 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const activeAbortControllerRef = useRef<AbortController | null>(null);
+
+  const emergencyHaltAssistant = () => {
+    logger.log('warn', 'audio', '🛑 EMERGENCY HARD HALT TRIGGERED: Silencing all audio, aborting tasks, and stopping background listening.');
+    
+    // 1. Immediately kill spoken audio and active utterance queues
+    stopSpeaking();
+
+    // 2. Abort all in-flight network requests
+    if (activeAbortControllerRef.current) {
+      activeAbortControllerRef.current.abort();
+      activeAbortControllerRef.current = null;
+    }
+
+    // 3. Hard-kill audio recorder & microphone hardware stream
+    audioRecorder.abort();
+
+    // 4. Hard-kill passive wake-word recognition so it does not keep running in background
+    wakeWordService.hardHalt();
+    setIsWakeWordActive(false);
+
+    // 5. Clear timers and pending state
+    if (sessionInactivityTimerRef.current) {
+      clearTimeout(sessionInactivityTimerRef.current);
+      sessionInactivityTimerRef.current = null;
+    }
+    isContinuousSessionActiveRef.current = false;
+    setIsContinuousSessionActive(false);
+    dialogueManager.clearPendingAction();
+    skillAcquisitionEngine.reset();
+
+    // 6. Reset all UI state
+    setIsListening(false);
+    setIsProcessingSpeech(false);
+    setLiveTranscript('');
+    setAudioLevel(0);
+
+    try {
+      playChime('listen_stop');
+    } catch {}
+  };
+
   const stopVoiceListeningInternal = (isTimeout: boolean = false) => {
     if (!isTimeout) {
       isContinuousSessionActiveRef.current = false;
@@ -1604,8 +1647,11 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       sessionInactivityTimerRef.current = null;
     }
     logger.log('info', 'audio', '⏹️ Stopping active microphone listening.');
+    stopSpeaking();
     audioRecorder.stop();
     setIsListening(false);
+    setIsProcessingSpeech(false);
+    setLiveTranscript('');
     setAudioLevel(0);
     if (isWakeWordActive) {
       wakeWordService.resume();
@@ -1847,6 +1893,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         clearDialogueTurns,
         startVoiceListening,
         stopVoiceListening,
+        emergencyHaltAssistant,
         submitVoiceTranscript,
         uploadAudioFile,
         continuousTimeoutSeconds,

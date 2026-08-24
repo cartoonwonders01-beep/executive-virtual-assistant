@@ -22,6 +22,7 @@ import {
   Flame,
   CheckCircle2,
   Terminal,
+  Square,
   Send
 } from 'lucide-react';
 
@@ -35,6 +36,7 @@ export const MobileVoiceHUD: React.FC = () => {
     isProcessingSpeech, 
     startVoiceListening, 
     stopVoiceListening, 
+    emergencyHaltAssistant,
     submitVoiceTranscript,
     actionCards,
     dialogueTurns,
@@ -195,6 +197,16 @@ export const MobileVoiceHUD: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-2">
+          {/* Emergency Hard STOP Button */}
+          <button
+            onClick={emergencyHaltAssistant}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/50 hover:border-rose-400 transition cursor-pointer active:scale-95 shadow-sm"
+            title="Emergency Hard Stop: Silence all audio, abort running tasks, and halt background listening"
+          >
+            <Square className="w-3.5 h-3.5 fill-rose-400 text-rose-400" />
+            <span>STOP</span>
+          </button>
+
           <button
             onClick={toggleWakeWordListener}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${

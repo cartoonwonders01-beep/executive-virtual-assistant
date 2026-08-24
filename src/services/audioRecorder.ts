@@ -332,6 +332,35 @@ export class AudioRecorderService {
     }
   }
 
+  public abort(): void {
+    this.isRecordingActive = false;
+    if (this.segmentTimer) {
+      clearTimeout(this.segmentTimer);
+      this.segmentTimer = null;
+    }
+    if (this.speechFinishTimer) {
+      clearTimeout(this.speechFinishTimer);
+      this.speechFinishTimer = null;
+    }
+    if (this.maxDurationTimer) {
+      clearTimeout(this.maxDurationTimer);
+      this.maxDurationTimer = null;
+    }
+    if (this.speechRecognition) {
+      try { this.speechRecognition.stop(); } catch {}
+      this.speechRecognition = null;
+    }
+    if (this.currentSegmentRecorder) {
+      try {
+        this.currentSegmentRecorder.ondataavailable = null;
+        this.currentSegmentRecorder.onstop = null;
+        this.currentSegmentRecorder.stop();
+      } catch {}
+      this.currentSegmentRecorder = null;
+    }
+    this.cleanup();
+  }
+
   public isActive(): boolean {
     return this.isRecordingActive;
   }

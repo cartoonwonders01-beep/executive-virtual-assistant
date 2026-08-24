@@ -119,4 +119,36 @@ test('Comprehensive Multi-Turn Voice Action Depth Suite', async (t) => {
     assert.ok(!isAcousticEcho("what is the weather tomorrow in london"));
   });
 
+  await t.test('8. Emergency Hard Halt Verification', async () => {
+    const { wakeWordService } = await import('../src/services/wakeWordService');
+    const { stopSpeaking, isCurrentlySpeaking } = await import('../src/services/speechSynthesis');
+    const { dialogueManager } = await import('../src/services/dialogueManager');
+
+    // Simulate active dialogue and wake-word
+    dialogueManager.setPendingAction({
+      type: 'send_email',
+      payload: { toName: 'Celine', toEmail: 'celine.loeuille@gmail.com', subject: 'Emergency Test', body: 'Test', tone: 'friendly', status: 'draft', id: 'halt-1' },
+      prompt: 'Confirm email?'
+    });
+    assert.ok(dialogueManager.hasPendingAction(), 'Pending action set');
+
+    // Execute hard halt
+    wakeWordService.hardHalt();
+    stopSpeaking();
+    dialogueManager.clearPendingAction();
+
+    assert.equal(isCurrentlySpeaking(), false, 'Speech synthesis silenced');
+    assert.equal(wakeWordService.isPassiveListeningActive(), false, 'Wake word completely halted');
+    assert.equal(dialogueManager.hasPendingAction(), false, 'Pending state cleared');
+  });
+
+  await t.test('9. Sub-Second Snappy Fast-Path Reasoning Latency', async () => {
+    const start = Date.now();
+    const res = await cortexEngine.reasonAndAct("Tell me a joke");
+    const duration = Date.now() - start;
+
+    assert.equal(res.actionCard.intent, 'knowledge_qa');
+    assert.ok(duration < 250, `Fast-path executed in ${duration}ms (target: <250ms)`);
+  });
+
 });

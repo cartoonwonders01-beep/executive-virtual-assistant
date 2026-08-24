@@ -28,6 +28,7 @@ import {
   CornerDownLeft,
   ChevronRight,
   ShieldCheck,
+  Square,
   Settings
 } from 'lucide-react';
 
@@ -40,6 +41,7 @@ export const LiveTranscriptView: React.FC = () => {
     isProcessingSpeech,
     startVoiceListening,
     stopVoiceListening,
+    emergencyHaltAssistant,
     submitVoiceTranscript,
     quietMode,
     toggleQuietMode,
@@ -411,6 +413,16 @@ export const LiveTranscriptView: React.FC = () => {
 
       {/* Chat Text Input & Push-To-Talk Bar */}
       <form onSubmit={handleSendMessage} className="bg-slate-900/90 border border-slate-800 rounded-2xl p-2 flex items-center gap-2 shadow-lg">
+        {/* Universal Emergency Hard STOP Button */}
+        <button
+          type="button"
+          onClick={emergencyHaltAssistant}
+          className="p-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/50 hover:border-rose-400 transition flex items-center justify-center shrink-0 cursor-pointer active:scale-95 shadow-sm"
+          title="Emergency Hard Stop: Silence all audio, abort running tasks, and halt background listening"
+        >
+          <Square className="w-4 h-4 fill-rose-400 text-rose-400" />
+        </button>
+
         {/* Push-to-talk mic button */}
         <button
           type="button"

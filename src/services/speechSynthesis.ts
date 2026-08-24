@@ -482,19 +482,27 @@ export function speakResponse(text: string, onEnd?: () => void, persona?: VoiceP
     }
   };
 
-  // Google Journey Neural Studio Synthesis
+  // Google Journey Neural Studio Synthesis with 350ms fast-fallback race
   if (selectedPersona.startsWith('google_journey') && typeof window !== 'undefined' && typeof fetch !== 'undefined') {
     let journeyVoice = 'en-US-Journey-F';
     if (selectedPersona === 'google_journey_british') journeyVoice = 'en-GB-Journey-F';
     if (selectedPersona === 'google_journey_male') journeyVoice = 'en-US-Journey-D';
 
+    const ttsAbort = new AbortController();
+    const fetchTimeout = setTimeout(() => {
+      ttsAbort.abort();
+      fallbackBrowserSynthesis();
+    }, 350);
+
     fetch('/api/tts/journey', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: cleanText, voiceName: journeyVoice, speakingRate: speechRate })
+      body: JSON.stringify({ text: cleanText, voiceName: journeyVoice, speakingRate: speechRate }),
+      signal: ttsAbort.signal
     })
       .then(res => res.json())
       .then((data: any) => {
+        clearTimeout(fetchTimeout);
         if (data.success && data.audioBase64) {
           isSpeakingState = true;
           const audio = new Audio(`data:audio/mp3;base64,${data.audioBase64}`);
@@ -509,6 +517,7 @@ export function speakResponse(text: string, onEnd?: () => void, persona?: VoiceP
         fallbackBrowserSynthesis();
       })
       .catch(() => {
+        clearTimeout(fetchTimeout);
         fallbackBrowserSynthesis();
       });
     return;

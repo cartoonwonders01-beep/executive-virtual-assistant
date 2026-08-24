@@ -20,6 +20,7 @@ import {
   Users,
   Terminal,
   MessageSquare,
+  Square,
   ChevronDown,
   Menu,
   X
@@ -32,6 +33,7 @@ export const Navigation: React.FC = () => {
     isListening, 
     startVoiceListening, 
     stopVoiceListening, 
+    emergencyHaltAssistant,
     quietMode,
     toggleQuietMode,
     dialogueTurns,
@@ -126,6 +128,16 @@ export const Navigation: React.FC = () => {
                   {dialogueTurns.length}
                 </span>
               )}
+            </button>
+
+            {/* Universal Hard STOP / HALT Button */}
+            <button
+              onClick={emergencyHaltAssistant}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer flex items-center space-x-1.5 bg-rose-500/20 border-rose-500/50 text-rose-300 hover:bg-rose-500/30 hover:border-rose-400 active:scale-95 shadow-sm"
+              title="Emergency Hard Stop: Silence all audio, abort running tasks, and halt background listening"
+            >
+              <Square className="w-3.5 h-3.5 fill-rose-400 text-rose-400" />
+              <span>STOP</span>
             </button>
 
             {/* Quiet Mode Switch */}

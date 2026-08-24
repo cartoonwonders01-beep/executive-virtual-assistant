@@ -79,13 +79,6 @@ export class WakeWordService {
     return [...this.wakeTriggers];
   }
 
-  public pause(): void {
-    this.isPaused = true;
-    if (this.recognition) {
-      try { this.recognition.stop(); } catch {}
-    }
-  }
-
   public resume(): void {
     this.isPaused = false;
     if (this.isListening && !this.recognition) {
@@ -187,13 +180,13 @@ export class WakeWordService {
         }
 
         if (matchedTrigger) {
-          // Debounce: Wait 650ms of silence after the user finishes speaking their full thought
+          // Debounce: Wait 250ms of silence after the user finishes speaking for sub-second snappiness
           if (this.debounceTimer) clearTimeout(this.debounceTimer);
           const capturedTrigger = matchedTrigger;
           const capturedCommand = command;
 
           this.debounceTimer = setTimeout(() => {
-            if (this.isPaused) return;
+            if (this.isPaused || !this.isListening) return;
             logger.log('success', 'wake_word', `🎯 Voice Command DETECTED: "${capturedTrigger}"`, { command: capturedCommand || 'none' });
 
             // Play Google-style double-tone wake chime
@@ -208,7 +201,7 @@ export class WakeWordService {
             if (this.config?.onWakeWordDetected) {
               this.config.onWakeWordDetected(capturedTrigger, capturedCommand);
             }
-          }, 650);
+          }, 250);
         }
       };
 
@@ -242,17 +235,46 @@ export class WakeWordService {
     }
   }
 
-  public stopPassiveListening(): void {
-    this.isListening = false;
-    this.isPaused = false;
+  public pause(): void {
+    this.isPaused = true;
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
     if (this.restartTimeout) {
       clearTimeout(this.restartTimeout);
       this.restartTimeout = null;
     }
     if (this.recognition) {
       try { this.recognition.stop(); } catch {}
+    }
+  }
+
+  public hardHalt(): void {
+    this.isListening = false;
+    this.isPaused = true;
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+    if (this.restartTimeout) {
+      clearTimeout(this.restartTimeout);
+      this.restartTimeout = null;
+    }
+    if (this.recognition) {
+      try {
+        this.recognition.onresult = null;
+        this.recognition.onend = null;
+        this.recognition.onerror = null;
+        this.recognition.abort?.();
+        this.recognition.stop?.();
+      } catch {}
       this.recognition = null;
     }
+  }
+
+  public stopPassiveListening(): void {
+    this.hardHalt();
   }
 
   public isPassiveListeningActive(): boolean {
