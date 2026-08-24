@@ -58,7 +58,8 @@ export async function processSpeechWithGemini(
   transcript: string,
   apiKey: string,
   model: 'gemini-1.5-pro' | 'gemini-1.5-flash' = 'gemini-1.5-flash',
-  customProfile?: CustomLLMProfile
+  customProfile?: CustomLLMProfile,
+  conversationHistory?: Array<{ speaker: string; text: string }>
 ): Promise<GeminiAnalysisResult | null> {
   if (!apiKey || !transcript.trim()) return null;
 
@@ -71,22 +72,31 @@ export async function processSpeechWithGemini(
 
   const unifiedPrompt = buildUnifiedSystemPrompt(activeProfile);
 
+  let historyContext = '';
+  if (conversationHistory && conversationHistory.length > 0) {
+    const recent = conversationHistory.slice(-4);
+    historyContext = `\nRECENT CONVERSATION HISTORY:\n` + recent.map(t => `${t.speaker === 'user' ? (activeProfile.userContext.userName || 'User') : 'Eve'}: "${t.text}"`).join('\n') + '\n';
+  }
+
   const systemPrompt = `${unifiedPrompt}
 
 MULTILINGUAL EUROPEAN LANGUAGE SUPPORT:
-- Detect the language of ${activeProfile.userContext.userName || 'Andrew'}'s speech or message (English, German/Deutsch, French/Français, Spanish/Español, Italian/Italiano, Dutch/Nederlands, Polish/Polski, Portuguese/Português, Russian, etc.).
-- Always formulate both your "spokenResponse" and "description" in that exact language with natural native phrasing and high executive IQ.
-- Ensure "spokenResponse" is concise (1-3 sentences) and perfect for text-to-speech audio playback.
+- Detect the language of ${activeProfile.userContext.userName}'s speech or message (English, German/Deutsch, French/Français, Spanish/Español, Italian/Italiano, Dutch/Nederlands, Polish/Polski, Portuguese/Português, Russian, etc.).
+- Always formulate both your "spokenResponse" and "description" in that exact language with natural native phrasing and high IQ.
+
+NATURAL HUMAN CONVERSATIONAL BEHAVIOR:
+- Respond naturally, warmly, and directly as an intelligent human companion and advisor.
+- Do NOT talk like a rigid Project Manager. Do NOT build a book, output generic checklists, or force artificial bullet points unless the user explicitly asks for a structured checklist.
+- For questions, advice, ideas, or casual conversation:
+  - "spokenResponse": 1 to 2 crisp, natural sentences for speech.
+  - "description": 1 to 2 thoughtful, articulate paragraphs in direct human tone.
+  - "tasks": [] (Leave tasks empty unless the user explicitly asks to create a task).
 
 CURRENT DATE & TIME: ${nowISO} (Today: ${todayStr})
-
+${historyContext}
 GUIDELINES FOR INTENT RESOLUTION:
-1. If the user asks a question, seeks advice, asks for an explanation, discusses a decision, or converses:
-   - Set "intent": "knowledge_qa"
-   - In "spokenResponse": Provide an intelligent, conversational, and direct spoken answer in the user's language matching the configured tone.
-   - In "description": Provide a thoughtful, articulate response matching the configured persona and user profile without rigid boilerplate.
-   - Set "tasks": [] (Do not force task creation when answering questions).
-2. If the user dictates an email (e.g. to his wife ${activeProfile.userContext.personalNotes?.includes('Emily') ? 'Emily' : 'partner'}, colleagues Sarah/David): Set "intent": "email_draft".
+1. If the user asks a question, seeks advice, asks for an explanation, discusses an idea, or converses: Set "intent": "knowledge_qa".
+2. If the user dictates an email (e.g. to spouse Emily, colleagues Sarah/David): Set "intent": "email_draft".
 3. If the user schedules a meeting: Set "intent": "calendar_booking".
 4. If the user explicitly asks to create/log a task: Set "intent": "task_create".
 
@@ -94,9 +104,9 @@ Analyze the user's transcript and return a STRICT JSON object matching this sche
 {
   "actionCard": {
     "intent": "knowledge_qa" | "calendar_booking" | "email_draft" | "task_create" | "call_contact" | "web_search",
-    "title": "Short executive title",
-    "description": "Clear summary of action taken, or comprehensive markdown solution/answer for questions",
-    "spokenResponse": "Warm, natural conversational response to speak aloud to the user",
+    "title": "Short title",
+    "description": "Natural, articulate human conversational response (1-2 paragraphs max)",
+    "spokenResponse": "Warm, natural spoken response (1-2 sentences)",
     "calendarData": {
       "title": "Meeting Title",
       "startDateTime": "YYYY-MM-DDTHH:mm:ss.sssZ",
@@ -105,10 +115,10 @@ Analyze the user's transcript and return a STRICT JSON object matching this sche
       "attendees": [{ "name": "Attendee Name", "email": "attendee@example.com" }]
     },
     "emailData": {
-      "toName": "Recipient Name (e.g. 'Emily Baxter', 'Sarah Chen')",
+      "toName": "Recipient Name",
       "toEmail": "recipient@example.com",
       "subject": "Contextual subject line",
-      "body": "Formatted email body with proper greeting and Andrew's signature",
+      "body": "Formatted email body with proper greeting and signature",
       "tone": "professional" | "friendly" | "urgent" | "concise"
     },
     "contactData": {
@@ -119,8 +129,8 @@ Analyze the user's transcript and return a STRICT JSON object matching this sche
   },
   "tasks": [
     {
-      "title": "Task title (only if creating a task)",
-      "description": "Full description of work",
+      "title": "Task title (ONLY if user explicitly asked to create a task)",
+      "description": "Description",
       "category": "Tech/Dev" | "Business & Strategy" | "Finance" | "Operations & Admin" | "Marketing & Sales" | "Client Projects" | "Personal & Health",
       "userPriority": "urgent" | "high" | "medium" | "low",
       "aiPriority": "critical" | "high" | "medium" | "low",
@@ -140,7 +150,7 @@ Analyze the user's transcript and return a STRICT JSON object matching this sche
       "assignee": "AI Agent"
     }
   ],
-  "spokenSummary": "One sentence spoken executive overview"
+  "spokenSummary": "One sentence spoken overview"
 }`;
 
   try {
@@ -152,7 +162,7 @@ Analyze the user's transcript and return a STRICT JSON object matching this sche
           {
             role: 'user',
             parts: [
-              { text: systemPrompt + '\n\nGROQ WHISPER TRANSCRIPT TO REASON ABOUT:\n"' + transcript + '"' }
+              { text: systemPrompt + '\n\nUSER TRANSCRIPT TO REASON ABOUT:\n"' + transcript + '"' }
             ]
           }
         ],

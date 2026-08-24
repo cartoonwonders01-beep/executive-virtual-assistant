@@ -319,4 +319,36 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     assert.ok(sarahUnified.includes('A100 Ventures'));
   });
 
+  await t.test('Module 13: Multi-User Family Memory & Speaker Auto-Recognition Engine', async () => {
+    const { 
+      DEFAULT_LLM_PROFILES, 
+      detectSpeakerFromTranscript,
+      getProfileDialogueStorageKey,
+      getProfileInsightsStorageKey
+    } = await import('../src/config');
+
+    // Family profiles exist
+    assert.ok(DEFAULT_LLM_PROFILES.some(p => p.id === 'prof-emily'), 'Emily family profile exists');
+    assert.ok(DEFAULT_LLM_PROFILES.some(p => p.id === 'prof-family-kids'), 'Family & Kids profile exists');
+
+    // Speaker auto-detection
+    const detectedEmily = detectSpeakerFromTranscript("Hi Eve, it's Emily, could you help me with weekend plans?", DEFAULT_LLM_PROFILES);
+    assert.ok(detectedEmily, 'Recognized Emily from voice greeting');
+    assert.equal(detectedEmily?.userContext.userName, 'Emily');
+
+    const detectedAndrew = detectSpeakerFromTranscript("Hey Eve, Andrew here, what are my morning priorities?", DEFAULT_LLM_PROFILES);
+    assert.ok(detectedAndrew, 'Recognized Andrew from voice greeting');
+    assert.equal(detectedAndrew?.userContext.userName, 'Andrew');
+
+    const detectedFamily = detectSpeakerFromTranscript("Hello Eve, this is the kids, tell us a bedtime story", DEFAULT_LLM_PROFILES);
+    assert.ok(detectedFamily, 'Recognized Family/Kids from voice greeting');
+    assert.equal(detectedFamily?.userContext.userName, 'Family');
+
+    // Partitioned storage keys
+    const emilyStorageKey = getProfileDialogueStorageKey('prof-emily');
+    const andrewStorageKey = getProfileDialogueStorageKey('prof-executive-lead');
+    assert.notEqual(emilyStorageKey, andrewStorageKey, 'Different users have isolated conversation histories');
+    assert.equal(emilyStorageKey, 'assistant_dialogue_turns_prof-emily');
+  });
+
 });

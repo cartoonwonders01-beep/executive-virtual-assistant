@@ -407,6 +407,8 @@ export interface UserProfileContext {
   userName: string;
   userRole: string;
   organization: string;
+  relationship?: 'self' | 'spouse' | 'child' | 'family' | 'colleague' | 'guest';
+  speakerAliases?: string[]; // e.g. ['emily', 'em', 'mrs baxter']
   strategicGoals: string[];
   communicationRules: string[];
   personalNotes?: string;
@@ -415,8 +417,10 @@ export interface UserProfileContext {
 export interface CustomLLMProfile {
   id: string;
   name: string;
+  avatarIcon?: string; // e.g. '🧠', '🌸', '🏡', '💡', '⚡', '🛠️'
   description: string;
   isDefault?: boolean;
+  isFamilyProfile?: boolean;
   systemPrompt: string;
   userContext: UserProfileContext;
   model: string;

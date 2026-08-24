@@ -18,7 +18,8 @@ import {
   AppView,
   DialogueTurn,
   CustomSkill,
-  SkillStep
+  SkillStep,
+  CustomLLMProfile
 } from '../types';
 import { api } from '../services/api';
 import { audioRecorder } from '../services/audioRecorder';
@@ -37,12 +38,21 @@ import {
   storePersonaStyle,
   getStoredPersonaPrompt,
   storePersonaPrompt,
-  PERSONA_PRESETS
+  PERSONA_PRESETS,
+  getStoredLLMProfiles,
+  getActiveLLMProfile,
+  storeActiveLLMProfileId,
+  detectSpeakerFromTranscript,
+  getProfileDialogueStorageKey
 } from '../config';
 
 export type AIBrainProvider = 'gemini_ultra' | 'groq';
 
 interface AssistantContextType {
+  // LLM Persona & Multi-User Profiles
+  activeLLMProfile: CustomLLMProfile;
+  allLLMProfiles: CustomLLMProfile[];
+  switchActiveProfile: (profileId: string) => void;
   // State
   tasks: TaskItem[];
   memos: VoiceMemo[];
@@ -180,7 +190,70 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [autonomousJobs, setAutonomousJobs] = useState<AutonomousJob[]>([]);
   const [wikiArticles, setWikiArticles] = useState<WikiArticle[]>([]);
   const [customSkills, setCustomSkills] = useState<CustomSkill[]>([]);
-  const [dialogueTurns, setDialogueTurns] = useState<DialogueTurn[]>([]);
+  const [allLLMProfiles, setAllLLMProfiles] = useState<CustomLLMProfile[]>(() => getStoredLLMProfiles());
+  const [activeLLMProfile, setActiveLLMProfile] = useState<CustomLLMProfile>(() => getActiveLLMProfile());
+  const activeLLMProfileRef = useRef<CustomLLMProfile>(activeLLMProfile);
+  activeLLMProfileRef.current = activeLLMProfile;
+
+  const [dialogueTurns, setDialogueTurnsState] = useState<DialogueTurn[]>(() => {
+    if (typeof localStorage === 'undefined') return [];
+    try {
+      const active = getActiveLLMProfile();
+      const raw = localStorage.getItem(getProfileDialogueStorageKey(active.id));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {}
+    return [];
+  });
+
+  const setDialogueTurns = (turnsOrUpdater: DialogueTurn[] | ((prev: DialogueTurn[]) => DialogueTurn[])) => {
+    setDialogueTurnsState(prev => {
+      const next = typeof turnsOrUpdater === 'function' ? turnsOrUpdater(prev) : turnsOrUpdater;
+      if (typeof localStorage !== 'undefined' && activeLLMProfileRef.current?.id) {
+        try {
+          localStorage.setItem(getProfileDialogueStorageKey(activeLLMProfileRef.current.id), JSON.stringify(next));
+        } catch {}
+      }
+      return next;
+    });
+  };
+
+  const switchActiveProfile = (profileId: string) => {
+    // 1. Save current profile's turns
+    if (typeof localStorage !== 'undefined' && activeLLMProfileRef.current?.id) {
+      try {
+        localStorage.setItem(getProfileDialogueStorageKey(activeLLMProfileRef.current.id), JSON.stringify(dialogueTurns));
+      } catch {}
+    }
+
+    // 2. Resolve target profile
+    const profiles = getStoredLLMProfiles();
+    setAllLLMProfiles(profiles);
+    const target = profiles.find(p => p.id === profileId) || profiles[0];
+    storeActiveLLMProfileId(target.id);
+    setActiveLLMProfile(target);
+    activeLLMProfileRef.current = target;
+
+    // 3. Load target profile's turns
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(getProfileDialogueStorageKey(target.id));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            setDialogueTurnsState(parsed);
+            logger.log('info', 'ai_reasoning', `👤 Switched user profile to "${target.name}" (${parsed.length} saved turns loaded).`);
+            return;
+          }
+        }
+      } catch {}
+    }
+    setDialogueTurnsState([]);
+    logger.log('info', 'ai_reasoning', `👤 Switched user profile to "${target.name}".`);
+  };
+
   const [isWakeWordActive, setIsWakeWordActive] = useState<boolean>(true);
   const [continuousConversation, setContinuousConversation] = useState<boolean>(true);
   const [kpi, setKpi] = useState<KPISummary | null>(null);
@@ -575,7 +648,15 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const cardId = 'ac-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5);
     const nowStr = new Date().toISOString();
 
-    logger.log('info', 'ai_reasoning', `🧠 Analyzing intent for user speech: "${text}"`);
+    // 0. Automatic Speaker Identification & Profile Switching (e.g. "Hi Eve, it's Emily", "Hey Eve, Andrew here")
+    const detectedSpeaker = detectSpeakerFromTranscript(text, allLLMProfiles);
+    if (detectedSpeaker && detectedSpeaker.id !== activeLLMProfileRef.current.id) {
+      logger.log('success', 'ai_reasoning', `👤 Speaker Recognized: "${detectedSpeaker.userContext.userName}" (${detectedSpeaker.name})`);
+      switchActiveProfile(detectedSpeaker.id);
+    }
+
+    const currentActiveProfile = activeLLMProfileRef.current;
+    logger.log('info', 'ai_reasoning', `🧠 Reasoning for ${currentActiveProfile.userContext.userName} (${currentActiveProfile.name}): "${text}"`);
     const userTurn: DialogueTurn = {
       id: 'turn-u-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5),
       speaker: 'user',
@@ -751,7 +832,13 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // F. 1. Check Gemini Ultra Provider if configured
       if (!actionCard && aiBrainProvider === 'gemini_ultra' && geminiApiKey) {
         try {
-          const geminiResult = await processSpeechWithGemini(text, geminiApiKey, 'gemini-1.5-flash');
+          const geminiResult = await processSpeechWithGemini(
+            text, 
+            geminiApiKey, 
+            'gemini-1.5-flash',
+            activeLLMProfileRef.current,
+            dialogueTurns.slice(0, 4)
+          );
           if (geminiResult) {
             actionCard = {
               id: cardId,
@@ -806,46 +893,25 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (!actionCard) {
         const isExplicitTaskCommand = /^(add\s+task|create\s+task|log\s+task|put\s+on\s+my\s+board|new\s+task|automate\s+task)\b/i.test(textLower);
 
-        // Intelligent Strategic Q&A & Advice Engine (Answers any question)
+        // Intelligent Strategic Q&A & Advice Engine (Answers any question naturally like a human peer)
         if (!isExplicitTaskCommand && intelligentAdvisor.isQuestionOrInquiry(text)) {
           const solution = intelligentAdvisor.solve(text);
           const currentStyle = personaStyle || getStoredPersonaStyle();
 
-          let formattedDesc = '';
-          if (currentStyle === 'pm_director') {
-            formattedDesc = [
-              solution.summary,
-              '',
-              '**Strategic Insights:**',
-              ...solution.keyInsights.map(k => `• ${k}`),
-              '',
-              '**Execution Steps:**',
-              ...solution.actionSteps.map((s, i) => `${i + 1}. ${s}`),
-              solution.proTip ? `\n💡 **Executive Pro-Tip:** ${solution.proTip}` : '',
-              solution.formulaOrCode ? `\n\`\`\`\n${solution.formulaOrCode}\n\`\`\`` : ''
-            ].filter(Boolean).join('\n');
-          } else if (currentStyle === 'concise_operator') {
-            formattedDesc = solution.spokenResponse || solution.summary;
-          } else {
-            // High-IQ Executive Peer (Default) & Strategic Co-Founder & Custom
-            // Direct, conversational, intelligent dialogue without rigid PM headers
-            const paragraphs = [
-              solution.spokenResponse || solution.summary,
-              solution.summary && solution.summary !== solution.spokenResponse ? solution.summary : null,
-              solution.keyInsights && solution.keyInsights.length > 0
-                ? solution.keyInsights.map(k => `• ${k}`).join('\n')
-                : null,
-              solution.proTip ? `💡 **Pro-Tip:** ${solution.proTip}` : null,
-              solution.formulaOrCode ? `\`\`\`\n${solution.formulaOrCode}\n\`\`\`` : null
-            ].filter(Boolean).join('\n\n');
-            formattedDesc = paragraphs;
+          let cleanDesc = solution.summary || solution.spokenResponse;
+          if (currentStyle === 'pm_director' && solution.keyInsights && solution.keyInsights.length > 0) {
+            cleanDesc = `${solution.summary}\n\n${solution.keyInsights.map(k => `• ${k}`).join('\n')}`;
+          }
+
+          if (solution.formulaOrCode) {
+            cleanDesc += '\n\n```\n' + solution.formulaOrCode + '\n```';
           }
 
           actionCard = {
             id: cardId,
             intent: 'knowledge_qa',
             title: solution.title,
-            description: formattedDesc,
+            description: cleanDesc,
             spokenResponse: solution.spokenResponse,
             status: 'executed',
             createdAt: nowStr
@@ -1609,6 +1675,9 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setIsActivityLogOpen,
         isPromptStudioOpen,
         setIsPromptStudioOpen,
+        activeLLMProfile,
+        allLLMProfiles,
+        switchActiveProfile,
         groqApiKey,
         setGroqApiKey,
         geminiApiKey,
