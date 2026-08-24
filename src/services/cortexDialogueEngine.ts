@@ -1,9 +1,9 @@
-// Central Cognitive Cortex Dialogue Engine (ReAct Architecture: Thought -> Action -> Dialogue)
 import { ActionCard, DialogueTurn, EmailDraft, CalendarAppointment, TaskItem, CustomLLMProfile } from '../types';
 import { memoryGraph } from './memoryGraphService';
 import { webSearchService } from './webSearchService';
 import { autonomousPractice } from './autonomousPracticeWorker';
 import { processSpeechWithGemini } from './geminiService';
+import { intelligentAdvisor } from './intelligentAdvisor';
 import { logger } from './loggerService';
 
 export interface CortexExecutionResult {
@@ -97,9 +97,15 @@ export class CortexDialogueEngine {
     // 2. High-IQ Local ReAct Semantic Cortex Reasoning & Tool Calling
     // =========================================================================
 
+    // Pre-clean speech transcript to remove leading STT hallucinations/fillers
+    const cleanedText = textTrimmed
+      .replace(/^(?:hey\s+eve|hi\s+eve|eve|eeve|if\s+i\s+want\s+you\s+to|if\s+you\s+can|if|ok\s+eve|okay\s+eve|please\s+eve|please)[,\s:]+/i, '')
+      .trim();
+    const cleanLower = cleanedText.toLowerCase();
+
     // A. Tool: Web Search Grounding
-    if (webSearchService.isWebSearchQuery(textTrimmed)) {
-      const searchRes = await webSearchService.searchWeb(textTrimmed);
+    if (webSearchService.isWebSearchQuery(cleanedText || textTrimmed)) {
+      const searchRes = await webSearchService.searchWeb(cleanedText || textTrimmed);
       return {
         actionCard: {
           id: cardId,
@@ -119,29 +125,29 @@ export class CortexDialogueEngine {
       };
     }
 
-    // B. Tool: Email Dispatch with Family Knowledge Graph Resolution
-    if (/(?:email|write\s+(?:an?\s+)?email|send\s+(?:an?\s+)?email|mail|let\s+\w+\s+know|message\s+\w+\s+saying|tell\s+\w+\s+(?:that|saying))/i.test(textLower)) {
+    // B. Tool: Email Dispatch with Family Knowledge Graph & Phonetic Resolution
+    if (/(?:email|write\s+(?:an?\s+)?email|send\s+(?:an?\s+)?email|mail|draft\s+(?:an?\s+)?(?:note|email)|send\s+[\w\s]+\s+(?:a\s+)?(?:quick\s+)?(?:email|note)|let\s+\w+\s+know|message\s+\w+\s+saying|tell\s+\w+\s+(?:that|saying)|(?:send|write|draft|email)\s+(?:a\s+)?(?:note\s+to|email\s+to)?\s*(?:eleanor|eleonore|ellie|celine|elizabeth|eliza|alexander|alex|angelina|lina|sarah))/i.test(textLower) || /(?:email|send\s+(?:a\s+)?note|draft\s+(?:a\s+)?note)/i.test(cleanLower)) {
       let recipientName = 'Celine Loeuille';
       let recipientEmail = 'celine.loeuille@gmail.com';
 
-      // Check all family members from Relational Memory Graph
-      if (/elizabeth|eliza|elizabth/i.test(textLower)) {
-        const ent = memoryGraph.findEntityByRelationOrAlias('elizabeth');
-        recipientName = ent?.entityName || 'Elizabeth Baxter';
-        recipientEmail = ent?.email || 'elizabth.js.baxter@gmail.com';
-      } else if (/alexander|alex/i.test(textLower)) {
-        const ent = memoryGraph.findEntityByRelationOrAlias('alexander');
-        recipientName = ent?.entityName || 'Alexander Baxter';
-        recipientEmail = ent?.email || 'alexander.j.baxter@gmail.com';
-      } else if (/eleonore|eléonore/i.test(textLower)) {
+      // Check all family members with phonetic tolerance
+      if (/eleonore|eléonore|eleanor|ellie|elinor|eli\b/i.test(textLower)) {
         const ent = memoryGraph.findEntityByRelationOrAlias('eleonore');
         recipientName = ent?.entityName || 'Eleonore Baxter';
         recipientEmail = ent?.email || 'eleonore.a.baxter@gmail.com';
-      } else if (/angelina|lina/i.test(textLower)) {
+      } else if (/angelina|lina|angie|angel\b/i.test(textLower)) {
         const ent = memoryGraph.findEntityByRelationOrAlias('angelina');
         recipientName = ent?.entityName || 'Angelina Baxter';
         recipientEmail = ent?.email || 'angelina.c.baxter@gmail.com';
-      } else if (/wife|celine|partner/i.test(textLower)) {
+      } else if (/elizabeth|eliza|elizabth|liz\b|lizzie/i.test(textLower)) {
+        const ent = memoryGraph.findEntityByRelationOrAlias('elizabeth');
+        recipientName = ent?.entityName || 'Elizabeth Baxter';
+        recipientEmail = ent?.email || 'elizabth.js.baxter@gmail.com';
+      } else if (/alexander|alex\b|alec\b|xander/i.test(textLower)) {
+        const ent = memoryGraph.findEntityByRelationOrAlias('alexander');
+        recipientName = ent?.entityName || 'Alexander Baxter';
+        recipientEmail = ent?.email || 'alexander.j.baxter@gmail.com';
+      } else if (/wife|celine|céline|seline|partner/i.test(textLower)) {
         const ent = memoryGraph.findEntityByRelationOrAlias('wife');
         recipientName = ent?.entityName || 'Celine Loeuille';
         recipientEmail = ent?.email || 'celine.loeuille@gmail.com';
@@ -160,6 +166,8 @@ export class CortexDialogueEngine {
         messageContent = sayingMatch[1].trim();
       } else if (regardingMatch) {
         messageContent = `Regarding ${regardingMatch[1].trim()}. Following up on next steps.`;
+      } else if (/careful|afternoon/i.test(textLower)) {
+        messageContent = `Please be careful this afternoon!`;
       } else if (/running\s+late|late|delay/i.test(textLower)) {
         messageContent = `Running a little late! Will be with you shortly.`;
       } else if (/dinner|lunch|reservation/i.test(textLower)) {
@@ -246,36 +254,36 @@ export class CortexDialogueEngine {
       };
     }
 
-    // E. Conversational Strategic Dialogue & Presence ("How are you?", "What's going on?", "Are you there?", Strategic Advice)
-    if (/^(how\s+are\s+you|what's\s+up|what's\s+going\s+on|can\s+you\s+hear\s+me|are\s+you\s+there|hello|hi|hey)/i.test(textLower)) {
-      const spoken = `Hello Andrew! I am right here with you and fully operational. What would you like to tackle together?`;
+    // E. Conversational Strategic Dialogue, Capability Inquiries & Personal Q&A
+    if (intelligentAdvisor.isQuestionOrInquiry(cleanedText || textTrimmed)) {
+      const solution = intelligentAdvisor.solve(cleanedText || textTrimmed);
       return {
         actionCard: {
           id: cardId,
           intent: 'knowledge_qa',
-          title: `Conversational Presence`,
-          description: spoken,
-          spokenResponse: spoken,
+          title: solution.title,
+          description: solution.summary || solution.spokenResponse,
+          spokenResponse: solution.spokenResponse,
           status: 'executed',
           createdAt: nowStr
         },
-        spokenResponse: spoken
+        spokenResponse: solution.spokenResponse
       };
     }
 
-    // F. General Executive Inquiry / Strategy / Advice Fallback
-    const spoken = `I've analyzed that for you, Andrew. The highest-leverage move is to prioritize key deliverables, automate repetitive bottlenecks, and align with your team. I'm ready for the next step.`;
+    // F. General Executive Inquiry Fallback
+    const solution = intelligentAdvisor.solve(textTrimmed);
     return {
       actionCard: {
         id: cardId,
         intent: 'knowledge_qa',
-        title: `Strategic Briefing: "${textTrimmed.substring(0, 30)}..."`,
-        description: `### 🎯 Strategic Takeaway\n\nLooking at **"${textTrimmed}"**, the core objective is clear execution with minimal operational friction.\n\nLet me know if you would like me to draft an email, schedule a follow-up, or log this into your task hub.`,
-        spokenResponse: spoken,
+        title: solution.title,
+        description: solution.summary || solution.spokenResponse,
+        spokenResponse: solution.spokenResponse,
         status: 'executed',
         createdAt: nowStr
       },
-      spokenResponse: spoken
+      spokenResponse: solution.spokenResponse
     };
   }
 }

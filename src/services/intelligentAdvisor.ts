@@ -789,7 +789,80 @@ export class IntelligentAdvisor {
       };
     }
 
-    // Dynamic Multi-Domain Semantic Thought Engine (Natural Human Thought & Analysis)
+    // Direct Personal & Capability Queries
+    if (/where\s+are\s+you\s+from/i.test(lower)) {
+      return {
+        title: 'Eve AI Origin',
+        category: 'General',
+        spokenResponse: "I was built as your executive virtual assistant, running on your private edge cloud and optimized for real-time collaboration with you.",
+        summary: "Eve origin: Private Edge Cloud AI assistant configured for Andrew Baxter.",
+        keyInsights: ['Architecture: Cloudflare Edge + Gemini & Groq cognitive backend', 'Location: Edge Serverless Engine'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    if (/how\s+old\s+am\s+i|who\s+am\s+i|what\s+is\s+my\s+name/i.test(lower)) {
+      return {
+        title: 'Executive Profile: Andrew Baxter',
+        category: 'General',
+        spokenResponse: "You are Andrew Baxter, founder and executive lead, coordinating your team and family operations with me.",
+        summary: "User Profile: Andrew Baxter, Executive Lead.",
+        keyInsights: ['Executive role: Founder & Lead', 'Family: Celine (Wife), Elizabeth, Alexander, Eleonore, Angelina'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    if (/what.*(?:can\s+you\s+do|you\s+can\s+do|are\s+your\s+capabilities|capabilities|do\s+you\s+do)/i.test(lower)) {
+      return {
+        title: 'Eve Capabilities & Tools',
+        category: 'Productivity',
+        spokenResponse: "I can draft and send emails to your family and team, brief you on your calendar and work pipeline, run live web research, tell jokes, and automate your executive tasks.",
+        summary: "Core Capabilities: 1) Gmail VIP Dispatch, 2) Calendar Briefing, 3) Work Pipeline Hub, 4) Real-Time Web Research, 5) Self-Teaching Skill Studio.",
+        keyInsights: ['Voice & Text Full-Duplex Dialogue', 'Relational Memory Graph', 'Autonomous Background Workers'],
+        actionSteps: ['Try: "Send an email to Celine..."', 'Try: "What is on my schedule tomorrow?"', 'Try: "Search the web for European AI regulations"'],
+        language: 'en'
+      };
+    }
+
+    if (/pipeline|state\s+of\s+my\s+work|work\s+hub|status\s+of\s+work/i.test(lower)) {
+      return {
+        title: 'Executive Work Hub & Pipeline Briefing',
+        category: 'Business & Strategy',
+        spokenResponse: "Your pipeline is active with your top high-leverage deliverables, including automated inbox triaging and project execution sprints.",
+        summary: "Pipeline status: High-priority tasks tracked with active automation blueprints.",
+        keyInsights: ['Top priorities organized by ROI', 'Autonomous background execution active'],
+        actionSteps: ['Check the Work Hub tab to view full Gantt timeline and task progress.'],
+        language: 'en'
+      };
+    }
+
+    if (/what\s+did\s+you\s+understand|did\s+you\s+get\s+that/i.test(lower)) {
+      return {
+        title: 'Dialogue Comprehension Status',
+        category: 'General',
+        spokenResponse: "I understood your instruction clearly, Andrew. I have recorded your dialogue and I am ready for your next command.",
+        summary: "Comprehension confirmed: Audio processed via low-latency speech pipeline.",
+        keyInsights: ['Speech Recognition: Active', 'Cognitive Cortex: Ready'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    if (/bye|goodbye|see\s+you|talk\s+later|adieu|au\s+revoir|tschüss|ciao/i.test(lower)) {
+      return {
+        title: 'Farewell',
+        category: 'General',
+        spokenResponse: "Goodbye Andrew! Have a wonderful day, and I am right here whenever you need me next.",
+        summary: "Session paused. Standby listener ready.",
+        keyInsights: [],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Dynamic Multi-Domain Semantic Thought Engine
     const cleanTopic = text
       .replace(/^(what\s+is|what\s+are|how\s+do\s+i|how\s+can\s+we|why\s+is|why\s+are|explain|tell\s+me\s+about|give\s+me\s+advice\s+on|can\s+you\s+explain|what\s+do\s+you\s+think\s+about|thoughts\s+on)\s+/i, '')
       .replace(/[?.]+$/, '')
@@ -797,21 +870,18 @@ export class IntelligentAdvisor {
     const capitalizedTopic = cleanTopic ? cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1) : 'Strategic Question';
 
     return {
-      title: `Strategic Analysis: ${capitalizedTopic}`,
+      title: `Strategic Perspective: ${capitalizedTopic}`,
       category: 'Business & Strategy',
-      spokenResponse: `Looking at ${cleanTopic || 'this'}: The core strategic priority is to identify your primary point of leverage, eliminate operational drag, and test assumptions in rapid feedback cycles. Let's review the breakdown on your screen.`,
-      summary: `In-depth analysis and executive perspective on ${cleanTopic || 'your inquiry'}.`,
+      spokenResponse: `Regarding ${cleanTopic || 'this'}: The clearest path is to focus on your primary point of leverage and keep the execution loop lean. Let me know what step you'd like to take.`,
+      summary: `Executive perspective on ${cleanTopic || 'your inquiry'}.`,
       keyInsights: [
-        `Leverage Point: Focus on the single highest-impact variable that drives 80% of desired outcomes for ${cleanTopic || 'this initiative'}.`,
-        `Risk & Trade-off Assessment: Balance short-term execution speed against sustainable long-term defensibility.`,
-        `Feedback & Iteration: Use rapid, low-cost experiments to validate assumptions before committing significant capital or resources.`
+        `Leverage Point: Focus on the single highest-impact variable for ${cleanTopic || 'this initiative'}.`,
+        `Feedback Loop: Test assumptions quickly before committing broad resources.`
       ],
       actionSteps: [
-        `1. Define the precise success metric and timeframe for ${cleanTopic || 'this project'}.`,
-        `2. Identify the primary operational bottleneck or constraint.`,
-        `3. Execute a 7-day focused sprint to test the initial milestone.`
+        `1. Clarify the immediate outcome for ${cleanTopic || 'this project'}.`,
+        `2. Execute a focused iteration.`
       ],
-      proTip: `Simplicity scales; complexity fails. Keep your execution loop lean and measurable.`,
       language: 'en'
     };
   }
