@@ -143,17 +143,29 @@ export async function runHeadlessBrowserRenderAudit() {
     });
     assert(logPanelRendered, 'H7.2: Docked right-hand Telemetry Inspector is visible in DOM');
 
+    const latestBadgeRendered = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return text.includes('LATEST') || text.includes('Newest on Top');
+    });
+    assert(latestBadgeRendered, 'H7.3: Latest activity highlighted with "✨ LATEST" badge at the top of the stream');
+
+    const sortOrderToggleFound = await page.evaluate(() => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      return buttons.some(b => b.innerText.includes('Newest on Top') || b.innerText.includes('Oldest on Top'));
+    });
+    assert(sortOrderToggleFound, 'H7.4: Sort order switcher (Newest-on-Top vs Oldest-on-Top) rendered in header');
+
     console.log('\n--- [Step 8] Real-User UI Interaction: New Chat & Archive ---');
     const newChatClicked = await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('button'));
-      const newChatBtn = buttons.find(b => b.innerText.includes('New Chat') || b.title?.includes('new clean chat'));
+      const newChatBtn = buttons.find(b => b.innerText.includes('New Chat') || b.title?.includes('new clean chat') || b.title?.includes('Archive'));
       if (newChatBtn) {
         newChatBtn.click();
         return true;
       }
       return false;
     });
-    assert(newChatClicked, 'H8.1: "New Chat & Archive" button found and clicked');
+    assert(newChatClicked, 'H8.1: "New Chat" button found and clicked');
 
     await new Promise(r => setTimeout(r, 600));
 

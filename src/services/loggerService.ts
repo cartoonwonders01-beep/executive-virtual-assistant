@@ -370,8 +370,28 @@ class LoggerService {
   public clearAllArchivedSessions(): void {
     this.archivedSessions = [];
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(SESSIONS_ARCHIVE_KEY);
+      try {
+        localStorage.removeItem(SESSIONS_ARCHIVE_KEY);
+      } catch {}
     }
+  }
+
+  /**
+   * Complete reset: Wipes all historical logs, archived sessions, and creates a fresh session
+   */
+  public clearAllStorage(): void {
+    this.entries = [];
+    this.archivedSessions = [];
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(LOG_STORAGE_KEY);
+        localStorage.removeItem(LOG_ARCHIVE_KEY);
+        localStorage.removeItem(SESSIONS_ARCHIVE_KEY);
+        sessionStorage.removeItem('assistant_session_id');
+      } catch {}
+    }
+    this.sessionId = 'session-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6);
+    this.log('info', 'system', `✨ Complete reset: All historical logs wiped. Fresh active session started (${this.sessionId}).`);
   }
 }
 
