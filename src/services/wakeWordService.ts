@@ -1,5 +1,5 @@
 import { logger } from './loggerService';
-import { stopSpeaking } from './speechSynthesis';
+import { stopSpeaking, isCurrentlySpeaking } from './speechSynthesis';
 import { isVerbalStopCommand } from './audioRecorder';
 
 export interface WakeWordListenerConfig {
@@ -131,18 +131,23 @@ export class WakeWordService {
 
         const lower = fullTranscript.toLowerCase().trim();
         if (lower) {
-          stopSpeaking(); // Immediate barge-in on user speech
+          if (isVerbalStopCommand(lower)) {
+            stopSpeaking();
+            logger.log('info', 'wake_word', `🛑 Verbal stop command recognized: "${lower}". Silencing assistant.`);
+            return;
+          }
+
+          // Full-Duplex Acoustic Isolation Protocol (FDAIP): Ignore speaker feedback during TTS playback
+          if (isCurrentlySpeaking()) {
+            return;
+          }
+
+          stopSpeaking(); // Immediate barge-in on distinct user speech
           logger.log('info', 'speech_stt', `Passive Audio Stream: "${lower}"`);
         }
 
         if (this.config?.onSpeechDetected) {
           this.config.onSpeechDetected(lower);
-        }
-
-        if (isVerbalStopCommand(lower)) {
-          stopSpeaking();
-          logger.log('info', 'wake_word', `🛑 Verbal stop command recognized: "${lower}". Silencing assistant.`);
-          return;
         }
 
         // 1. Direct Trigger Matching

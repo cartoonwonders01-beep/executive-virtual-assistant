@@ -350,13 +350,30 @@ export function resolveBestVoice(persona: VoicePersona = activePersona, targetLa
     || voices[0];
 }
 
+let isSpeakingState = false;
+let activeUtteranceRef: SpeechSynthesisUtterance | null = null;
+let watchdogInterval: any = null;
+
+export function isCurrentlySpeaking(): boolean {
+  return isSpeakingState;
+}
+
 export function speakResponse(text: string, onEnd?: () => void, persona?: VoicePersona, targetLang?: SupportedLanguage): void {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
     if (onEnd) onEnd();
     return;
   }
 
-  window.speechSynthesis.cancel();
+  // Clear previous watchdog
+  if (watchdogInterval) {
+    clearInterval(watchdogInterval);
+    watchdogInterval = null;
+  }
+
+  // Cancel any lingering utterances
+  try {
+    window.speechSynthesis.cancel();
+  } catch {}
 
   // Strip markdown styling and emojis for clean phonetics
   const cleanText = text
@@ -366,12 +383,17 @@ export function speakResponse(text: string, onEnd?: () => void, persona?: VoiceP
     .trim();
 
   if (!cleanText) {
+    isSpeakingState = false;
+    activeUtteranceRef = null;
     if (onEnd) onEnd();
     return;
   }
 
   const detectedLang = targetLang || detectLanguage(cleanText);
   const utterance = new SpeechSynthesisUtterance(cleanText);
+  activeUtteranceRef = utterance; // Retain top-level reference to prevent V8 garbage collection
+  isSpeakingState = true;
+
   utterance.rate = speechRate;
   utterance.pitch = speechPitch;
   utterance.lang = detectedLang;
@@ -385,6 +407,12 @@ export function speakResponse(text: string, onEnd?: () => void, persona?: VoiceP
   const finish = () => {
     if (!ended) {
       ended = true;
+      isSpeakingState = false;
+      activeUtteranceRef = null;
+      if (watchdogInterval) {
+        clearInterval(watchdogInterval);
+        watchdogInterval = null;
+      }
       if (onEnd) onEnd();
     }
   };
@@ -392,15 +420,37 @@ export function speakResponse(text: string, onEnd?: () => void, persona?: VoiceP
   utterance.onend = finish;
   utterance.onerror = finish;
 
+  // Chromium TTS Keepalive Watchdog (prevents Chrome speech queue freeze on long utterances)
+  watchdogInterval = setInterval(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking) {
+      window.speechSynthesis.pause();
+      window.speechSynthesis.resume();
+    } else {
+      if (watchdogInterval) clearInterval(watchdogInterval);
+    }
+  }, 6000);
+
   // Fallback safety timeout in case browser TTS hangs
   const approxDurationMs = (cleanText.split(' ').length / (speechRate * 2.5)) * 1000 + 2000;
   setTimeout(() => finish(), Math.max(4000, approxDurationMs));
 
+  // Resume synthesis queue and speak
+  try {
+    window.speechSynthesis.resume();
+  } catch {}
   window.speechSynthesis.speak(utterance);
 }
 
 export function stopSpeaking(): void {
+  isSpeakingState = false;
+  activeUtteranceRef = null;
+  if (watchdogInterval) {
+    clearInterval(watchdogInterval);
+    watchdogInterval = null;
+  }
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
+    try {
+      window.speechSynthesis.cancel();
+    } catch {}
   }
 }

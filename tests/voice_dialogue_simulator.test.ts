@@ -302,4 +302,84 @@ test('Autonomous Voice & Dialogue Interactive Simulation Suite', async (t) => {
     assert.equal(isVerbalStopCommand("Create a task for tomorrow"), false, 'Task creation is NOT stop');
   });
 
+  await t.test('Simulation 15: Full-Duplex Acoustic Isolation Protocol (FDAIP)', async () => {
+    const { isCurrentlySpeaking } = await import('../src/services/speechSynthesis');
+    assert.equal(typeof isCurrentlySpeaking, 'function', 'isCurrentlySpeaking function is exported');
+    assert.equal(isCurrentlySpeaking(), false, 'Initially not speaking');
+  });
+
+  await t.test('Simulation 16: Relational Memory Graph & Entity Resolution', async () => {
+    const { memoryGraph } = await import('../src/services/memoryGraphService');
+
+    // 1. Resolve default wife
+    const wife = memoryGraph.findEntityByRelationOrAlias('wife');
+    assert.ok(wife !== null, 'Wife entity resolved from memory graph');
+    assert.ok(wife?.entityName.includes('Celine'), 'Wife name is Celine');
+
+    // 2. Learn a new contact/entity dynamically
+    const newEntity = memoryGraph.learnEntity(
+      'client',
+      'Acme Corp Partner Mark',
+      'mark@acmepartners.com',
+      '+1 (555) 777-8899',
+      ['Key enterprise client', 'Prefers Tuesday morning syncs']
+    );
+    assert.equal(newEntity.entityName, 'Acme Corp Partner Mark', 'New client entity committed to memory');
+
+    // 3. Resolve by alias
+    const resolvedClient = memoryGraph.findEntityByRelationOrAlias('mark');
+    assert.ok(resolvedClient !== null, 'Resolved client Mark by alias');
+    assert.equal(resolvedClient?.email, 'mark@acmepartners.com', 'Resolved Mark email correctly');
+  });
+
+  await t.test('Simulation 17: Universal Interactive Skill Acquisition Protocol (UISAP)', async () => {
+    const { skillAcquisitionEngine } = await import('../src/services/skillAcquisitionEngine');
+
+    // Step 1: Start interview for unknown skill
+    const interview = skillAcquisitionEngine.startSkillInterview('Monthly Investor Update', 'generate the monthly investor update');
+    assert.equal(skillAcquisitionEngine.getState(), 'awaiting_skill_explanation', 'State transitioned to awaiting_skill_explanation');
+    assert.ok(interview.spokenPrompt.includes('learn'), 'Spoken interview prompt asks how to execute');
+
+    // Step 2: User provides explanation of steps
+    const synthesis = skillAcquisitionEngine.synthesizeSkillFromExplanation(
+      'First check calendar, then triage inbox, then list tasks and draft an email to Celine'
+    );
+    assert.equal(skillAcquisitionEngine.getState(), 'awaiting_confirmation', 'State transitioned to awaiting_confirmation');
+    assert.ok(synthesis.blueprint.actionSteps.length >= 3, 'Synthesized at least 3 workflow steps');
+    assert.ok(synthesis.spokenConfirmation.includes('Should I commit this skill'), 'Prompt asks for confirmation');
+
+    // Step 3: User confirms and commits to memory
+    const committed = skillAcquisitionEngine.commitPendingSkill();
+    assert.ok(committed !== null, 'Skill committed successfully');
+    assert.equal(committed?.name, 'Monthly Investor Update', 'Skill name preserved');
+    assert.equal(skillAcquisitionEngine.getState(), 'idle', 'State reset to idle');
+  });
+
+  await t.test('Simulation 18: Proactive Background Skill Practice & Joke Repertoire', async () => {
+    const { autonomousPractice } = await import('../src/services/autonomousPracticeWorker');
+
+    // 1. Get initial joke
+    const joke1 = autonomousPractice.getNextItem('jokes');
+    assert.ok(joke1 !== null, 'Retrieved joke from repertoire');
+    assert.ok(joke1?.content.length! > 10, 'Joke has valid content');
+    assert.equal(joke1?.timesServed, 1, 'Times served incremented');
+
+    // 2. Get next joke (rotation without immediate repetition)
+    const joke2 = autonomousPractice.getNextItem('jokes');
+    assert.ok(joke2 !== null, 'Retrieved second joke from repertoire');
+    assert.notEqual(joke1?.id, joke2?.id, 'Served distinct jokes sequentially');
+  });
+
+  await t.test('Simulation 19: Real-Time Web Search & Grounding Engine', async () => {
+    const { webSearchService } = await import('../src/services/webSearchService');
+
+    assert.equal(webSearchService.isWebSearchQuery('search the web for quantum AI'), true, 'Identified web search query');
+    assert.equal(webSearchService.isWebSearchQuery('what is the latest news on tech'), true, 'Identified news query');
+    assert.equal(webSearchService.isWebSearchQuery('Book a meeting with Sarah'), false, 'Meeting booking is not web search');
+
+    const searchResult = await webSearchService.searchWeb('European AI Act regulations');
+    assert.ok(searchResult.summary.length > 50, 'Generated web intelligence summary');
+    assert.ok(searchResult.sources.length >= 2, 'Provided verified web sources');
+  });
+
 });

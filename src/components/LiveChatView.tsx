@@ -528,10 +528,13 @@ export const LiveChatView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handlePlayAudio(turn.id, turn.spokenResponse || turn.text)}
-                            className="hover:text-teal-300 transition p-0.5 text-teal-400 cursor-pointer"
-                            title="Play spoken response"
+                            className="hover:text-teal-300 transition p-1 text-teal-400 cursor-pointer flex items-center gap-1 rounded bg-teal-950/40 border border-teal-800/40 hover:border-teal-500/50"
+                            title="🔊 Read Aloud with Natural Voice"
                           >
-                            <Play className={`w-3 h-3 ${playingTurnId === turn.id ? 'animate-spin' : ''}`} />
+                            <Volume2 className={`w-3 h-3 ${playingTurnId === turn.id ? 'animate-pulse text-emerald-400' : ''}`} />
+                            <span className="text-[9px] font-mono font-medium hidden sm:inline">
+                              {playingTurnId === turn.id ? 'Speaking...' : 'Speak'}
+                            </span>
                           </button>
                         )}
 
@@ -567,6 +570,47 @@ export const LiveChatView: React.FC = () => {
                     <p className="whitespace-pre-wrap font-sans text-slate-200">
                       {turn.text}
                     </p>
+
+                    {/* Interactive Action / Skill Confirmation Buttons */}
+                    {!isUser && turn.text.includes('Should I commit this skill') && (
+                      <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => submitVoiceTranscript('Yes, commit and execute')}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>✅ Confirm & Commit to Memory</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => submitVoiceTranscript('Cancel')}
+                          className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-medium text-xs transition border border-slate-700 cursor-pointer"
+                        >
+                          <span>❌ Cancel</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {!isUser && turn.text.includes('Should I send it now?') && (
+                      <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => submitVoiceTranscript('Yes, send it')}
+                          className="px-3 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-semibold text-xs transition shadow-md shadow-teal-600/20 cursor-pointer flex items-center gap-1.5"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>✈️ Send Email Now</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => submitVoiceTranscript('Cancel')}
+                          className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition border border-slate-700 cursor-pointer"
+                        >
+                          <span>Cancel</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {isUser && (

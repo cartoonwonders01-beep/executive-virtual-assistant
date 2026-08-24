@@ -4,7 +4,7 @@ import {
   getStoredSilenceDurationMs, 
   getStoredMimeType 
 } from '../config';
-import { stopSpeaking } from './speechSynthesis';
+import { stopSpeaking, isCurrentlySpeaking } from './speechSynthesis';
 
 // Production MediaRecorder & Web Audio monitoring with intelligent Voice Activity Detection (VAD)
 // and Concurrent Web Speech API Real-Time Speech Recognition
@@ -130,6 +130,20 @@ export class AudioRecorderService {
 
             const current = fullAccumulated.trim();
             if (current) {
+              if (isVerbalStopCommand(current)) {
+                if (config.onVerbalStopDetected) {
+                  config.onVerbalStopDetected(current);
+                }
+                stopSpeaking();
+                this.stop();
+                return;
+              }
+
+              // Full-Duplex Acoustic Isolation: Ignore microphone speaker pickup during active TTS playback
+              if (isCurrentlySpeaking()) {
+                return;
+              }
+
               this.hasDetectedSpeech = true;
               this.silenceStartTime = null;
               this.capturedLiveTranscript = current;
@@ -137,14 +151,6 @@ export class AudioRecorderService {
 
               if (config.onLiveTranscript) {
                 config.onLiveTranscript(current);
-              }
-
-              if (isVerbalStopCommand(current)) {
-                if (config.onVerbalStopDetected) {
-                  config.onVerbalStopDetected(current);
-                }
-                this.stop();
-                return;
               }
 
               // Auto-stop after user finishes speaking their sentence (Adaptive Low-Latency VAD: 450ms)

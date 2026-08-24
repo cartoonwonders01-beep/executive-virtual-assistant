@@ -31,6 +31,10 @@ import { playChime } from '../services/soundEffects';
 import { intelligentAdvisor } from '../services/intelligentAdvisor';
 import { logger } from '../services/loggerService';
 import { selfLearningEngine } from '../services/selfLearningEngine';
+import { memoryGraph } from '../services/memoryGraphService';
+import { skillAcquisitionEngine } from '../services/skillAcquisitionEngine';
+import { autonomousPractice } from '../services/autonomousPracticeWorker';
+import { webSearchService } from '../services/webSearchService';
 import {
   getStoredContinuousTimeoutSeconds,
   storeContinuousTimeoutSeconds,
@@ -681,8 +685,130 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       let createdTasks: TaskItem[] = [];
       let spokenResponseText = '';
 
-      // A. Check for Voice Skill Learning ("When I say [Trigger]...", "Learn a skill...")
-      if (/^(when\s+i\s+say|teach\s+skill|learn\s+skill|create\s+routine)/i.test(textLower)) {
+      // =========================================================================
+      // UISAP PHASE 1, 2, 3: Interactive Learning State Machine
+      // =========================================================================
+      const acqState = skillAcquisitionEngine.getState();
+
+      if (acqState === 'awaiting_missing_entity') {
+        const pending = skillAcquisitionEngine.getPendingEntity();
+        const nameMatch = text.match(/(?:name\s+is|it's|is|c'est)\s+([a-zA-Z\s]+?)(?:[,.]|\s+email|\s+and|\s+et|$)/i);
+        const entityName = nameMatch ? nameMatch[1].trim() : text.split(/[,.]/)[0].trim();
+        const emailMatch = text.match(/[\w.-]+@[\w.-]+\.\w+/i);
+        const entityEmail = emailMatch ? emailMatch[0] : `${entityName.toLowerCase().replace(/\s+/g, '.')}@executive.co`;
+
+        memoryGraph.learnEntity(pending?.relationType || 'wife', entityName || 'Celine Baxter', entityEmail);
+        skillAcquisitionEngine.reset();
+
+        spokenResponseText = `Got it, Andrew! I've committed ${entityName} (${entityEmail}) as your ${pending?.entityRoleName || 'wife'} to permanent memory. Drafting and sending your email to ${entityName} right now!`;
+
+        const draftEmail: EmailDraft = {
+          id: 'em-' + Date.now().toString(36),
+          toName: entityName,
+          toEmail: entityEmail,
+          subject: 'Executive Note from Andrew',
+          body: `Hi ${entityName},\n\nSending you a quick note.\n\nLove,\nAndrew`,
+          tone: 'friendly',
+          status: 'sent',
+          sentAt: nowStr
+        };
+
+        actionCard = {
+          id: cardId,
+          intent: 'email_draft',
+          title: `Email Dispatched to ${entityName}`,
+          description: `Permanent memory updated: [${pending?.entityRoleName || 'Wife'}] -> ${entityName} (${entityEmail})\n\nEmail body:\n"${draftEmail.body}"`,
+          spokenResponse: spokenResponseText,
+          status: 'executed',
+          createdAt: nowStr,
+          emailData: draftEmail
+        };
+      }
+      else if (acqState === 'awaiting_skill_explanation') {
+        const { blueprint, spokenConfirmation, summaryMarkdown } = skillAcquisitionEngine.synthesizeSkillFromExplanation(text);
+        spokenResponseText = spokenConfirmation;
+        actionCard = {
+          id: cardId,
+          intent: 'skill_learn',
+          title: `Confirm Skill: "${blueprint.skillName}"`,
+          description: summaryMarkdown,
+          spokenResponse: spokenConfirmation,
+          status: 'pending',
+          createdAt: nowStr
+        };
+      }
+      else if (acqState === 'awaiting_confirmation') {
+        if (/^(yes|yeah|sure|confirm|do it|proceed|go ahead|commit|oui|d'accord)/i.test(textLower)) {
+          const committed = skillAcquisitionEngine.commitPendingSkill();
+          if (committed) {
+            await createCustomSkill(committed);
+            spokenResponseText = `Skill "${committed.name}" has been permanently stored in my memory! Next time you ask, I will execute it straight away. Executing the steps for you right now.`;
+            await executeCustomSkill(committed.id);
+            return;
+          }
+        } else if (/^(no|cancel|stop|nevermind|annule|non)/i.test(textLower)) {
+          skillAcquisitionEngine.reset();
+          spokenResponseText = `Understood. The new skill was not saved.`;
+          actionCard = {
+            id: cardId,
+            intent: 'general_query',
+            title: `Skill Cancelled`,
+            description: spokenResponseText,
+            spokenResponse: spokenResponseText,
+            status: 'executed',
+            createdAt: nowStr
+          };
+        }
+      }
+
+      // 0. Curated Humor & Proactive Skill Practice ("Tell me a joke")
+      if (!actionCard && /^(tell\s+me\s+a\s+joke|joke|tell\s+joke|make\s+me\s+laugh|raconte\s+une\s+blague|witz)/i.test(textLower)) {
+        const nextJoke = autonomousPractice.getNextItem('jokes');
+        spokenResponseText = nextJoke ? nextJoke.content : "Why do programmers prefer dark mode? Because light attracts bugs!";
+        actionCard = {
+          id: cardId,
+          intent: 'knowledge_qa',
+          title: 'Curated Executive Humor',
+          description: `😄 **Joke of the Moment**:\n\n${spokenResponseText}\n\n*(Eve's background practice worker has cached ${autonomousPractice.getRepertoireCount('jokes')} jokes in repertoire)*`,
+          spokenResponse: spokenResponseText,
+          status: 'executed',
+          createdAt: nowStr
+        };
+      }
+
+      // 0.1 Real-Time Live Web Search & Grounding ("Search the web for...")
+      if (!actionCard && webSearchService.isWebSearchQuery(text)) {
+        const searchRes = await webSearchService.searchWeb(text);
+        spokenResponseText = searchRes.spokenSummary;
+        actionCard = {
+          id: cardId,
+          intent: 'web_search',
+          title: `Web Intelligence: "${searchRes.query}"`,
+          description: searchRes.summary,
+          spokenResponse: searchRes.spokenSummary,
+          status: 'executed',
+          createdAt: nowStr
+        };
+      }
+
+      // 0.2 Unknown Action / Routine Interview Trigger ("Generate monthly update", "Prepare board deck")
+      if (!actionCard && /^(generate|prepare|organize|learn\s+how\s+to|build\s+workflow)\s+/i.test(textLower) && !/task|email|calendar|appointment|timer|alarm|weather|matrix/i.test(textLower)) {
+        const skillName = text.replace(/^(generate|prepare|organize|learn\s+how\s+to|build\s+workflow)\s+(?:the\s+|my\s+|a\s+)?/i, '').trim();
+        const { spokenPrompt, summaryPrompt } = skillAcquisitionEngine.startSkillInterview(skillName || 'Custom Workflow', text);
+        spokenResponseText = spokenPrompt;
+        actionCard = {
+          id: cardId,
+          intent: 'skill_learn',
+          title: `🛠️ Learning New Skill: "${skillName}"`,
+          description: summaryPrompt,
+          spokenResponse: spokenPrompt,
+          status: 'pending',
+          createdAt: nowStr
+        };
+      }
+
+      // A. Check for Explicit Voice Skill Learning ("When I say [Trigger]...", "Learn a skill...")
+      if (!actionCard && /^(when\s+i\s+say|teach\s+skill|learn\s+skill|create\s+routine)/i.test(textLower)) {
         const triggerMatch = text.match(/(?:when\s+i\s+say|trigger|called)\s+['"]?([^,'"]+)['"]?/i);
         const trigger = triggerMatch ? triggerMatch[1].trim() : 'custom action';
         
@@ -696,8 +822,9 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (/task|priority|priorities/i.test(textLower)) {
           steps.push({ id: 's3', order: steps.length + 1, actionType: 'list_tasks', label: 'List Top Priorities' });
         }
-        if (/wife|emily|love/i.test(textLower)) {
-          steps.push({ id: 's4', order: steps.length + 1, actionType: 'send_email', label: 'Draft Love Note to Emily', target: 'emily.baxter@personal.com' });
+        if (/wife|celine|emily|love/i.test(textLower)) {
+          const resolvedWife = memoryGraph.findEntityByRelationOrAlias('wife');
+          steps.push({ id: 's4', order: steps.length + 1, actionType: 'send_email', label: `Draft Love Note to ${resolvedWife?.entityName || 'Celine'}`, target: resolvedWife?.email || 'celine.baxter@executive.co' });
         }
         if (steps.length === 0) {
           steps.push({ id: 's1', order: 1, actionType: 'triage_inbox', label: 'Triage VIP Inbox' });
@@ -1237,19 +1364,18 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         } catch {}
 
         if (!quietMode && voiceFeedbackEnabled && actionCard.spokenResponse) {
+          wakeWordService.pause(); // Full-Duplex Acoustic Isolation
           logger.log('info', 'tts_speech', `🔊 Speaking response (Voice: Studio American Female, Speed: 1.05x): "${actionCard.spokenResponse}"`);
           speakResponse(actionCard.spokenResponse, () => {
             logger.log('success', 'tts_speech', '✅ Voice playback complete.');
-            // Re-arm continuous listening or wake-word listener!
-            if (isContinuousSessionActiveRef.current) {
-              setTimeout(() => {
-                if (isContinuousSessionActiveRef.current) {
-                  startVoiceListening();
-                }
-              }, 300);
-            } else if (isWakeWordActive) {
-              wakeWordService.resume();
-            }
+            // Re-arm continuous listening or wake-word listener with 300ms acoustic grace period!
+            setTimeout(() => {
+              if (isContinuousSessionActiveRef.current) {
+                startVoiceListening();
+              } else if (isWakeWordActive) {
+                wakeWordService.resume();
+              }
+            }, 300);
           });
         } else if (quietMode) {
           logger.log('info', 'tts_speech', `🤫 [Quiet Mode] Rendered response silently without audio playback.`);
