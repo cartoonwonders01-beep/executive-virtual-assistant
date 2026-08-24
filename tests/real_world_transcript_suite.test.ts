@@ -115,4 +115,34 @@ test('Real-World Dialogue & Telemetry Robustness Suite (Zero Boilerplate Verific
     assert.ok(res.actionCard.emailData?.body.includes('love you'));
   });
 
+  await t.test('Case 17: Compound Intent ("Please tell me a joke and start thinking about also the email that I need to send")', async () => {
+    const res = await cortexEngine.reasonAndAct('Please tell me a joke and start thinking about also the email that I need to send');
+    assert.equal(res.actionCard.intent, 'email_draft', 'Resolved compound intent');
+    assert.ok(res.spokenResponse.includes('Celine Loeuille'), 'Prepared draft to Celine');
+  });
+
+  await t.test('Case 18: Weather Disambiguation vs Calendar ("What\'s the weather going to be like tomorrow")', async () => {
+    const res = await cortexEngine.reasonAndAct("What's the weather going to be like tomorrow");
+    assert.equal(res.actionCard.intent, 'web_search', 'Routed weather to live intelligence web search');
+    assert.ok(!res.spokenResponse.includes('Q3 Product Strategy'), 'Did NOT confuse weather with calendar appointment');
+  });
+
+  await t.test('Case 19: Standalone Calendar Query ("My calendar")', async () => {
+    const res = await cortexEngine.reasonAndAct('My calendar');
+    assert.equal(res.actionCard.intent, 'calendar_booking', 'Routed to calendar schedule briefing');
+    assert.ok(!res.spokenResponse.includes(BANNED_BOILERPLATE), 'Did not return banned boilerplate');
+  });
+
+  await t.test('Case 20: Email Contents Inspection ("What\'s the contents of the email")', async () => {
+    const res = await cortexEngine.reasonAndAct("What's the contents of the email");
+    assert.ok(/draft|subject|reads|Celine/i.test(res.spokenResponse), 'Explained current draft contents');
+  });
+
+  await t.test('Case 21: AEC & Self-Hearing Filter ("let me know what step you\'d like to take")', async () => {
+    const { recordAssistantSpokenText, isAcousticEcho } = await import('../src/services/speechSynthesis');
+    recordAssistantSpokenText("Let me know what step you'd like to take.");
+    const isEcho = isAcousticEcho("let me know what step you'd like to take");
+    assert.ok(isEcho, 'Correctly identified reverberated assistant speech as acoustic echo');
+  });
+
 });

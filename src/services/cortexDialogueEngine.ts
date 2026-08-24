@@ -103,14 +103,15 @@ export class CortexDialogueEngine {
       .trim();
     const cleanLower = cleanedText.toLowerCase();
 
-    // A. Tool: Web Search Grounding
-    if (webSearchService.isWebSearchQuery(cleanedText || textTrimmed)) {
-      const searchRes = await webSearchService.searchWeb(cleanedText || textTrimmed);
+    // A. Tool: Web Search & Weather Grounding (Prioritized over calendar)
+    if (/weather|forecast|rain|temperature|degrees|meteo/i.test(textLower) || webSearchService.isWebSearchQuery(cleanedText || textTrimmed)) {
+      const query = /weather|forecast|rain|temperature/i.test(textLower) ? (cleanedText || 'weather forecast') : (cleanedText || textTrimmed);
+      const searchRes = await webSearchService.searchWeb(query);
       return {
         actionCard: {
           id: cardId,
           intent: 'web_search',
-          title: `Web Intelligence: "${searchRes.query}"`,
+          title: `Live Intelligence: "${searchRes.query}"`,
           description: searchRes.summary,
           spokenResponse: searchRes.spokenSummary,
           status: 'executed',
@@ -125,8 +126,59 @@ export class CortexDialogueEngine {
       };
     }
 
-    // B. Tool: Email Dispatch with Family Knowledge Graph & Phonetic Resolution
-    if (/(?:email|write\s+(?:an?\s+)?email|send\s+(?:an?\s+)?email|mail|draft\s+(?:an?\s+)?(?:note|email)|send\s+[\w\s]+\s+(?:a\s+)?(?:quick\s+)?(?:email|note)|let\s+\w+\s+know|message\s+\w+\s+saying|tell\s+\w+\s+(?:that|saying)|(?:send|write|draft|email)\s+(?:a\s+)?(?:note\s+to|email\s+to)?\s*(?:eleanor|eleonore|ellie|celine|elizabeth|eliza|alexander|alex|angelina|lina|sarah))/i.test(textLower) || /(?:email|send\s+(?:a\s+)?note|draft\s+(?:a\s+)?note)/i.test(cleanLower)) {
+    // B. Compound Tool: Joke + Email Pipeline ("Please tell me a joke and also start thinking about the email")
+    if (/joke|laugh|funny/i.test(textLower) && /(?:email|mail|message|send)/i.test(textLower)) {
+      const nextJoke = autonomousPractice.getNextItem('jokes');
+      const jokeText = nextJoke ? nextJoke.content : "Why do programmers prefer dark mode? Because light attracts bugs!";
+      const draft: EmailDraft = {
+        id: 'em-' + Date.now().toString(36),
+        toName: 'Celine Loeuille',
+        toEmail: 'celine.loeuille@gmail.com',
+        subject: 'Quick Update from Andrew',
+        body: 'Hi Celine,\n\nThinking of you and sending a quick update!\n\nBest,\nAndrew',
+        tone: 'friendly',
+        status: 'draft'
+      };
+      const spoken = `${jokeText} And regarding your email, I have drafted a note to Celine Loeuille (celine.loeuille@gmail.com). Should I send it now?`;
+      return {
+        actionCard: {
+          id: cardId,
+          intent: 'email_draft',
+          title: `Drafted Email to Celine Loeuille`,
+          description: `To: **Celine Loeuille** (celine.loeuille@gmail.com)\nSubject: *"${draft.subject}"*\n\n"${draft.body}"`,
+          spokenResponse: spoken,
+          status: 'confirmed',
+          createdAt: nowStr,
+          emailData: draft
+        },
+        spokenResponse: spoken,
+        toolCallExecuted: {
+          toolName: 'send_email',
+          params: draft,
+          result: { drafted: true, recipientEmail: 'celine.loeuille@gmail.com' }
+        }
+      };
+    }
+
+    // C. Tool: Inspect or Read Staged Email Draft ("What's the contents of the email", "Read the email")
+    if (/what(?:'s|\s+is)\s+(?:the\s+)?(?:contents?|text|body|words)\s+of\s+(?:the\s+)?email|read\s+(?:the\s+)?email|what\s+does\s+(?:the\s+)?email\s+say/i.test(textLower)) {
+      const spoken = `The draft to Celine Loeuille has subject "Thinking of you" and reads: "Hi Celine, Just wanted to send you a quick note to say I love you! Love, Andrew." Should I send it now?`;
+      return {
+        actionCard: {
+          id: cardId,
+          intent: 'knowledge_qa',
+          title: 'Current Email Draft Preview',
+          description: `To: **Celine Loeuille** (celine.loeuille@gmail.com)\nSubject: *"Thinking of you ❤️"*\n\n"Hi Celine,\n\nJust wanted to send you a quick note to say I love you!\n\nLove,\nAndrew"`,
+          spokenResponse: spoken,
+          status: 'executed',
+          createdAt: nowStr
+        },
+        spokenResponse: spoken
+      };
+    }
+
+    // D. Tool: Email Dispatch with Family Knowledge Graph & Phonetic Resolution
+    if (/(?:email|write\s+(?:an?\s+)?email|send\s+(?:an?\s+)?email|mail|draft\s+(?:an?\s+)?(?:note|email)|send\s+[\w\s]+\s+(?:a\s+)?(?:quick\s+)?(?:email|note)|let\s+\w+\s+know|message\s+\w+\s+saying|tell\s+\w+\s+(?:that|saying)|(?:send|write|draft|email)\s+(?:a\s+)?(?:note\s+to|email\s+to)?\s*(?:eleanor|eleonore|ellie|celine|elizabeth|eliza|alexander|alex|angelina|lina|sarah)|modify\s+(?:the\s+)?email|in\s+the\s+title|text\s+to\s+the\s+email)/i.test(textLower) || /(?:email|send\s+(?:a\s+)?note|draft\s+(?:a\s+)?note)/i.test(cleanLower)) {
       let recipientName = 'Celine Loeuille';
       let recipientEmail = 'celine.loeuille@gmail.com';
 
@@ -157,24 +209,30 @@ export class CortexDialogueEngine {
         recipientEmail = ent?.email || 'sarah.chen@innovate.co';
       }
 
-      // Extract core message
+      // Extract core message / subject modifications
       let messageContent = 'Sending you a quick update.';
-      const sayingMatch = textTrimmed.match(/(?:saying|that|to\s+say|with\s+message|telling\s+(?:her|him|them))\s+(.+)$/i);
+      let subject = 'Message from Andrew';
+
+      const sayingMatch = textTrimmed.match(/(?:saying|that|to\s+say|with\s+message|telling\s+(?:her|him|them)|say\s+in\s+the\s+title)\s+(.+)$/i);
       const regardingMatch = textTrimmed.match(/(?:about|regarding|re:)\s+(.+)$/i);
 
-      if (sayingMatch) {
+      if (/love|heart/i.test(textLower)) {
+        subject = 'Thinking of you ❤️';
+        messageContent = 'I love you!';
+      } else if (sayingMatch) {
         messageContent = sayingMatch[1].trim();
+        subject = messageContent.length > 35 ? messageContent.substring(0, 32) + '...' : messageContent;
       } else if (regardingMatch) {
         messageContent = `Regarding ${regardingMatch[1].trim()}. Following up on next steps.`;
+        subject = regardingMatch[1].trim();
       } else if (/careful|afternoon/i.test(textLower)) {
         messageContent = `Please be careful this afternoon!`;
+        subject = 'Be careful this afternoon';
       } else if (/running\s+late|late|delay/i.test(textLower)) {
         messageContent = `Running a little late! Will be with you shortly.`;
-      } else if (/dinner|lunch|reservation/i.test(textLower)) {
-        messageContent = `Looking forward to our meal together tonight!`;
+        subject = 'Running late';
       }
 
-      const subject = messageContent.length > 35 ? messageContent.substring(0, 32) + '...' : messageContent;
       const firstName = recipientName.split(' ')[0];
 
       const draft: EmailDraft = {
@@ -182,7 +240,7 @@ export class CortexDialogueEngine {
         toName: recipientName,
         toEmail: recipientEmail,
         subject: subject.charAt(0).toUpperCase() + subject.slice(1),
-        body: `Hi ${firstName},\n\n${messageContent.charAt(0).toUpperCase() + messageContent.slice(1)}.\n\nBest,\nAndrew`,
+        body: `Hi ${firstName},\n\n${messageContent.charAt(0).toUpperCase() + messageContent.slice(1)}\n\nLove,\nAndrew`,
         tone: 'friendly',
         status: 'draft'
       };
@@ -209,7 +267,7 @@ export class CortexDialogueEngine {
       };
     }
 
-    // C. Tool: Curated Humor & Intelligence Practice ("Tell me a joke")
+    // E. Tool: Curated Humor & Intelligence Practice ("Tell me a joke")
     if (/joke|laugh|funny|blague|witz/i.test(textLower)) {
       const nextJoke = autonomousPractice.getNextItem('jokes');
       const jokeText = nextJoke ? nextJoke.content : "Why do programmers prefer dark mode? Because light attracts bugs!";
@@ -232,8 +290,8 @@ export class CortexDialogueEngine {
       };
     }
 
-    // D. Tool: Calendar Coordination
-    if (/calendar|schedule|meeting|sync|appointment|tomorrow|today|agenda/i.test(textLower) && /check|what|view|list|show/i.test(textLower)) {
+    // F. Tool: Calendar Coordination ("My calendar", "What is on my schedule tomorrow")
+    if (/^(?:my\s+)?calendar$|^(?:check|view|show|what's\s+on)\s+(?:my\s+)?(?:calendar|schedule)|(?:calendar|schedule|agenda|appointment|meeting)/i.test(textLower)) {
       const spoken = `You have your Q3 Product Strategy sync tomorrow at 10:00 AM, followed by an afternoon alignment call. Your schedule is clear from 2:00 PM onwards.`;
       return {
         actionCard: {

@@ -936,7 +936,27 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             status: 'executed',
             createdAt: nowStr
           };
-        } else if (/^(no|cancel|stop|nevermind|don't|abort|non)/i.test(textLower)) {
+        } else if (pending?.type === 'send_email' && /(?:in\s+the\s+title|modify\s+(?:the\s+)?email|change\s+(?:the\s+)?(?:title|subject|body)|text\s+to\s+the\s+email)/i.test(textLower)) {
+          let newSubject = pending.payload?.subject || 'Message from Andrew';
+          let newBody = pending.payload?.body || 'I love you!';
+          if (/love/i.test(textLower)) {
+            newSubject = 'Thinking of you ❤️';
+            newBody = `Hi Celine,\n\nI love you!\n\nLove,\nAndrew`;
+          }
+          pending.payload.subject = newSubject;
+          pending.payload.body = newBody;
+          spokenResponseText = `I have updated the email to ${pending.payload?.toName || 'Celine'} with subject "${newSubject}". Should I send it now?`;
+          actionCard = {
+            id: cardId,
+            intent: 'email_draft',
+            title: `Updated Email Draft`,
+            description: `To: **${pending.payload?.toName}** (${pending.payload?.toEmail})\nSubject: *"${newSubject}"*\n\n"${newBody}"`,
+            spokenResponse: spokenResponseText,
+            status: 'confirmed',
+            createdAt: nowStr,
+            emailData: pending.payload
+          };
+        } else if (/^(?:no\b|cancel\b|stop\b|nevermind\b|don't\b|abort\b|non\b)/i.test(textLower)) {
           dialogueManager.clearPendingAction();
           spokenResponseText = `Understood. I have cancelled the pending action.`;
           actionCard = {

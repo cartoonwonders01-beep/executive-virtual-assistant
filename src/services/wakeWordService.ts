@@ -1,5 +1,5 @@
 import { logger } from './loggerService';
-import { stopSpeaking, isCurrentlySpeaking } from './speechSynthesis';
+import { stopSpeaking, isCurrentlySpeaking, isAcousticEcho } from './speechSynthesis';
 import { isVerbalStopCommand } from './audioRecorder';
 
 export interface WakeWordListenerConfig {
@@ -137,8 +137,9 @@ export class WakeWordService {
             return;
           }
 
-          // Full-Duplex Acoustic Isolation Protocol (FDAIP): Ignore speaker feedback during TTS playback
-          if (isCurrentlySpeaking()) {
+          // Full-Duplex Acoustic Isolation Protocol (FDAIP) & AEC: Ignore speaker feedback & echo
+          if (isCurrentlySpeaking() || isAcousticEcho(lower)) {
+            logger.log('info', 'audio', `🔇 Acoustic Echo / Self-Hearing Suppressed: "${lower}"`);
             return;
           }
 

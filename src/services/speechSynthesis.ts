@@ -22,6 +22,45 @@ let speechRate = 1.02;
 let speechPitch = 1.0;
 let preferredLanguage: SupportedLanguage | 'auto' = 'auto';
 
+// Acoustic Echo Cancellation (AEC) Fingerprint Buffer
+interface UtteranceRecord {
+  text: string;
+  ts: number;
+}
+const recentAssistantUtterances: UtteranceRecord[] = [];
+let lastSpeechEndedTs = 0;
+
+export function recordAssistantSpokenText(text: string): void {
+  const clean = text.toLowerCase().replace(/[*#_`~>]/g, '').trim();
+  if (!clean) return;
+  recentAssistantUtterances.unshift({ text: clean, ts: Date.now() });
+  if (recentAssistantUtterances.length > 8) {
+    recentAssistantUtterances.pop();
+  }
+}
+
+export function isAcousticEcho(transcript: string): boolean {
+  if (!transcript) return false;
+  const clean = transcript.toLowerCase().trim();
+  if (isCurrentlySpeaking()) return true;
+
+  const now = Date.now();
+  for (const record of recentAssistantUtterances) {
+    if (now - record.ts < 10000) {
+      if (record.text.includes(clean) || clean.includes(record.text)) {
+        return true;
+      }
+      const recordWords = new Set(record.text.split(/\s+/));
+      const transWords = clean.split(/\s+/);
+      const matched = transWords.filter(w => recordWords.has(w) && w.length > 2).length;
+      if (transWords.length > 0 && (matched / transWords.length) >= 0.5) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 // Load saved settings from localStorage
 if (typeof window !== 'undefined') {
   const savedPersona = localStorage.getItem('assistant_voice_persona');
@@ -389,6 +428,7 @@ export function speakResponse(text: string, onEnd?: () => void, persona?: VoiceP
     return;
   }
 
+  recordAssistantSpokenText(cleanText);
   const detectedLang = targetLang || detectLanguage(cleanText);
   const utterance = new SpeechSynthesisUtterance(cleanText);
   activeUtteranceRef = utterance; // Retain top-level reference to prevent V8 garbage collection
@@ -408,6 +448,7 @@ export function speakResponse(text: string, onEnd?: () => void, persona?: VoiceP
     if (!ended) {
       ended = true;
       isSpeakingState = false;
+      lastSpeechEndedTs = Date.now();
       activeUtteranceRef = null;
       if (watchdogInterval) {
         clearInterval(watchdogInterval);
