@@ -2,8 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAssistant } from '../context/AssistantContext';
 import { 
   speakResponse, 
-  stopSpeaking 
+  stopSpeaking,
+  getPreferredLanguage,
+  setPreferredLanguage,
+  SupportedLanguage
 } from '../services/speechSynthesis';
+import { selfLearningEngine } from '../services/selfLearningEngine';
 import { 
   Send, 
   Mic, 
@@ -22,7 +26,10 @@ import {
   Menu, 
   X,
   Radio,
-  Download
+  ThumbsUp,
+  ThumbsDown,
+  Globe,
+  Brain
 } from 'lucide-react';
 import { AppView } from '../types';
 
@@ -41,15 +48,16 @@ export const LiveChatView: React.FC = () => {
     setIsActivityLogOpen,
     setIsSettingsOpen,
     activeView,
-    setActiveView,
-    inboxEmails,
-    kpi
+    setActiveView
   } = useAssistant();
 
   const [inputMessage, setInputMessage] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [playingTurnId, setPlayingTurnId] = useState<string | null>(null);
+  const [feedbackMap, setFeedbackMap] = useState<Record<string, 'up' | 'down'>>({});
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [currentLang, setCurrentLang] = useState<string>(() => getPreferredLanguage());
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -96,13 +104,28 @@ export const LiveChatView: React.FC = () => {
     speakResponse(text, () => setPlayingTurnId(null));
   };
 
+  const handleFeedback = (turnId: string, isPositive: boolean) => {
+    setFeedbackMap(prev => ({ ...prev, [turnId]: isPositive ? 'up' : 'down' }));
+    selfLearningEngine.recordFeedback(turnId, isPositive);
+  };
+
+  const handleCycleLanguage = () => {
+    const langs: (SupportedLanguage | 'auto')[] = ['auto', 'en', 'de', 'fr', 'es', 'it', 'nl'];
+    const nextIdx = (langs.indexOf(currentLang as any) + 1) % langs.length;
+    const nextLang = langs[nextIdx];
+    setCurrentLang(nextLang);
+    setPreferredLanguage(nextLang);
+  };
+
   const starterChips = [
-    { label: 'Deep Work Strategies', prompt: 'What are 3 strategies for deep work?' },
-    { label: 'Draft Email to Emily', prompt: 'Draft an email to Emily saying I love her ❤️' },
-    { label: 'Schedule Meeting', prompt: 'Schedule sync with David Miller tomorrow at 2pm' },
-    { label: 'Triage VIP Inbox', prompt: 'Triage my VIP inbox and summarize urgent emails' },
-    { label: 'Create Daily Routine', prompt: 'Teach skill: when I say wrap up my day, summarize KPIs and list tasks' },
-    { label: 'Tell a Joke', prompt: 'Tell me a quick joke' },
+    { label: '🇬🇧 Deep Work Strategies', prompt: 'What are 3 strategies for deep work?' },
+    { label: '🇩🇪 Morgenroutine (DE)', prompt: 'Was sind 3 Strategien für eine produktive Morgenroutine?' },
+    { label: '🇫🇷 Travail Profond (FR)', prompt: 'Quelles sont 3 stratégies pour le travail profond ?' },
+    { label: '🇪🇸 Estrategias (ES)', prompt: '¿Cuáles son 3 estrategias para la productividad ejecutiva?' },
+    { label: '🧠 Save Memory', prompt: 'Eve, remember that my preferred meeting tool is Google Meet' },
+    { label: '💌 Email Emily', prompt: 'Draft an email to Emily saying I love her ❤️' },
+    { label: '📅 Schedule Meeting', prompt: 'Schedule sync with David Miller tomorrow at 2pm' },
+    { label: '🤖 Teach Routine', prompt: 'Teach skill: when I say wrap up my day, summarize KPIs and list tasks' },
   ];
 
   const secondaryViews: { id: AppView; label: string; desc: string }[] = [
@@ -143,7 +166,7 @@ export const LiveChatView: React.FC = () => {
                 Assistant
               </span>
             </div>
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[10px] text-slate-400 flex items-center gap-1">
               {isListening ? (
                 <span className="text-rose-400 font-semibold animate-pulse">🎙️ Listening...</span>
               ) : isProcessingSpeech ? (
@@ -155,9 +178,20 @@ export const LiveChatView: React.FC = () => {
           </div>
         </div>
 
-        {/* Right: Actions (Quiet Mode, Logs, Config, Menu) */}
-        <div className="flex items-center space-x-2">
+        {/* Right: Actions (Language, Quiet Mode, Logs, Config, Menu) */}
+        <div className="flex items-center space-x-1.5 sm:space-x-2">
           
+          {/* Quick Language Toggle */}
+          <button
+            type="button"
+            onClick={handleCycleLanguage}
+            className="px-2 py-1.5 rounded-xl text-xs bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 flex items-center space-x-1 transition cursor-pointer"
+            title="Cycle European Language (Auto / EN / DE / FR / ES / IT / NL)"
+          >
+            <Globe className="w-3.5 h-3.5 text-teal-400" />
+            <span className="uppercase font-mono text-[10px]">{currentLang === 'auto' ? '🌐 Multi' : currentLang}</span>
+          </button>
+
           {/* Quiet Mode Switch */}
           <button
             type="button"
@@ -260,11 +294,11 @@ export const LiveChatView: React.FC = () => {
             <div>
               <h2 className="text-lg font-bold text-white">How can I help you today?</h2>
               <p className="text-xs text-slate-400 max-w-sm mt-1">
-                Say <strong className="text-teal-300">"Hey Eve"</strong>, tap the microphone, or type a message below.
+                Say <strong className="text-teal-300">"Hey Eve"</strong>, tap the microphone, or type a message in English, German, French, Spanish, and more.
               </p>
             </div>
 
-            {/* Starter Suggestion Chips */}
+            {/* Multilingual Starter Suggestion Chips */}
             <div className="flex flex-wrap items-center justify-center gap-2 max-w-lg pt-4">
               {starterChips.map((chip, idx) => (
                 <button
@@ -284,6 +318,7 @@ export const LiveChatView: React.FC = () => {
             {dialogueTurns.slice().reverse().map((turn) => {
               const isUser = turn.speaker === 'user';
               const timeStr = new Date(turn.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              const feedback = feedbackMap[turn.id];
 
               return (
                 <div
@@ -340,6 +375,32 @@ export const LiveChatView: React.FC = () => {
                             <Play className={`w-3 h-3 ${playingTurnId === turn.id ? 'animate-spin' : ''}`} />
                           </button>
                         )}
+
+                        {/* Feedback Thumbs on Assistant Turns */}
+                        {!isUser && (
+                          <div className="flex items-center space-x-1 pl-1 border-l border-slate-800">
+                            <button
+                              type="button"
+                              onClick={() => handleFeedback(turn.id, true)}
+                              className={`p-0.5 rounded transition cursor-pointer ${
+                                feedback === 'up' ? 'text-emerald-400 bg-emerald-500/10' : 'hover:text-emerald-300 text-slate-500'
+                              }`}
+                              title="Helpful (Train Eve)"
+                            >
+                              <ThumbsUp className="w-3 h-3" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleFeedback(turn.id, false)}
+                              className={`p-0.5 rounded transition cursor-pointer ${
+                                feedback === 'down' ? 'text-rose-400 bg-rose-500/10' : 'hover:text-rose-300 text-slate-500'
+                              }`}
+                              title="Needs Improvement"
+                            >
+                              <ThumbsDown className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -362,7 +423,7 @@ export const LiveChatView: React.FC = () => {
             {(isListening || liveTranscript) && (
               <div className="flex items-start gap-3 justify-end animate-pulse">
                 <div className="max-w-[85%] sm:max-w-xl rounded-2xl p-3.5 text-xs sm:text-sm bg-teal-950/40 border border-teal-500/50 text-teal-100 rounded-tr-sm">
-                  <div className="flex items-center gap-1.5 text-[10px] text-teal-300 font-semibold pb-1 mb-1 border-b border-teal-800/40">
+                  <div className="flex items-center gap-1.5 text-[10px] text-teal-300 font-semibold pb-1 mb-1 border-teal-800/40 border-b">
                     <Mic className="w-3 h-3 text-teal-400 animate-bounce" />
                     <span>Live Ingesting Speech...</span>
                   </div>

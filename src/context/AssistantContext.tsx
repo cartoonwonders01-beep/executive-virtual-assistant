@@ -29,6 +29,7 @@ import { processSpeechWithGemini } from '../services/geminiService';
 import { playChime } from '../services/soundEffects';
 import { intelligentAdvisor } from '../services/intelligentAdvisor';
 import { logger } from '../services/loggerService';
+import { selfLearningEngine } from '../services/selfLearningEngine';
 
 export type AIBrainProvider = 'gemini_ultra' | 'groq';
 
@@ -853,6 +854,20 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             title: `☀️ Weather Forecast`,
             description: weatherMsg,
             spokenResponse: weatherMsg,
+            status: 'executed',
+            createdAt: nowStr
+          };
+        }
+        // Continuous Memory & Fact Ingestion
+        else if (selfLearningEngine.isMemoryInstruction(textLower)) {
+          const insight = selfLearningEngine.extractAndSaveMemory(text);
+          const memSpoken = `I have committed that to memory: "${insight.insight}".`;
+          actionCard = {
+            id: cardId,
+            intent: 'knowledge_qa',
+            title: `🧠 Memory Saved: ${insight.topic}`,
+            description: `Saved fact: **${insight.insight}**\n\n*Confidence: 100% • Stored in Persistent Memory*`,
+            spokenResponse: memSpoken,
             status: 'executed',
             createdAt: nowStr
           };

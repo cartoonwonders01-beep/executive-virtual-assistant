@@ -1,16 +1,26 @@
-// Production Human Voice Synthesis Engine with Natural Voice Resolution
+// Production Human Voice Synthesis Engine with Natural Multilingual European Voice Resolution
 
 export type VoicePersona = 
   | 'studio_american_female' // Aria, Jenny, Ava Premium, Samantha Enhanced
   | 'executive_british_male' // Daniel Enhanced, Ryan Natural, Oliver, George
   | 'crisp_american_male'    // Guy Natural, Christopher, Tom Enhanced, Alex
   | 'warm_australian'        // Natasha, Karen, Russell
+  | 'german_natural'         // Katja, Marlene, Conrad, Google Deutsch
+  | 'french_natural'         // Denise, Henri, Amelie, Google Français
+  | 'spanish_natural'        // Elvira, Alvaro, Monica, Google Español
+  | 'italian_natural'        // Elsa, Diego, Alice, Google Italiano
+  | 'dutch_natural'          // Colette, Maarten, Fenna, Google Nederlands
+  | 'polish_natural'         // Zofia, Jan, Maja, Google Polski
+  | 'portuguese_natural'     // Raquel, Duarte, Francisca, Google Português
   | 'auto';
+
+export type SupportedLanguage = 'en' | 'de' | 'fr' | 'es' | 'it' | 'nl' | 'pl' | 'pt' | 'ru';
 
 let cachedVoices: SpeechSynthesisVoice[] = [];
 let activePersona: VoicePersona = 'studio_american_female';
-let speechRate = 0.98; // Slightly more relaxed for natural cadence
+let speechRate = 0.98;
 let speechPitch = 1.0;
+let preferredLanguage: SupportedLanguage | 'auto' = 'auto';
 
 // Load saved settings from localStorage
 if (typeof window !== 'undefined') {
@@ -22,6 +32,9 @@ if (typeof window !== 'undefined') {
 
   const savedPitch = localStorage.getItem('assistant_voice_pitch');
   if (savedPitch) speechPitch = parseFloat(savedPitch);
+
+  const savedLang = localStorage.getItem('assistant_preferred_language');
+  if (savedLang) preferredLanguage = savedLang as SupportedLanguage | 'auto';
 }
 
 function initVoices() {
@@ -45,6 +58,17 @@ export function setVoicePersona(persona: VoicePersona): void {
 
 export function getVoicePersona(): VoicePersona {
   return activePersona;
+}
+
+export function setPreferredLanguage(lang: SupportedLanguage | 'auto'): void {
+  preferredLanguage = lang;
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('assistant_preferred_language', lang);
+  }
+}
+
+export function getPreferredLanguage(): SupportedLanguage | 'auto' {
+  return preferredLanguage;
 }
 
 export function setVoiceRate(rate: number): void {
@@ -77,13 +101,191 @@ export function getAvailableVoices(): SpeechSynthesisVoice[] {
   return cachedVoices;
 }
 
-export function resolveBestVoice(persona: VoicePersona = activePersona): SpeechSynthesisVoice | undefined {
+/**
+ * Intelligent European Language Detector with Multi-Factor Scoring
+ */
+export function detectLanguage(text: string): SupportedLanguage {
+  const lower = text.toLowerCase();
+  const scores: Record<SupportedLanguage, number> = {
+    en: 0,
+    de: 0,
+    fr: 0,
+    es: 0,
+    it: 0,
+    nl: 0,
+    pl: 0,
+    pt: 0,
+    ru: 0
+  };
+
+  // Unique Characters
+  if (/[äöüß]/.test(lower)) scores.de += 5;
+  if (/[¿¡ñ]/.test(lower)) scores.es += 6;
+  if (/[çœæ]/.test(lower)) scores.fr += 4;
+  if (/[ąćęłńóśźż]/.test(lower)) scores.pl += 6;
+  if (/[ãõ]/.test(lower)) scores.pt += 6;
+  if (/[а-яё]/i.test(lower)) scores.ru += 8;
+
+  // Spanish words
+  const esWords = ['cuales', 'cuáles', 'estrategias', 'trabajo', 'profundo', 'productividad', 'rutina', 'buenos', 'días', 'hola', 'gracias', 'tarea', 'correo', 'para', 'como', 'cómo', 'por', 'que', 'qué', 'reunión', 'está', 'hacer'];
+  for (const w of esWords) {
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.es += 2;
+  }
+
+  // French words
+  const frWords = ['quelles', 'quels', 'stratégies', 'travail', 'profond', 'productivité', 'bonjour', 'merci', 'tâche', 'courriel', 'écris', 'rendez-vous', 'pour', 'dans', 'avec', 'sur', 'vous', 'nous', 'est-ce'];
+  for (const w of frWords) {
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.fr += 2;
+  }
+
+  // German words
+  const deWords = ['strategien', 'morgenroutine', 'produktivität', 'guten', 'morgen', 'danke', 'bitte', 'aufgabe', 'kalender', 'arbeit', 'schreibe', 'haben', 'kann', 'nicht', 'oder'];
+  for (const w of deWords) {
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.de += 2;
+  }
+
+  // Italian words
+  const itWords = ['strategie', 'lavoro', 'profondo', 'buongiorno', 'grazie', 'ciao', 'compito', 'scrivi', 'appuntamento', 'perché', 'come', 'quando', 'dove', 'quali'];
+  for (const w of itWords) {
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.it += 2;
+  }
+
+  // Dutch words
+  const nlWords = ['strategieën', 'werk', 'goedemorgen', 'bedankt', 'afspraak', 'graag', 'alsjeblieft', 'dankjewel', 'zijn', 'voor', 'niet', 'taak'];
+  for (const w of nlWords) {
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.nl += 2;
+  }
+
+  // Polish words
+  const plWords = ['strategie', 'głęboką', 'pracę', 'praca', 'dzień', 'dobry', 'dziękuję', 'zadanie', 'napisz', 'spotkanie', 'jakie', 'jest', 'się'];
+  for (const w of plWords) {
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.pl += 2;
+  }
+
+  // Portuguese words
+  const ptWords = ['estratégias', 'trabalho', 'profundo', 'obrigado', 'olá', 'bom', 'dia', 'tarefa', 'escreva', 'reunião', 'você', 'quais'];
+  for (const w of ptWords) {
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.pt += 2;
+  }
+
+  // English words
+  const enWords = ['what', 'why', 'how', 'when', 'where', 'strategies', 'deep', 'work', 'morning', 'routine', 'email', 'schedule', 'task', 'meeting', 'the', 'and', 'for', 'you', 'are'];
+  for (const w of enWords) {
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.en += 1;
+  }
+
+  let bestLang: SupportedLanguage = 'en';
+  let maxScore = 0;
+  for (const [l, s] of Object.entries(scores) as [SupportedLanguage, number][]) {
+    if (s > maxScore) {
+      maxScore = s;
+      bestLang = l;
+    }
+  }
+
+  return maxScore > 0 ? bestLang : 'en';
+}
+
+/**
+ * Resolves the highest fidelity natural neural voice for the specified language & persona
+ */
+export function resolveBestVoice(persona: VoicePersona = activePersona, targetLang?: SupportedLanguage): SpeechSynthesisVoice | undefined {
   const voices = getAvailableVoices();
   if (voices.length === 0) return undefined;
 
+  const lang = targetLang || (preferredLanguage !== 'auto' ? preferredLanguage : 'en');
+
+  // 1. German Voices
+  if (lang === 'de' || persona === 'german_natural') {
+    const deVoices = voices.filter(v => v.lang.startsWith('de'));
+    if (deVoices.length > 0) {
+      return deVoices.find(v => v.name.includes('Katja') && v.name.includes('Natural'))
+        || deVoices.find(v => v.name.includes('Marlene') || v.name.includes('Premium'))
+        || deVoices.find(v => v.name.includes('Conrad') || v.name.includes('Natural'))
+        || deVoices.find(v => v.name.includes('Google Deutsch'))
+        || deVoices.find(v => v.name.includes('Hedda') || v.name.includes('Stefan'))
+        || deVoices[0];
+    }
+  }
+
+  // 2. French Voices
+  if (lang === 'fr' || persona === 'french_natural') {
+    const frVoices = voices.filter(v => v.lang.startsWith('fr'));
+    if (frVoices.length > 0) {
+      return frVoices.find(v => v.name.includes('Denise') && v.name.includes('Natural'))
+        || frVoices.find(v => v.name.includes('Henri') && v.name.includes('Natural'))
+        || frVoices.find(v => v.name.includes('Amelie') || v.name.includes('Premium'))
+        || frVoices.find(v => v.name.includes('Thomas') || v.name.includes('Enhanced'))
+        || frVoices.find(v => v.name.includes('Google français'))
+        || frVoices[0];
+    }
+  }
+
+  // 3. Spanish Voices
+  if (lang === 'es' || persona === 'spanish_natural') {
+    const esVoices = voices.filter(v => v.lang.startsWith('es'));
+    if (esVoices.length > 0) {
+      return esVoices.find(v => v.name.includes('Elvira') && v.name.includes('Natural'))
+        || esVoices.find(v => v.name.includes('Alvaro') && v.name.includes('Natural'))
+        || esVoices.find(v => v.name.includes('Monica') || v.name.includes('Premium'))
+        || esVoices.find(v => v.name.includes('Jorge') || v.name.includes('Enhanced'))
+        || esVoices.find(v => v.name.includes('Google español'))
+        || esVoices[0];
+    }
+  }
+
+  // 4. Italian Voices
+  if (lang === 'it' || persona === 'italian_natural') {
+    const itVoices = voices.filter(v => v.lang.startsWith('it'));
+    if (itVoices.length > 0) {
+      return itVoices.find(v => v.name.includes('Elsa') && v.name.includes('Natural'))
+        || itVoices.find(v => v.name.includes('Diego') && v.name.includes('Natural'))
+        || itVoices.find(v => v.name.includes('Alice') || v.name.includes('Premium'))
+        || itVoices.find(v => v.name.includes('Federico'))
+        || itVoices.find(v => v.name.includes('Google italiano'))
+        || itVoices[0];
+    }
+  }
+
+  // 5. Dutch Voices
+  if (lang === 'nl' || persona === 'dutch_natural') {
+    const nlVoices = voices.filter(v => v.lang.startsWith('nl'));
+    if (nlVoices.length > 0) {
+      return nlVoices.find(v => v.name.includes('Colette') && v.name.includes('Natural'))
+        || nlVoices.find(v => v.name.includes('Maarten') && v.name.includes('Natural'))
+        || nlVoices.find(v => v.name.includes('Fenna'))
+        || nlVoices.find(v => v.name.includes('Google Nederlands'))
+        || nlVoices[0];
+    }
+  }
+
+  // 6. Polish Voices
+  if (lang === 'pl' || persona === 'polish_natural') {
+    const plVoices = voices.filter(v => v.lang.startsWith('pl'));
+    if (plVoices.length > 0) {
+      return plVoices.find(v => v.name.includes('Zofia') && v.name.includes('Natural'))
+        || plVoices.find(v => v.name.includes('Maja'))
+        || plVoices.find(v => v.name.includes('Jan'))
+        || plVoices.find(v => v.name.includes('Google polski'))
+        || plVoices[0];
+    }
+  }
+
+  // 7. Portuguese Voices
+  if (lang === 'pt' || persona === 'portuguese_natural') {
+    const ptVoices = voices.filter(v => v.lang.startsWith('pt'));
+    if (ptVoices.length > 0) {
+      return ptVoices.find(v => v.name.includes('Raquel') && v.name.includes('Natural'))
+        || ptVoices.find(v => v.name.includes('Duarte') && v.name.includes('Natural'))
+        || ptVoices.find(v => v.name.includes('Francisca'))
+        || ptVoices.find(v => v.name.includes('Google português'))
+        || ptVoices[0];
+    }
+  }
+
+  // 8. English Personas
   const enVoices = voices.filter(v => v.lang.startsWith('en'));
 
-  // Studio American Female: Prioritize Microsoft Natural, Apple Premium/Enhanced, Google Neural
   if (persona === 'studio_american_female') {
     return enVoices.find(v => v.name.includes('Aria') && v.name.includes('Natural'))
       || enVoices.find(v => v.name.includes('Jenny') && v.name.includes('Natural'))
@@ -96,7 +298,6 @@ export function resolveBestVoice(persona: VoicePersona = activePersona): SpeechS
       || enVoices[0];
   }
 
-  // Executive British Male: Prioritize Ryan Natural, Daniel Enhanced, Oliver, George
   if (persona === 'executive_british_male') {
     return enVoices.find(v => v.name.includes('Ryan') && v.name.includes('Natural'))
       || enVoices.find(v => v.name.includes('Daniel') && v.name.includes('Enhanced'))
@@ -108,7 +309,6 @@ export function resolveBestVoice(persona: VoicePersona = activePersona): SpeechS
       || enVoices[0];
   }
 
-  // Crisp American Male: Prioritize Guy Natural, Christopher, Tom Enhanced, Alex
   if (persona === 'crisp_american_male') {
     return enVoices.find(v => v.name.includes('Guy') && v.name.includes('Natural'))
       || enVoices.find(v => v.name.includes('Christopher') && v.name.includes('Natural'))
@@ -118,7 +318,6 @@ export function resolveBestVoice(persona: VoicePersona = activePersona): SpeechS
       || enVoices[0];
   }
 
-  // Warm Australian: Natasha, Karen, Russell
   if (persona === 'warm_australian') {
     return enVoices.find(v => v.name.includes('Natasha') && v.name.includes('Natural'))
       || enVoices.find(v => v.name.includes('Karen') && v.name.includes('Enhanced'))
@@ -127,12 +326,12 @@ export function resolveBestVoice(persona: VoicePersona = activePersona): SpeechS
       || enVoices[0];
   }
 
-  // Auto
+  // Fallback
   return enVoices.find(v => v.name.includes('Natural') || v.name.includes('Premium') || v.name.includes('Enhanced') || v.name.includes('Google'))
-    || enVoices[0];
+    || voices[0];
 }
 
-export function speakResponse(text: string, onEnd?: () => void, persona?: VoicePersona): void {
+export function speakResponse(text: string, onEnd?: () => void, persona?: VoicePersona, targetLang?: SupportedLanguage): void {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
     if (onEnd) onEnd();
     return;
@@ -152,11 +351,13 @@ export function speakResponse(text: string, onEnd?: () => void, persona?: VoiceP
     return;
   }
 
+  const detectedLang = targetLang || detectLanguage(cleanText);
   const utterance = new SpeechSynthesisUtterance(cleanText);
   utterance.rate = speechRate;
   utterance.pitch = speechPitch;
+  utterance.lang = detectedLang;
 
-  const targetVoice = resolveBestVoice(persona || activePersona);
+  const targetVoice = resolveBestVoice(persona || activePersona, detectedLang);
   if (targetVoice) {
     utterance.voice = targetVoice;
   }

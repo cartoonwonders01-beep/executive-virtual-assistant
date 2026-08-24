@@ -137,7 +137,8 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     assert.equal(config.DEFAULT_AUDIO_BITRATE_KBPS, 64);
     assert.equal(config.DEFAULT_SILENCE_DURATION_MS, 1600);
     assert.ok(config.AUDIO_BITRATE_OPTIONS.length >= 3, 'Provides bitrate options');
-    assert.equal(config.APP_VERSION, '3.2.0');
+    assert.equal(config.APP_VERSION, '3.3.0');
+    assert.ok(config.LANGUAGE_OPTIONS.length >= 8, 'Provides European language options');
   });
 
   await t.test('Module 8: Live Interactive Transcript, Quiet Mode & Dialogue Stream', async () => {
@@ -156,6 +157,56 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
 
     const turns = dialogueManager.getTurns();
     assert.equal(turns.length, 2, '2 turns registered in dialogue stream');
+  });
+
+  await t.test('Module 9: Multilingual European Language Detection & Native Personas', async () => {
+    const { detectLanguage, resolveBestVoice } = await import('../src/services/speechSynthesis');
+    const { intelligentAdvisor } = await import('../server/intelligentAdvisor');
+
+    // Language detection
+    assert.equal(detectLanguage('What are 3 strategies for deep work?'), 'en');
+    assert.equal(detectLanguage('Was sind 3 Strategien für eine produktive Morgenroutine?'), 'de');
+    assert.equal(detectLanguage('Quelles sont les stratégies pour le travail profond ?'), 'fr');
+    assert.equal(detectLanguage('¿Cuáles son 3 estrategias para el trabajo profundo?'), 'es');
+    assert.equal(detectLanguage('Quali sono le strategie per il lavoro profondo?'), 'it');
+    assert.equal(detectLanguage('Wat zijn 3 strategieën voor deep work?'), 'nl');
+    assert.equal(detectLanguage('Jakie są strategie na głęboką pracę?'), 'pl');
+    assert.equal(detectLanguage('Quais são as estratégias para o trabalho profundo?'), 'pt');
+
+    // Multilingual Intelligent Advisor Answers
+    const deAns = intelligentAdvisor.solve('Was sind Strategien für Deep Work?');
+    assert.equal(deAns.language, 'de');
+    assert.ok(deAns.spokenResponse.includes('Deep-Work-Block') || deAns.spokenResponse.includes('Hebel'));
+
+    const frAns = intelligentAdvisor.solve('Quelles sont les stratégies pour le travail profond ?');
+    assert.equal(frAns.language, 'fr');
+    assert.ok(frAns.spokenResponse.includes('travail profond') || frAns.spokenResponse.includes('stratégique'));
+
+    const esAns = intelligentAdvisor.solve('¿Cuáles son las estrategias de productividad?');
+    assert.equal(esAns.language, 'es');
+    assert.ok(esAns.spokenResponse.includes('trabajo profundo') || esAns.spokenResponse.includes('rendimiento'));
+  });
+
+  await t.test('Module 10: Continuous Memory & Adaptive Self-Learning Engine', async () => {
+    const { selfLearningEngine } = await import('../src/services/selfLearningEngine');
+
+    // Detection of memory instructions
+    assert.ok(selfLearningEngine.isMemoryInstruction('Eve, remember that my favorite meeting tool is Google Meet'));
+    assert.ok(selfLearningEngine.isMemoryInstruction('Merk dir, dass Andrew gerne Espresso trinkt'));
+    assert.ok(selfLearningEngine.isMemoryInstruction('Rappelle-toi que le client préfère les rapports PDF'));
+    assert.ok(selfLearningEngine.isMemoryInstruction('Recuerda que Emily ama las flores'));
+
+    // Fact saving & extraction
+    const memory = selfLearningEngine.extractAndSaveMemory('Remember that my preferred meeting tool is Google Meet');
+    assert.ok(memory.id.startsWith('ins-'));
+    assert.ok(memory.insight.includes('Google Meet'));
+    assert.equal(memory.confidenceScore, 1.0);
+
+    // Feedback recording
+    selfLearningEngine.recordFeedback('turn-test-1', true);
+    selfLearningEngine.recordFeedback('turn-test-2', false, 'Too verbose');
+    const insights = selfLearningEngine.getInsights();
+    assert.ok(insights.length >= 4, 'Learned insights tracked');
   });
 
 });

@@ -1,7 +1,7 @@
 // Configuration & Tuning Engine for Eve Virtual Assistant
-// Ported from Relay PWA configuration architecture
+// Ported from Relay PWA configuration architecture with European Multilingual Support
 
-export const APP_VERSION = '3.2.0';
+export const APP_VERSION = '3.3.0';
 
 export const DEFAULT_CHUNK_INTERVAL_MS = 3500;
 export const MIN_CHUNK_INTERVAL_MS = 1500;
@@ -16,6 +16,7 @@ export const DEFAULT_SPEECH_TRIGGER_THRESHOLD = 0.12;
 
 export const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbxIIkn9yUHjzo7xJCmgcVCjT-6fQfuXw82TzdDdlSZQUD7nmPcwy3qqNnq9AC5-l3NV/exec';
 export const DEFAULT_PAYLOAD_FORMAT = 'json';
+export const DEFAULT_LANGUAGE = 'auto';
 
 export const CHUNK_INTERVAL_OPTIONS = [
   { value: 2500, label: '⚡ 2.5 Seconds (Ultra-Fast Assistant Slices)' },
@@ -54,6 +55,18 @@ export const LIVE_MODEL_OPTIONS = [
   { value: 'local-heuristic', label: 'Local In-Memory Engine (Sub-50ms Offline)' },
 ];
 
+export const LANGUAGE_OPTIONS = [
+  { value: 'auto', label: '🌐 Auto-Detect (Multilingual European Support)' },
+  { value: 'en', label: '🇬🇧 English' },
+  { value: 'de', label: '🇩🇪 Deutsch (German)' },
+  { value: 'fr', label: '🇫🇷 Français (French)' },
+  { value: 'es', label: '🇪🇸 Español (Spanish)' },
+  { value: 'it', label: '🇮🇹 Italiano (Italian)' },
+  { value: 'nl', label: '🇳🇱 Nederlands (Dutch)' },
+  { value: 'pl', label: '🇵🇱 Polski (Polish)' },
+  { value: 'pt', label: '🇵🇹 Português (Portuguese)' },
+];
+
 export const PAYLOAD_FORMAT_OPTIONS = [
   { value: 'json', label: 'JSON + Base64 (Google Apps Script / BigQuery)' },
   { value: 'multipart', label: 'Multipart Form-Data (n8n / Cloud Edge)' },
@@ -64,10 +77,10 @@ const CHUNK_INTERVAL_KEY = 'assistant_chunk_interval_ms';
 const AUDIO_BITRATE_KEY = 'assistant_audio_bitrate_kbps';
 const MIME_TYPE_KEY = 'assistant_mime_type';
 const SILENCE_DURATION_KEY = 'assistant_silence_duration_ms';
-const SILENCE_THRESHOLD_KEY = 'assistant_silence_threshold';
 const PURGE_AUDIO_KEY = 'assistant_purge_audio';
 const DEBUG_MODE_KEY = 'assistant_debug_mode';
 const LIVE_MODEL_KEY = 'assistant_live_model';
+const LANGUAGE_KEY = 'assistant_preferred_language';
 const PAYLOAD_FORMAT_KEY = 'assistant_payload_format';
 const WEBHOOK_URL_KEY = 'assistant_webhook_url';
 
@@ -117,6 +130,17 @@ export function getStoredSilenceDurationMs(): number {
 export function storeSilenceDurationMs(ms: number): void {
   try {
     localStorage.setItem(SILENCE_DURATION_KEY, String(ms));
+  } catch {}
+}
+
+export function getStoredLanguage(): string {
+  if (typeof localStorage === 'undefined') return DEFAULT_LANGUAGE;
+  return localStorage.getItem(LANGUAGE_KEY) || DEFAULT_LANGUAGE;
+}
+
+export function storeLanguage(lang: string): void {
+  try {
+    localStorage.setItem(LANGUAGE_KEY, lang);
   } catch {}
 }
 

@@ -10,9 +10,13 @@ import {
   speakResponse, 
   stopSpeaking,
   VoicePersona,
-  resolveBestVoice
+  resolveBestVoice,
+  setPreferredLanguage,
+  getPreferredLanguage,
+  SupportedLanguage
 } from '../services/speechSynthesis';
 import { wakeWordService } from '../services/wakeWordService';
+import { selfLearningEngine, LearnedInsight } from '../services/selfLearningEngine';
 import {
   APP_VERSION,
   CHUNK_INTERVAL_OPTIONS,
@@ -20,6 +24,7 @@ import {
   MIME_TYPE_OPTIONS,
   SILENCE_DURATION_OPTIONS,
   LIVE_MODEL_OPTIONS,
+  LANGUAGE_OPTIONS,
   PAYLOAD_FORMAT_OPTIONS,
   getStoredChunkIntervalMs,
   storeChunkIntervalMs,
@@ -29,6 +34,8 @@ import {
   storeMimeType,
   getStoredSilenceDurationMs,
   storeSilenceDurationMs,
+  getStoredLanguage,
+  storeLanguage,
   getStoredPurgeAudio,
   storePurgeAudio,
   getStoredDebugMode,
@@ -56,7 +63,11 @@ import {
   SlidersHorizontal,
   ChevronDown,
   ChevronUp,
-  FileText
+  FileText,
+  Globe,
+  Brain,
+  Trash2,
+  Plus
 } from 'lucide-react';
 
 export const SettingsModal: React.FC = () => {
@@ -101,6 +112,12 @@ export const SettingsModal: React.FC = () => {
   const [pitch, setPitch] = useState<number>(getVoicePitch());
   const [detectedVoiceName, setDetectedVoiceName] = useState<string>('');
   const [selectedWakeWord, setSelectedWakeWord] = useState<string>('hey eve');
+  const [language, setLanguage] = useState<string>(() => getStoredLanguage());
+  
+  // Continuous Memories State
+  const [insights, setInsights] = useState<LearnedInsight[]>(() => selfLearningEngine.getInsights());
+  const [newTopic, setNewTopic] = useState('');
+  const [newFact, setNewFact] = useState('');
 
   useEffect(() => {
     if (isSettingsOpen) {
@@ -111,6 +128,7 @@ export const SettingsModal: React.FC = () => {
       setPersona(getVoicePersona());
       setRate(getVoiceRate());
       setPitch(getVoicePitch());
+      setLanguage(getStoredLanguage());
       setChunkIntervalMs(getStoredChunkIntervalMs());
       setAudioBitrateKbps(getStoredAudioBitrateKbps());
       setMimeType(getStoredMimeType());
@@ -119,6 +137,7 @@ export const SettingsModal: React.FC = () => {
       setDebugMode(getStoredDebugMode());
       setLiveModel(getStoredLiveModel());
       setPayloadFormat(getStoredPayloadFormat());
+      setInsights(selfLearningEngine.getInsights());
       const voice = resolveBestVoice(getVoicePersona());
       if (voice) setDetectedVoiceName(voice.name);
       try {
@@ -135,6 +154,27 @@ export const SettingsModal: React.FC = () => {
     setVoicePersona(newPersona);
     const resolved = resolveBestVoice(newPersona);
     if (resolved) setDetectedVoiceName(resolved.name);
+  };
+
+  const handleLanguageChange = (newLang: string) => {
+    setLanguage(newLang);
+    storeLanguage(newLang);
+    setPreferredLanguage(newLang as any);
+  };
+
+  const handleAddMemory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newFact.trim()) return;
+    const topic = newTopic.trim() || 'User Preference';
+    selfLearningEngine.learnInsight(topic, newFact.trim(), 'user_explicit_memory');
+    setInsights(selfLearningEngine.getInsights());
+    setNewTopic('');
+    setNewFact('');
+  };
+
+  const handleDeleteMemory = (id: string) => {
+    selfLearningEngine.deleteInsight(id);
+    setInsights(selfLearningEngine.getInsights());
   };
 
   const handleRateChange = (newRate: number) => {
@@ -184,8 +224,10 @@ export const SettingsModal: React.FC = () => {
     storeDebugMode(debugMode);
     storeLiveModel(liveModel);
     storePayloadFormat(payloadFormat);
+    storeLanguage(language);
+    setPreferredLanguage(language as any);
 
-    const cleanWake = selectedWakeWord.toLowerCase().trim() || 'hey eve';
+    const cleanWake = selectedWakeWord.trim().toLowerCase() || 'hey eve';
     wakeWordService.setPrimaryWakeWord(cleanWake);
     try {
       localStorage.setItem('assistant_primary_wake_word', cleanWake);
@@ -206,10 +248,17 @@ export const SettingsModal: React.FC = () => {
   ];
 
   const voicePersonas = [
-    { id: 'studio_american_female' as VoicePersona, title: 'Studio American Female', desc: 'Natural, articulate, and studio-grade' },
-    { id: 'executive_british_male' as VoicePersona, title: 'Executive British Male', desc: 'Refined, authoritative, and crisp' },
-    { id: 'crisp_american_male' as VoicePersona, title: 'Crisp American Male', desc: 'Dynamic, clear, and professional' },
-    { id: 'warm_australian' as VoicePersona, title: 'Warm Australian', desc: 'Approachable, warm, and clear' },
+    { id: 'studio_american_female' as VoicePersona, title: 'Studio American Female', desc: 'Aria/Jenny (Natural & Studio-Grade)' },
+    { id: 'executive_british_male' as VoicePersona, title: 'Executive British Male', desc: 'Daniel/Ryan (Refined & Authoritative)' },
+    { id: 'crisp_american_male' as VoicePersona, title: 'Crisp American Male', desc: 'Guy/Christopher (Dynamic & Clear)' },
+    { id: 'warm_australian' as VoicePersona, title: 'Warm Australian', desc: 'Natasha/Karen (Approachable & Warm)' },
+    { id: 'german_natural' as VoicePersona, title: 'Deutsch (German Natural)', desc: 'Katja/Marlene/Conrad' },
+    { id: 'french_natural' as VoicePersona, title: 'Français (French Natural)', desc: 'Denise/Henri/Amelie' },
+    { id: 'spanish_natural' as VoicePersona, title: 'Español (Spanish Natural)', desc: 'Elvira/Alvaro/Monica' },
+    { id: 'italian_natural' as VoicePersona, title: 'Italiano (Italian Natural)', desc: 'Elsa/Diego/Alice' },
+    { id: 'dutch_natural' as VoicePersona, title: 'Nederlands (Dutch Natural)', desc: 'Colette/Maarten/Fenna' },
+    { id: 'polish_natural' as VoicePersona, title: 'Polski (Polish Natural)', desc: 'Zofia/Jan/Maja' },
+    { id: 'portuguese_natural' as VoicePersona, title: 'Português (Portuguese Natural)', desc: 'Raquel/Duarte' },
   ];
 
   return (
@@ -288,6 +337,95 @@ export const SettingsModal: React.FC = () => {
                 <p className="text-[10px] text-slate-400 mt-0.5">Local Server Intent Classifier</p>
               </div>
             </div>
+          </div>
+
+          {/* European Language Preference */}
+          <div className="space-y-2 bg-slate-950 p-3.5 rounded-2xl border border-teal-500/30">
+            <div className="flex items-center justify-between">
+              <label className="text-slate-200 font-semibold flex items-center gap-1.5">
+                <Globe className="w-4 h-4 text-teal-400" />
+                <span>Conversational Language (European Multilingual)</span>
+              </label>
+              <span className="text-[10px] font-mono text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/20 font-bold">
+                {LANGUAGE_OPTIONS.find(l => l.value === language)?.label.split(' ')[0] || '🌐 Auto'}
+              </span>
+            </div>
+            <select
+              value={language}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-slate-100 text-xs focus:outline-none focus:border-teal-500 cursor-pointer"
+            >
+              {LANGUAGE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-slate-400">
+              Eve understands and speaks in English, German (Deutsch), French (Français), Spanish (Español), Italian (Italiano), Dutch (Nederlands), Polish (Polski), and Portuguese (Português).
+            </p>
+          </div>
+
+          {/* Continuous Memory & Self-Learned Insights */}
+          <div className="space-y-2 bg-slate-950 p-3.5 rounded-2xl border border-purple-500/30">
+            <div className="flex items-center justify-between">
+              <label className="text-slate-200 font-semibold flex items-center gap-1.5">
+                <Brain className="w-4 h-4 text-purple-400" />
+                <span>Continuous Memory & Learned Insights ({insights.length})</span>
+              </label>
+            </div>
+            <p className="text-[10px] text-slate-400">
+              Eve retains memories, preferences, and feedback across conversations. Say "Eve, remember that..." to teach new facts.
+            </p>
+
+            {/* Existing Memories List */}
+            <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+              {insights.map((ins) => (
+                <div key={ins.id} className="p-2 rounded-xl bg-slate-900 border border-slate-800 flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold text-slate-200">{ins.topic}</p>
+                    <p className="text-[10px] text-slate-400 leading-tight mt-0.5">{ins.insight}</p>
+                    <span className="inline-block text-[9px] font-mono text-purple-300 mt-1 px-1.5 py-0.2 rounded bg-purple-950/60 border border-purple-800/60">
+                      {ins.source.replace(/_/g, ' ')} • {Math.round(ins.confidenceScore * 100)}% confidence
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteMemory(ins.id)}
+                    className="p-1 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded transition cursor-pointer"
+                    title="Delete Memory"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Add Memory Form */}
+            <form onSubmit={handleAddMemory} className="pt-2 border-t border-slate-900 flex flex-col sm:flex-row gap-1.5">
+              <input
+                type="text"
+                value={newTopic}
+                onChange={(e) => setNewTopic(e.target.value)}
+                placeholder="Topic (e.g. Diet)"
+                className="bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-purple-500 text-xs sm:w-1/3"
+              />
+              <input
+                type="text"
+                value={newFact}
+                onChange={(e) => setNewFact(e.target.value)}
+                placeholder="Fact (e.g. Andrew prefers espresso)"
+                className="bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-purple-500 text-xs flex-1"
+              />
+              <button
+                type="submit"
+                disabled={!newFact.trim()}
+                className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white font-bold text-xs flex items-center justify-center space-x-1 transition cursor-pointer shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Save</span>
+              </button>
+            </form>
           </div>
 
           {/* Groq Whisper API Key */}
