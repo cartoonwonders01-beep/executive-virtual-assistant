@@ -53,7 +53,9 @@ export class MemoryGraphService {
 
   private ensureDefaultEntities(): void {
     if (this.entities.size === 0) {
-      // Default initial profile relationships for Andrew
+      const nowStr = new Date().toISOString();
+      
+      // Default initial profile relationships for Andrew & Family
       const defaultWife: RelationalEntity = {
         id: 'rel-wife-celine',
         userId: 'andrew',
@@ -65,8 +67,68 @@ export class MemoryGraphService {
         company: 'Executive Operations',
         notes: ['Wife of Andrew', 'Executive partner and Operations Lead'],
         confidence: 1.0,
-        firstLearnedAt: new Date().toISOString(),
-        lastConfirmedAt: new Date().toISOString(),
+        firstLearnedAt: nowStr,
+        lastConfirmedAt: nowStr,
+        usageCount: 10
+      };
+
+      const defaultElizabeth: RelationalEntity = {
+        id: 'rel-child-elizabeth',
+        userId: 'andrew',
+        relationType: 'child',
+        entityName: 'Elizabeth Baxter',
+        aliases: ['elizabeth', 'eliza', 'daughter elizabeth', 'my daughter'],
+        email: 'elizabeth.baxter@executive.co',
+        phone: '+33 6 22 33 44 55',
+        notes: ['Daughter of Andrew and Celine'],
+        confidence: 1.0,
+        firstLearnedAt: nowStr,
+        lastConfirmedAt: nowStr,
+        usageCount: 5
+      };
+
+      const defaultAlexander: RelationalEntity = {
+        id: 'rel-child-alexander',
+        userId: 'andrew',
+        relationType: 'child',
+        entityName: 'Alexander Baxter',
+        aliases: ['alexander', 'alex', 'son alexander', 'my son'],
+        email: 'alexander.baxter@executive.co',
+        phone: '+33 6 33 44 55 66',
+        notes: ['Son of Andrew and Celine'],
+        confidence: 1.0,
+        firstLearnedAt: nowStr,
+        lastConfirmedAt: nowStr,
+        usageCount: 5
+      };
+
+      const defaultEleonore: RelationalEntity = {
+        id: 'rel-child-eleonore',
+        userId: 'andrew',
+        relationType: 'child',
+        entityName: 'Eleonore Baxter',
+        aliases: ['eleonore', 'eléonore', 'daughter eleonore'],
+        email: 'eleonore.baxter@executive.co',
+        phone: '+33 6 44 55 66 77',
+        notes: ['Daughter of Andrew and Celine'],
+        confidence: 1.0,
+        firstLearnedAt: nowStr,
+        lastConfirmedAt: nowStr,
+        usageCount: 5
+      };
+
+      const defaultAngelina: RelationalEntity = {
+        id: 'rel-child-angelina',
+        userId: 'andrew',
+        relationType: 'child',
+        entityName: 'Angelina Baxter',
+        aliases: ['angelina', 'lina', 'daughter angelina'],
+        email: 'angelina.baxter@executive.co',
+        phone: '+33 6 55 66 77 88',
+        notes: ['Daughter of Andrew and Celine'],
+        confidence: 1.0,
+        firstLearnedAt: nowStr,
+        lastConfirmedAt: nowStr,
         usageCount: 5
       };
 
@@ -81,12 +143,16 @@ export class MemoryGraphService {
         company: 'Innovate AI Labs',
         notes: ['VP of Product', 'Prefers Slack for quick updates, Email for specs'],
         confidence: 1.0,
-        firstLearnedAt: new Date().toISOString(),
-        lastConfirmedAt: new Date().toISOString(),
+        firstLearnedAt: nowStr,
+        lastConfirmedAt: nowStr,
         usageCount: 4
       };
 
       this.entities.set(defaultWife.id, defaultWife);
+      this.entities.set(defaultElizabeth.id, defaultElizabeth);
+      this.entities.set(defaultAlexander.id, defaultAlexander);
+      this.entities.set(defaultEleonore.id, defaultEleonore);
+      this.entities.set(defaultAngelina.id, defaultAngelina);
       this.entities.set(defaultColleague.id, defaultColleague);
       this.saveToStorage();
     }

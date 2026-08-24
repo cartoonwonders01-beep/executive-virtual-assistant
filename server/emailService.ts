@@ -26,11 +26,23 @@ export function draftEmailFromSpeech(speechText: string, contactHint?: string): 
 
   if (!recipient) {
     const contacts = db.getContacts();
-    const wifeContact = contacts.find(c => (c.role && /wife|family/i.test(c.role)) || /emily/i.test(c.name));
+    const wifeContact = contacts.find(c => (c.role && /wife|family/i.test(c.role)) || /celine|emily/i.test(c.name));
     
-    if (textLower.includes('wife')) {
-      toName = wifeContact ? wifeContact.name : 'Emily Baxter (Wife)';
-      toEmail = wifeContact?.email || 'emily.baxter@personal.com';
+    if (textLower.includes('wife') || textLower.includes('celine')) {
+      toName = wifeContact ? wifeContact.name : 'Celine Baxter';
+      toEmail = wifeContact?.email || 'celine.baxter@executive.co';
+    } else if (textLower.includes('elizabeth') || textLower.includes('eliza')) {
+      toName = 'Elizabeth Baxter';
+      toEmail = 'elizabeth.baxter@executive.co';
+    } else if (textLower.includes('alexander') || textLower.includes('alex')) {
+      toName = 'Alexander Baxter';
+      toEmail = 'alexander.baxter@executive.co';
+    } else if (textLower.includes('eleonore') || textLower.includes('eléonore')) {
+      toName = 'Eleonore Baxter';
+      toEmail = 'eleonore.baxter@executive.co';
+    } else if (textLower.includes('angelina') || textLower.includes('lina')) {
+      toName = 'Angelina Baxter';
+      toEmail = 'angelina.baxter@executive.co';
     } else if (textLower.includes('husband')) {
       toName = 'My Husband';
       toEmail = 'husband@personal.com';
@@ -56,9 +68,9 @@ export function draftEmailFromSpeech(speechText: string, contactHint?: string): 
   const sayingMatch = speechText.match(/(?:saying|to say|that says|with message|telling (?:her|him|them)|to tell (?:her|him|them))\s+(.+)$/i);
   const regardingMatch = speechText.match(/(?:regarding|about|re:|topic:|for)\s+([^,.]+)/i);
 
-  if (/love|loved/i.test(textLower) && (textLower.includes('wife') || textLower.includes('emily'))) {
+  if (/love|loved/i.test(textLower) && (textLower.includes('wife') || textLower.includes('celine') || textLower.includes('emily'))) {
     subject = 'Thinking of you ❤️';
-    bodyContent = `Hi Emily,\n\nJust wanted to send you a quick note to say I love you and hope you are having a wonderful day!\n\nLove,\nAndrew`;
+    bodyContent = `Hi ${toName.split(' ')[0]},\n\nJust wanted to send you a quick note to say I love you and hope you are having a wonderful day!\n\nLove,\nAndrew`;
   } else if (sayingMatch) {
     const directMessage = sayingMatch[1].trim();
     subject = directMessage.length > 40 ? directMessage.substring(0, 37) + '...' : directMessage;

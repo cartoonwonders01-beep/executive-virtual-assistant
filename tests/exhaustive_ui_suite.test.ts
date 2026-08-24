@@ -248,7 +248,7 @@ async function runExhaustiveTestSuite() {
   assert(testEmail.status === 'sent', 'M8.7: Email status transitioned to sent');
 
   const personalDraft = draftEmailFromSpeech("Write an email to my wife saying thinking of you");
-  assert(personalDraft.toName.includes('Emily') || personalDraft.toName.includes('Wife'), 'M8.8: Personal recipient wife identified');
+  assert(personalDraft.toName.includes('Celine') || personalDraft.toName.includes('Emily') || personalDraft.toName.includes('Wife'), 'M8.8: Personal recipient wife identified');
   assert(personalDraft.tone === 'friendly', 'M8.9: Friendly/personal tone assigned');
   assert(personalDraft.body.includes('Andrew') || personalDraft.body.includes('love') || personalDraft.body.includes('thinking'), 'M8.10: Formats message content cleanly');
 

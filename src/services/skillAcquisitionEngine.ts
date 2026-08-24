@@ -128,9 +128,9 @@ export class SkillAcquisitionEngine {
       steps.push({ id: 's3', order: steps.length + 1, actionType: 'list_tasks', label: 'Triage High-ROI Tasks on Monday.com Work Hub' });
     }
 
-    if (/send|draft|email\s+to|écris/i.test(lower) && /(wife|celine|emily|sarah|david|alex|team)/i.test(lower)) {
+    if (/send|draft|email\s+to|écris/i.test(lower) && /(wife|celine|elizabeth|alexander|alex|eleonore|angelina|sarah|david|team)/i.test(lower)) {
       const recipientMatch = lower.match(/(?:to|à)\s+([a-zA-Z]+)/i);
-      const targetName = recipientMatch ? recipientMatch[1] : 'Contact';
+      const targetName = recipientMatch ? recipientMatch[1] : 'Celine';
       steps.push({
         id: 's4',
         order: steps.length + 1,
