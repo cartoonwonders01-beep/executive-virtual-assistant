@@ -163,7 +163,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isWakeWordActive, setIsWakeWordActive] = useState<boolean>(true);
   const [continuousConversation, setContinuousConversation] = useState<boolean>(true);
   const [kpi, setKpi] = useState<KPISummary | null>(null);
-  const [activeView, setActiveView] = useState<AppView>('voice_hud');
+  const [activeView, setActiveView] = useState<AppView>('transcript');
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Cloud API & Webhook Configurations

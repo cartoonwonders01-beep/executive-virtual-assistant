@@ -27,7 +27,8 @@ import {
   Terminal, 
   CornerDownLeft,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  Settings
 } from 'lucide-react';
 
 export const LiveTranscriptView: React.FC = () => {
@@ -43,6 +44,9 @@ export const LiveTranscriptView: React.FC = () => {
     quietMode,
     toggleQuietMode,
     setIsActivityLogOpen,
+    setIsSettingsOpen,
+    isWakeWordActive,
+    toggleWakeWordListener,
     customSkills
   } = useAssistant();
 
@@ -196,14 +200,41 @@ export const LiveTranscriptView: React.FC = () => {
             <Trash2 className="w-4 h-4" />
           </button>
 
+          {/* Wake Word Toggle */}
+          <button
+            type="button"
+            onClick={toggleWakeWordListener}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center space-x-1 cursor-pointer ${
+              isWakeWordActive
+                ? 'bg-brand-500/10 border-brand-500/40 text-brand-300'
+                : 'bg-slate-800 border-slate-700 text-slate-400'
+            }`}
+            title="Toggle 'Hey Eve' Voice Activation"
+          >
+            <Sparkles className="w-3 h-3 text-brand-400" />
+            <span className="hidden sm:inline">{isWakeWordActive ? 'Hey Eve ON' : 'Wake Word OFF'}</span>
+          </button>
+
           {/* Telemetry Log */}
           <button
             type="button"
             onClick={() => setIsActivityLogOpen(true)}
-            className="px-2.5 py-1.5 rounded-xl text-xs bg-purple-950/80 hover:bg-purple-900 text-purple-200 border border-purple-800 flex items-center space-x-1 transition cursor-pointer"
+            className="px-2.5 py-1.5 rounded-xl text-xs bg-emerald-950/80 hover:bg-emerald-900 text-emerald-200 border border-emerald-800 flex items-center space-x-1 transition cursor-pointer"
+            title="Open Live GUI Activity & Telemetry Log"
           >
-            <Terminal className="w-3.5 h-3.5 text-purple-400" />
+            <Terminal className="w-3.5 h-3.5 text-emerald-400" />
             <span>Logs</span>
+          </button>
+
+          {/* Config / Tuning Settings */}
+          <button
+            type="button"
+            onClick={() => setIsSettingsOpen(true)}
+            className="px-2.5 py-1.5 rounded-xl text-xs bg-purple-950/80 hover:bg-purple-900 text-purple-200 border border-purple-800 flex items-center space-x-1 transition cursor-pointer"
+            title="Open Relay Audio & AI Brain Configuration"
+          >
+            <Settings className="w-3.5 h-3.5 text-purple-400" />
+            <span>Config</span>
           </button>
         </div>
       </div>
