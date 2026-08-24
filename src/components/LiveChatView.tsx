@@ -288,25 +288,78 @@ export const LiveChatView: React.FC = () => {
 
       {/* Main Conversation Stream */}
       <main ref={chatContainerRef} className="flex-1 w-full max-w-4xl mx-auto overflow-y-auto px-4 py-4 space-y-4 custom-scrollbar">
-        {dialogueTurns.length === 0 && !isListening && !liveTranscript && !isProcessingSpeech ? (
-          <div className="flex flex-col items-center justify-center min-h-full text-center py-12 space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-teal-600/20 to-emerald-500/20 border border-teal-500/30 flex items-center justify-center text-teal-300 shadow-lg shadow-teal-500/10">
-              <Bot className="w-7 h-7" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">How can I help you today?</h2>
-              <p className="text-xs text-slate-400 max-w-sm mt-1 mx-auto leading-relaxed">
-                Say <strong className="text-teal-300">"Hey Eve"</strong>, tap the microphone, or type a message in English, German, French, Spanish, or Italian.
-              </p>
+        {dialogueTurns.length === 0 && !isProcessingSpeech ? (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-5 my-auto animate-fadeIn">
+            
+            {/* Glowing Hero Voice Orb Button */}
+            <div className="relative flex items-center justify-center pt-2">
+              <div className={`absolute w-36 h-36 rounded-full transition-all duration-300 ${
+                isListening
+                  ? 'bg-rose-500/30 animate-ping opacity-80'
+                  : 'bg-teal-500/15 animate-ping opacity-60'
+              } pointer-events-none`} />
+              <div className={`absolute w-28 h-28 rounded-full blur-xl transition-all duration-300 ${
+                isListening ? 'bg-rose-500/40' : 'bg-teal-500/25'
+              } pointer-events-none`} />
+
+              <button
+                type="button"
+                onClick={isListening ? stopVoiceListening : startVoiceListening}
+                className={`relative z-10 w-28 h-28 sm:w-32 sm:h-32 rounded-full flex flex-col items-center justify-center transition-all duration-300 transform active:scale-95 shadow-2xl cursor-pointer border-2 ${
+                  isListening
+                    ? 'bg-gradient-to-tr from-rose-600 via-rose-500 to-red-600 border-rose-300 text-white shadow-rose-500/60 scale-110 animate-pulse'
+                    : 'bg-gradient-to-tr from-slate-900 via-teal-950 to-slate-900 border-teal-400 text-teal-300 hover:border-teal-300 hover:text-white shadow-teal-500/40 hover:scale-105'
+                }`}
+                title={isListening ? 'Tap to stop and send' : 'Start Voice Conversation with Eve'}
+              >
+                {isListening ? (
+                  <>
+                    <MicOff className="w-10 h-10 sm:w-12 sm:h-12 text-white animate-bounce" />
+                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider mt-1 text-white">
+                      Listening...
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Mic className="w-10 h-10 sm:w-12 sm:h-12 text-teal-300 animate-pulse" />
+                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider mt-1 text-teal-200">
+                      Tap to Talk
+                    </span>
+                  </>
+                )}
+              </button>
             </div>
 
+            {/* Live Hearing Display when Listening */}
+            {isListening && (
+              <div className="bg-slate-900/90 border border-teal-500/40 rounded-2xl p-3.5 shadow-xl text-center max-w-md w-full animate-fadeIn">
+                <p className="text-[10px] text-teal-400 font-semibold uppercase tracking-wider mb-1 flex items-center justify-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
+                  Listening to your voice:
+                </p>
+                <p className="text-sm text-slate-100 font-medium italic">
+                  "{liveTranscript || 'Speak naturally to Eve...'}"
+                </p>
+              </div>
+            )}
+
+            {!isListening && (
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Talk with Eve</h2>
+                <p className="text-xs sm:text-sm text-slate-400 max-w-md mt-1 mx-auto leading-relaxed">
+                  Tap the <strong className="text-teal-300">"Tap to Talk"</strong> button above, say <strong className="text-teal-300">"Hey Eve"</strong>, or choose a topic below to start a meaningful conversation.
+                </p>
+              </div>
+            )}
+
             {/* Multilingual Starter Suggestion Chips */}
-            <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl pt-4">
+            <div className="flex flex-wrap items-center justify-center gap-2 max-w-xl pt-2">
               {starterChips.map((chip, idx) => (
                 <button
                   key={idx}
+                  type="button"
                   onClick={() => submitVoiceTranscript(chip.prompt)}
-                  className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/40 text-xs text-slate-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
+                  className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-teal-500/50 text-xs text-slate-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer shadow-sm active:scale-95"
                 >
                   <Sparkles className="w-3 h-3 text-amber-400" />
                   <span>{chip.label}</span>
