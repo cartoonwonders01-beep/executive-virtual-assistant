@@ -1,17 +1,12 @@
-# Project AI Agent Instructions & Air-Gapped Sandbox Protocol
+# Project AI Agent Instructions: Heterogeneous Autonomous Triad & Air-Gapped Sandbox Protocol
 
-## 🔒 1. Air-Gapped Security & Ingress-Execute-Egress (IEE) Protocol
-The macOS host is strictly an **air-gapped storage & git origin**. 
-**100% of all development, package installations, file editing, builds, test execution, and daemon servers must occur exclusively inside the Parallels Linux Sandbox VM (`sandbox-vm` / `10.211.55.6`).**
+## 🏛️ 1. Heterogeneous Triad Architecture
+All tasks in this repository operate under the **Heterogeneous Autonomous Triad**:
+1. **Lead Engineer (Gemini 3.7 Flash)**: Implements 100% complete production code (zero TODOs/mocks) and handles heavy build iterations in the Linux VM (95% token load).
+2. **Sandbox Inspector (Playwright)**: Audits live dev servers across Mobile (390px), Tablet (820px), and Desktop (1440px) inside the Linux VM (`10.211.55.6`).
+3. **User Proxy Critic Gate (Claude 3.7 Sonnet / Gemini 3.7 Pro)**: Receives compact git diffs + Visual Proof Cards (5% token load). Evaluates architectural integrity with zero model monoculture bias.
 
-### The 4-Phase Pipeline:
-1. **Ingress (Pre-Flight)**: Sync project folder from Mac to VM:
-   `rsync -avz --exclude="node_modules" --exclude=".git/objects" --exclude="dist" --exclude=".venv" . sandbox-vm:/home/andy/projects/$(basename "$PWD")/`
-2. **100% Sandbox Execution**: All coding, `npm install`, `uv pip`, `docker`, and test runners execute exclusively in `/home/andy/projects/` inside the VM.
-3. **Autonomous Self-Correction**: If tests or builds fail in the VM, the agent self-corrects and iterates (max 3 loops) until 100% green without stopping for manual intervention.
-4. **Egress (Return)**: Only when 100% of tests are green does the agent sync clean, verified source files back to the Mac folder and commit to Git.
-
-## 💰 2. Cost & Token Governance (Flash-First)
-- Build and self-heal on **Gemini 3.7 Flash (Medium)** (~$0.02/feature).
-- Max 3 fix attempts per error (circuit-breaker).
-- Optional 1-prompt Senior Architect review on **Gemini Pro** or **Claude 3.7**.
+## 🔒 2. Air-Gapped Sandbox Safeguards
+- **Host Protection**: macOS is an air-gapped storage & git origin. All package managers (`pnpm`, `uv`, `npm`), compilers, and test runners run inside Linux Sandbox VM.
+- **Port Scavenger**: Pre-flight port cleaner `/home/andy/tools/port_cleaner.sh` clears stale dev servers automatically.
+- **Auto-Rollback**: Hard 5-iteration circuit breaker runs `git reset --hard` if an unrecoverable failure occurs.

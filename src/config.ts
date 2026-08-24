@@ -472,6 +472,20 @@ export function buildUnifiedSystemPrompt(profile?: CustomLLMProfile): string {
     ? `\nSPECIFIC CUSTOM INSTRUCTIONS:\n${active.customInstructions}`
     : '';
 
+  let learnedMemoriesSection = '';
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const stored = localStorage.getItem('assistant_learned_insights');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const formatted = parsed.slice(0, 10).map((p: any) => `• [${p.topic}]: ${p.insight}`).join('\n');
+          learnedMemoriesSection = `\nCONTINUOUS LEARNED MEMORIES & USER PREFERENCES:\n${formatted}\n`;
+        }
+      }
+    } catch {}
+  }
+
   const verbosityRule = active.responseVerbosity === 'ultra_concise'
     ? 'VERBOSITY: Keep responses ultra-concise (1-3 sentences maximum).'
     : active.responseVerbosity === 'comprehensive'
@@ -482,7 +496,7 @@ export function buildUnifiedSystemPrompt(profile?: CustomLLMProfile): string {
 
 ${userContextSection}
 ${instructionsSection}
-
+${learnedMemoriesSection}
 ${verbosityRule}
 TONE: ${active.tone.replace(/_/g, ' ')}
 MODEL TEMPERATURE: ${active.temperature}`;
