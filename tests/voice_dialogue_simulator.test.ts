@@ -237,4 +237,40 @@ test('Autonomous Voice & Dialogue Interactive Simulation Suite', async (t) => {
     assert.ok(result.spokenResponse.length > 0, 'Spoken response present');
   });
 
+  await t.test('Simulation 12: Conversational Liveness & Presence ("Are you going to respond", "What\'s going on", "Can you hear me")', async () => {
+    const { parseIntentFromSpeech } = await import('../server/intentParser');
+
+    // 1. "Are you going to respond to me"
+    const presence1 = parseIntentFromSpeech('Are you going to respond to me');
+    assert.equal(presence1.intent, 'knowledge_qa', 'Presence check resolved to knowledge_qa (not task_create)');
+    assert.ok(presence1.spokenResponse.includes('listening') || presence1.spokenResponse.includes('right here'), 'Warm presence confirmed in voice response');
+
+    // 2. "What's going on"
+    const presence2 = parseIntentFromSpeech("What's going on");
+    assert.equal(presence2.intent, 'knowledge_qa', 'Conversational inquiry resolved to knowledge_qa');
+    assert.ok(presence2.spokenResponse.includes('listening') || presence2.spokenResponse.includes('right here'), 'Conversational presence confirmed');
+
+    // 3. "Can you hear me"
+    const presence3 = parseIntentFromSpeech('Can you hear me');
+    assert.equal(presence3.intent, 'knowledge_qa', 'Liveness check resolved to knowledge_qa');
+  });
+
+  await t.test('Simulation 13: Conversational French Dialogue & Zero Accidental Tasks', async () => {
+    const { parseIntentFromSpeech } = await import('../server/intentParser');
+
+    // 1. "j'ai la même impression"
+    const fr1 = parseIntentFromSpeech("j'ai la même impression");
+    assert.equal(fr1.intent, 'knowledge_qa', 'Conversational French reflection resolved to dialogue (not task)');
+    assert.ok(fr1.spokenResponse.includes('partage') || fr1.spokenResponse.includes('analyse'), 'Affirmation acknowledged in French');
+
+    // 2. "tu m'entends"
+    const fr2 = parseIntentFromSpeech("tu m'entends");
+    assert.equal(fr2.intent, 'knowledge_qa', 'French presence check resolved to dialogue');
+    assert.ok(fr2.spokenResponse.includes('écoute'), 'French listening confirmation spoken');
+
+    // 3. Explicit task command creates task
+    const explicitTask = parseIntentFromSpeech("ajoute une tâche: réviser le contrat fournisseur");
+    assert.equal(explicitTask.intent, 'task_create', 'Explicit French task command correctly creates task');
+  });
+
 });

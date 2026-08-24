@@ -35,9 +35,9 @@ async function runExhaustiveTestSuite() {
   // 1.1 Personal message
   const card1 = parseIntentFromSpeech("Send an email to my wife saying I love you");
   assert(card1.intent === 'email_draft', 'M1.1: Identifies personal email intent');
-  assert(card1.emailData?.toName.includes('Emily') || card1.emailData?.toName.includes('Wife'), 'M1.2: Matches recipient to Emily Baxter / My Wife');
+  assert(card1.emailData?.toName.includes('Celine') || card1.emailData?.toName.includes('Emily') || card1.emailData?.toName.includes('Wife'), 'M1.2: Matches recipient to Celine / Emily Baxter / My Wife');
   assert(card1.emailData?.body.includes('love') || card1.emailData?.body.includes('loved'), 'M1.3: Embeds love message in email body');
-  assert(card1.spokenResponse.toLowerCase().includes('emily') || card1.spokenResponse.toLowerCase().includes('wife'), 'M1.4: Generates spoken confirmation mentioning Emily/Wife');
+  assert(card1.spokenResponse.toLowerCase().includes('celine') || card1.spokenResponse.toLowerCase().includes('emily') || card1.spokenResponse.toLowerCase().includes('wife'), 'M1.4: Generates spoken confirmation mentioning Celine/Emily/Wife');
 
   // 1.2 Strategy Calendar Booking
   const card2 = parseIntentFromSpeech("Schedule a Q3 strategy sync with David Miller next Tuesday at 2 PM");

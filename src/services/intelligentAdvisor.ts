@@ -32,15 +32,21 @@ export class IntelligentAdvisor {
     if (/\d+\s*%\s*(?:of)/i.test(lower) || /\d+\s*[+\-*\/]\s*\d+/.test(lower)) return false;
     if (/^(what\s+did\s+i\s+ask\s+you\s+to\s+remember|recall|list\s+my\s+memories|was\s+hast\s+du\s+gespeichert|rappelle-toi|recuerda)/i.test(lower)) return false;
     if (/(timer|alarm|wecker|minuterie|alarma|sveglia)/i.test(lower)) return false;
+    if (/^(remind\s+me|create\s+reminder|set\s+a\s+reminder|erinnere\s+mich|rappelle-moi|recuérdame)/i.test(lower)) return false;
+    if (/^(take\s+a\s+note|save\s+note|write\s+this\s+down|note\s+down|notiz|note:)/i.test(lower)) return false;
+    if (/^(call|dial|phone|ring|anrufen|appeler|llamar)\s+/i.test(lower)) return false;
     if (/(email|message|schreibe|écris|escribe|scrivi|napisz)\s+/i.test(lower) && /(wife|frau|épouse|esposa|emily|sarah|david|celine|alex)/i.test(lower)) return false;
     if (/love|liebe|aime|amo|kocham/i.test(lower) && /wife|frau|épouse|esposa|emily/i.test(lower)) return false;
     if (/(book|schedule|vereinbare|planen|planifier|programar|prenota)\s+([\w\s]+\s+)?(appointment|termin|meeting|reunión|appuntamento|spotkanie)/i.test(lower)) return false;
 
-    // Multilingual question words & prefixes
+    // Multilingual question words & conversational prefixes
     const questionPrefixes = [
       // English
       'what', 'why', 'how', 'when', 'where', 'who', 'which',
-      'can you explain', 'explain', 'could you explain', 'tell me about', 'tell me how',
+      'are you', 'can you', 'do you', 'will you', 'did you', 'could you', 'would you',
+      'can you hear me', 'are you there', 'are you listening', 'are you working', 'are you going to respond',
+      'what is going on', 'what\'s going on', 'what\'s happening', 'what are you doing', 'talk to me', 'listen to me',
+      'can you explain', 'explain', 'tell me about', 'tell me how', 'tell me a joke', 'tell me another joke',
       'give me advice', 'how should i', 'how do i', 'how can we', 'how to',
       'what are the pros and cons', 'pros and cons of', 'compare', 'difference between',
       'what do you think about', 'what is the best way to', 'strategies for', 'strategy to',
@@ -48,28 +54,32 @@ export class IntelligentAdvisor {
       'suggest', 'recommend', 'how would you', 'teach me', 'give me ideas',
       // German (Deutsch)
       'was', 'warum', 'wie', 'wann', 'wo', 'wer', 'welche', 'welcher', 'welches',
+      'bist du da', 'hörst du mich', 'antwortest du', 'was ist los', 'kannst du mich hören',
       'kannst du erklären', 'erkläre', 'erzähl mir von', 'gib mir rat', 'wie sollte ich',
       'was sind die vor- und nachteile', 'unterschied zwischen', 'was denkst du über',
       'strategien für', 'tipps für', 'hilf mir zu verstehen', 'empfehle', 'guten morgen', 'hallo',
       // French (Français)
-      'qu\'est-ce que', 'pourquoi', 'comment', 'quand', 'où', 'qui', 'quel', 'quelle',
-      'peux-tu expliquer', 'explique', 'parle-moi de', 'donne-moi des conseils',
+      'qu\'est-ce que', 'qu\'est-ce qui', 'pourquoi', 'comment', 'quand', 'où', 'qui', 'quel', 'quelle',
+      'tu m\'entends', 'tu es là', 'est-ce que', 'qu\'est-ce qui se passe', 'qu\'est-ce que tu fais',
+      'tu as entendu', 'tu l\'as entendu', 'j\'ai la même impression', 'j\'ai l\'impression', 'on doit',
+      'peux-tu expliquer', 'explique', 'parle-moi de', 'donne-moi des conseils', 'dis-moi', 'réponds-moi',
       'quelles sont les stratégies', 'stratégies pour', 'que penses-tu de', 'bonjour', 'salut',
       // Spanish (Español)
       'qué', 'por qué', 'cómo', 'cuándo', 'dónde', 'quién', 'cuál', 'cuáles',
+      'estás ahí', 'me escuchas', 'vas a responder', 'qué pasa', 'qué está pasando',
       'puedes explicar', 'explica', 'cuéntame sobre', 'dame consejos',
       'cuáles son las estrategias', 'estrategias para', 'qué piensas de', 'hola', 'buenos días',
       // Italian (Italiano)
       'cosa', 'perché', 'come', 'quando', 'dove', 'chi', 'quale', 'quali',
-      'puoi spiegare', 'spiega', 'parlami di', 'dammi consigli', 'strategie per', 'buongiorno', 'ciao',
+      'ci sei', 'mi senti', 'puoi spiegare', 'spiega', 'parlami di', 'dammi consigli', 'strategie per', 'buongiorno', 'ciao',
       // Dutch (Nederlands)
-      'wat', 'waarom', 'hoe', 'wanneer', 'waar', 'wie', 'welke', 'kun je uitleggen', 'leg uit',
+      'wat', 'waarom', 'hoe', 'wanneer', 'waar', 'wie', 'welke', 'hoor je mij', 'ben je daar', 'kun je uitleggen', 'leg uit',
       'geef me advies', 'strategieën voor', 'goedemorgen', 'hallo',
       // Polish (Polski)
-      'co', 'dlaczego', 'jak', 'kiedy', 'gdzie', 'kto', 'który', 'czy możesz wyjaśnić',
+      'co', 'dlaczego', 'jak', 'kiedy', 'gdzie', 'kto', 'który', 'czy słyszysz mnie', 'czy możesz wyjaśnić',
       'wyjaśnij', 'opowiedz mi o', 'doradź mi', 'jakie są strategie', 'dzień dobry', 'cześć',
       // Portuguese (Português)
-      'o que', 'por que', 'como', 'quando', 'onde', 'quem', 'qual', 'quais',
+      'o que', 'por que', 'como', 'quando', 'onde', 'quem', 'qual', 'quais', 'está aí', 'você me ouve',
       'você pode explicar', 'explique', 'me fale sobre', 'me dê conselhos', 'estratégias para', 'bom dia', 'olá'
     ];
 
@@ -77,8 +87,13 @@ export class IntelligentAdvisor {
       return true;
     }
 
-    // Conversational greetings & direct inquiries
-    if (/\b(?:hello|hi|hey|good morning|guten morgen|bonjour|hola|buongiorno|goedemorgen|dzień dobry|bom dia|who are you|wer bist du|qui es-tu|quién eres|tell me|tell a joke|joke|what's going on|how are you|witze|blague|chiste|barzelletta|grappig|żart|piada)\b/i.test(lower)) {
+    // Conversational greetings, liveness, jokes, & direct inquiries
+    if (/\b(?:hello|hi|hey|good morning|guten morgen|bonjour|hola|buongiorno|goedemorgen|dzień dobry|bom dia|who are you|wer bist du|qui es-tu|quién eres|tell me|tell a joke|joke|what's going on|how are you|witze|blague|chiste|barzelletta|grappig|żart|piada|respond|listening|working|hearing|hear me|impression|entendu|compris|d'accord|agree)\b/i.test(lower)) {
+      return true;
+    }
+
+    // If it ends in a question mark or is conversational reflection (not explicit task command)
+    if (lower.endsWith('?') || !/^(add|create|log|insert|schedule|draft|send|book)\b/i.test(lower)) {
       return true;
     }
 
@@ -202,6 +217,42 @@ export class IntelligentAdvisor {
         };
       }
 
+      if (/tu\s+m'entends|tu\s+es\s+là|tu\s+m'écoutes|tu\s+fonctionnes|qu'est-ce\s+qui\s+se\s+passe|qu'est-ce\s+que\s+tu\s+fais|tu\s+as\s+entendu|tu\s+l'as\s+entendu|est-ce\s+que\s+tu\s+marches|réponds-moi/i.test(lower)) {
+        return {
+          title: 'Présence & Écoute Active',
+          category: 'General',
+          spokenResponse: "Je suis là et je t'écoute parfaitement, Andrew ! Tout fonctionne à merveille. De quoi aimerais-tu qu'on parle ?",
+          summary: "Confirmation de présence et écoute active en temps réel.",
+          keyInsights: [
+            'Microphone et transcription vocale actifs en temps réel.',
+            'Prête pour la dictée, l\'analyse stratégique ou la gestion d\'agenda.'
+          ],
+          actionSteps: [
+            'Posez votre question ou dictez votre pensée naturellement.',
+            'Dites "Hey Eve, fais le point sur mon planning" pour la journée.'
+          ],
+          language: 'fr'
+        };
+      }
+
+      if (/j'ai\s+la\s+même\s+impression|j'ai\s+l'impression|d'accord|exactement|on\s+doit\s+trancher/i.test(lower)) {
+        return {
+          title: 'Alignement & Échange Conversationnel',
+          category: 'General',
+          spokenResponse: "Je partage tout à fait cette analyse. Concentrons-nous sur les priorités décisives pour avancer rapidement.",
+          summary: "Alignement stratégique et validation des orientations opérationnelles.",
+          keyInsights: [
+            'Validation des points de convergence et élimination des ambiguïtés.',
+            'Passage direct à l\'action mesurable.'
+          ],
+          actionSteps: [
+            'Définir les étapes concrètes dans le Work Hub.',
+            'Planifier le prochain point d\'étape.'
+          ],
+          language: 'fr'
+        };
+      }
+
       if (/qui\s+es-tu|bonjour|comment\s+vas-tu|aide|salut/i.test(lower)) {
         return {
           title: 'Eve — Votre Assistante IA Exécutive',
@@ -222,11 +273,11 @@ export class IntelligentAdvisor {
       }
 
       return {
-        title: 'Analyse Stratégique & Réponse Exécutive',
+        title: 'Dialogue Exécutif & Réflexion',
         category: 'Business & Strategy',
-        spokenResponse: `Voici la recommandation stratégique pour : "${text}". Concentrez-vous sur les actions à fort effet de levier et l'exécution mesurable.`,
-        summary: `Synthèse exécutive en français pour : "${text}".`,
-        keyInsights: ['Alignement stratégique et exécution rapide.'],
+        spokenResponse: `Sur ce point : l'essentiel est de cibler le point de levier majeur et d'éliminer les frictions opérationnelles. Voici l'analyse à l'écran.`,
+        summary: `Synthèse et réflexion conversationnelle pour : "${text}".`,
+        keyInsights: ['Alignement sur la priorité fondamentale.', 'Mesure continue de l\'impact.'],
         actionSteps: ['Passez en revue les points clés sur votre écran.'],
         language: 'fr'
       };
@@ -329,6 +380,25 @@ export class IntelligentAdvisor {
     // =========================================================================
     // 5. ENGLISH (Standard Default)
     // =========================================================================
+    // Presence, Liveness & Conversational Check-ins
+    if (/^(are\s+you\s+going\s+to\s+respond|are\s+you\s+responding|are\s+you\s+there|are\s+you\s+listening|can\s+you\s+hear\s+me|are\s+you\s+working|what'?s\s+going\s+on|what\s+is\s+going\s+on|what'?s\s+happening|what\s+are\s+you\s+doing|maybe\s+working|is\s+this\s+working|hello\??$|talk\s+to\s+me|why\s+aren'?t\s+you\s+answering)/i.test(lower)) {
+      return {
+        title: 'Conversational Presence & Liveness',
+        category: 'General',
+        spokenResponse: "I'm right here with you and listening clearly, Andrew! Everything is active and ready. What can I do for you right now?",
+        summary: "Live voice connection confirmed. Assistant is active, listening, and ready.",
+        keyInsights: [
+          'Microphone stream and speech recognition are active.',
+          'Ready for strategic questions, email dictation, calendar scheduling, or conversational thoughts.'
+        ],
+        actionSteps: [
+          'Ask any question or dictate your thoughts naturally.',
+          'Say "Hey Eve, what are my priorities today?" for an instant briefing.'
+        ],
+        language: 'en'
+      };
+    }
+
     // Clarification & Curiosity Inquiries (Handling ambiguous, incomplete, or underspecified requests)
     if (/^(i\s+have\s+a\s+problem|there'?s\s+an\s+issue|what\s+should\s+i\s+do\??$|what\s+do\s+you\s+think\??$|help\s+me\??$|i\s+need\s+help\??$|let'?s\s+fix\s+this|something\s+is\s+wrong|i\s+need\s+advice\??$|can\s+you\s+help\s+me\??$|i\s+have\s+a\s+question\??$|i\s+need\s+to\s+make\s+a\s+decision)/i.test(lower)) {
       return {

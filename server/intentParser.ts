@@ -3,7 +3,7 @@ import { db } from './db';
 import { draftEmailFromSpeech } from './emailService';
 import { parseAppointmentFromSpeech } from './calendarService';
 import { generateAutomationBlueprint } from './automationEngine';
-import { intelligentAdvisor } from './intelligentAdvisor';
+import { intelligentAdvisor } from '../src/services/intelligentAdvisor';
 
 export function parseIntentFromSpeech(speechText: string): ActionCard {
   const text = speechText.trim();
@@ -13,9 +13,9 @@ export function parseIntentFromSpeech(speechText: string): ActionCard {
 
   // -------------------------------------------------------------------------
   // 0. High-IQ Knowledge, Q&A & Strategic Solution Engine
-  // (Analyse questions, inquiries, strategies, explanations, advice)
+  // (Analyse questions, inquiries, strategies, explanations, advice, presence check-ins)
   // -------------------------------------------------------------------------
-  const isExplicitTaskCommand = /^(add\s+task|create\s+task|log\s+task|put\s+on\s+my\s+board|new\s+task|automate\s+task)\b/i.test(textLower);
+  const isExplicitTaskCommand = /^(add\s+task|create\s+task|log\s+task|put\s+on\s+my\s+board|new\s+task|automate\s+task|erstelle\s+aufgabe|créer\s+tâche|crear\s+tarea|ajoute\s+une\s+tâche|nouvelle\s+tâche)\b/i.test(textLower);
   
   if (!isExplicitTaskCommand && intelligentAdvisor.isQuestionOrInquiry(text)) {
     const solution = intelligentAdvisor.solve(text);

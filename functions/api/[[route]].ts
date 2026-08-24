@@ -275,16 +275,26 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
       let emailData: any = undefined;
       let calendarData: any = undefined;
 
-      // 0. Question / Advice / Strategic Inquiry Resolver
-      const isExplicitTask = /^(add\s+task|create\s+task|log\s+task|put\s+on\s+my\s+board|new\s+task)\b/i.test(textLower);
+      // 0. Question / Advice / Strategic Inquiry & Presence Resolver
+      const isExplicitTask = /^(add\s+task|create\s+task|log\s+task|put\s+on\s+my\s+board|new\s+task|ajoute\s+une\s+tâche|nouvelle\s+tâche)\b/i.test(textLower);
       const isQuestion = !isExplicitTask && (
-        /^(what|why|how|when|where|who|which|can you|explain|tell me|give me advice|how should|how do|what are|is it|suggest|recommend|who are you|what can you do)/i.test(textLower) ||
+        /^(what|why|how|when|where|who|which|can you|are you|do you|will you|explain|tell me|give me advice|how should|how do|what are|is it|suggest|recommend|who are you|what can you do|talk to me|tu m'entends|tu es là|est-ce que|qu'est-ce|j'ai la même)/i.test(textLower) ||
+        /(respond|listening|working|hear me|going on|happening)/i.test(textLower) ||
         textLower.endsWith('?')
       );
 
       if (isQuestion) {
         intent = 'knowledge_qa';
-        if (/morning|productivity|deep\s+work|focus/i.test(textLower)) {
+        if (/are\s+you\s+going\s+to\s+respond|are\s+you\s+listening|can\s+you\s+hear\s+me|are\s+you\s+working|what'?s\s+going\s+on|what'?s\s+happening|talk\s+to\s+me/i.test(textLower)) {
+          title = 'Conversational Presence & Liveness';
+          spokenResponse = "I'm right here with you and listening clearly, Andrew! Everything is active and ready. What can I do for you right now?";
+        } else if (/tu\s+m'entends|tu\s+es\s+là|qu'est-ce\s+qui\s+se\s+passe|tu\s+m'écoutes|réponds-moi/i.test(textLower)) {
+          title = 'Présence & Écoute Active';
+          spokenResponse = "Je suis là et je t'écoute parfaitement, Andrew ! Tout fonctionne à merveille. De quoi aimerais-tu qu'on parle ?";
+        } else if (/j'ai\s+la\s+même\s+impression|j'ai\s+l'impression|d'accord|exactement/i.test(textLower)) {
+          title = 'Alignement Conversationnel';
+          spokenResponse = "Je partage tout à fait cette analyse. Concentrons-nous sur les priorités décisives pour avancer rapidement.";
+        } else if (/morning|productivity|deep\s+work|focus/i.test(textLower)) {
           title = 'Executive Productivity Protocol';
           spokenResponse = 'To maximize your daily leverage, implement a 90-minute morning deep work block before opening email, time-box strategic thinking, and delegate repetitive operational tasks.';
         } else if (/escalat|difficult\s+client|angry/i.test(textLower)) {

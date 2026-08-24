@@ -119,9 +119,10 @@ export function detectLanguage(text: string): SupportedLanguage {
   };
 
   // Unique Characters
-  if (/[äöüß]/.test(lower)) scores.de += 5;
+  if (/[äöüß]/.test(lower)) scores.de += 6;
   if (/[¿¡ñ]/.test(lower)) scores.es += 6;
-  if (/[çœæ]/.test(lower)) scores.fr += 4;
+  if (/[çœæ]/.test(lower)) scores.fr += 6;
+  if (/[ëï]/.test(lower)) scores.nl += 6;
   if (/[ąćęłńóśźż]/.test(lower)) scores.pl += 6;
   if (/[ãõ]/.test(lower)) scores.pt += 6;
   if (/[а-яё]/i.test(lower)) scores.ru += 8;
@@ -129,54 +130,67 @@ export function detectLanguage(text: string): SupportedLanguage {
   // Spanish words
   const esWords = ['cuales', 'cuáles', 'estrategias', 'trabajo', 'profundo', 'productividad', 'rutina', 'buenos', 'días', 'hola', 'gracias', 'tarea', 'correo', 'para', 'como', 'cómo', 'por', 'que', 'qué', 'reunión', 'está', 'hacer', 'mejorar', 'enfoque', 'una', 'crisis', 'optimizar', 'el', 'la', 'los', 'las', 'de', 'en', 'y'];
   for (const w of esWords) {
-    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.es += 2;
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.es += 3;
+  }
+
+  // French elisions & specific patterns (j'ai, c'est, qu'est-ce, etc.)
+  if (/\b(?:j'ai|j’ai|c'est|c’est|qu'est-ce|qu’est-ce|d'accord|d’accord|aujourd'hui|aujourd’hui)\b/i.test(lower) ||
+      /\b(?:j'|c'|qu'|l'|d'|n'|s'|m'|t')\w+/i.test(lower)) {
+    scores.fr += 8;
   }
 
   // French words
-  const frWords = ['quelles', 'quels', 'stratégies', 'travail', 'profond', 'productivité', 'bonjour', 'merci', 'tâche', 'courriel', 'écris', 'rendez-vous', 'pour', 'dans', 'avec', 'sur', 'vous', 'nous', 'est-ce', 'comment', 'gérer', 'crise', 'réclamation', 'client', 'une', 'qui', 'est'];
+  const frWords = [
+    'quelles', 'quels', 'stratégies', 'travail', 'profond', 'productivité', 'bonjour', 'merci', 'tâche', 'courriel', 
+    'écris', 'rendez-vous', 'pour', 'dans', 'avec', 'sur', 'vous', 'nous', 'est-ce', 'comment', 'gérer', 'crise', 
+    'réclamation', 'client', 'une', 'qui', 'est', 'même', 'impression', 'entends', 'écoute', 'passe', 'marche', 
+    'trancher', 'doit', 'fait', 'plus', 'aussi', 'bien', 'très', 'faire', 'tout', 'tous', 'notre', 'votre', 
+    'planning', 'famille', 'peux-tu', 'veux-tu', 'dis-moi'
+  ];
   for (const w of frWords) {
-    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.fr += 2;
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.fr += 3;
   }
 
   // German words
-  const deWords = ['strategien', 'morgenroutine', 'produktivität', 'guten', 'morgen', 'danke', 'bitte', 'aufgabe', 'kalender', 'arbeit', 'schreibe', 'haben', 'kann', 'nicht', 'oder', 'verbessern', 'fokus', 'wie', 'warum', 'wer'];
+  const deWords = ['strategien', 'morgenroutine', 'produktivität', 'guten', 'morgen', 'danke', 'bitte', 'aufgabe', 'kalender', 'arbeit', 'schreibe', 'haben', 'kann', 'nicht', 'oder', 'verbessern', 'fokus', 'wie', 'warum', 'wer', 'sind'];
   for (const w of deWords) {
-    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.de += 2;
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.de += 3;
   }
 
   // Italian words
-  const itWords = ['strategie', 'lavoro', 'profondo', 'buongiorno', 'grazie', 'ciao', 'compito', 'scrivi', 'appuntamento', 'perché', 'come', 'quando', 'dove', 'quali'];
+  const itWords = ['strategie', 'lavoro', 'profondo', 'buongiorno', 'grazie', 'ciao', 'compito', 'scrivi', 'appuntamento', 'perché', 'come', 'quando', 'dove', 'quali', 'sono'];
   for (const w of itWords) {
-    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.it += 2;
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.it += 3;
   }
 
   // Dutch words
-  const nlWords = ['strategieën', 'werk', 'goedemorgen', 'bedankt', 'afspraak', 'graag', 'alsjeblieft', 'dankjewel', 'zijn', 'voor', 'niet', 'taak'];
+  const nlWords = ['wat', 'zijn', 'strategieën', 'werk', 'goedemorgen', 'bedankt', 'afspraak', 'graag', 'alsjeblieft', 'dankjewel', 'voor', 'niet', 'taak', 'hoe', 'wanneer'];
   for (const w of nlWords) {
-    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.nl += 2;
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.nl += 3;
   }
 
   // Polish words
-  const plWords = ['strategie', 'głęboką', 'pracę', 'praca', 'dzień', 'dobry', 'dziękuję', 'zadanie', 'napisz', 'spotkanie', 'jakie', 'jest', 'się'];
+  const plWords = ['strategie', 'głęboką', 'pracę', 'praca', 'dzień', 'dobry', 'dziękuję', 'zadanie', 'napisz', 'spotkanie', 'jakie', 'jest', 'się', 'są'];
   for (const w of plWords) {
-    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.pl += 2;
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.pl += 3;
   }
 
   // Portuguese words
-  const ptWords = ['estratégias', 'trabalho', 'profundo', 'obrigado', 'olá', 'bom', 'dia', 'tarefa', 'escreva', 'reunião', 'você', 'quais'];
+  const ptWords = ['estratégias', 'trabalho', 'profundo', 'obrigado', 'olá', 'bom', 'dia', 'tarefa', 'escreva', 'reunião', 'você', 'quais', 'são'];
   for (const w of ptWords) {
-    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.pt += 2;
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.pt += 3;
   }
 
   // English words
   const enWords = [
-    'what', 'why', 'how', 'when', 'where', 'strategies', 'deep', 'work', 'morning', 'routine', 
-    'email', 'schedule', 'task', 'meeting', 'the', 'and', 'for', 'you', 'are', 'create', 'plan', 
-    'fix', 'with', 'about', 'problem', 'delays', 'client', 'help', 'have', 'this', 'that', 'should',
-    'think', 'need', 'let', 'make', 'decision', 'onboarding', 'grow', 'revenue', 'next', 'days'
+    'what', 'whats', 'why', 'how', 'when', 'where', 'who', 'which', 'going', 'listening', 'working', 
+    'respond', 'responding', 'hear', 'hearing', 'can', 'will', 'did', 'there', 'this', 'that', 
+    'strategies', 'deep', 'routine', 'email', 'schedule', 'meeting', 'and', 'create', 
+    'plan', 'fix', 'problem', 'delays', 'client', 'should', 'think', 'need', 'make', 'decision', 
+    'onboarding', 'grow', 'revenue', 'next', 'days', 'tell', 'joke'
   ];
   for (const w of enWords) {
-    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.en += 2;
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.en += 3;
   }
 
   let bestLang: SupportedLanguage = 'en';
