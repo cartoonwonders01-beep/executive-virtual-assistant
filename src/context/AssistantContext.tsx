@@ -22,7 +22,7 @@ import {
   CustomLLMProfile
 } from '../types';
 import { api } from '../services/api';
-import { audioRecorder } from '../services/audioRecorder';
+import { audioRecorder, isVerbalStopCommand } from '../services/audioRecorder';
 import { wakeWordService } from '../services/wakeWordService';
 import { dialogueManager } from '../services/dialogueManager';
 import { speakResponse, stopSpeaking } from '../services/speechSynthesis';
@@ -643,8 +643,20 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const submitVoiceTranscript = async (text: string) => {
     if (!text.trim()) return;
-    setIsProcessingSpeech(true);
     const textLower = text.toLowerCase().trim();
+
+    // Instant Verbal Stop Command Interceptor (English, French, German, Spanish)
+    if (isVerbalStopCommand(textLower)) {
+      logger.log('info', 'audio', `🛑 Verbal stop command processed: "${text}". Halting speech and continuous listening.`);
+      stopSpeaking();
+      stopVoiceListeningInternal(false);
+      try { playChime('listen_stop'); } catch {}
+      setIsProcessingSpeech(false);
+      setLiveTranscript('');
+      return;
+    }
+
+    setIsProcessingSpeech(true);
     const cardId = 'ac-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 5);
     const nowStr = new Date().toISOString();
 
@@ -1294,6 +1306,12 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (level > 0.08) {
           resetSessionInactivityTimer();
         }
+      },
+      onVerbalStopDetected: (command) => {
+        logger.log('info', 'audio', `🛑 Live verbal stop command recognized: "${command}". Halting assistant immediately.`);
+        stopSpeaking();
+        stopVoiceListeningInternal(false);
+        try { playChime('listen_stop'); } catch {}
       },
       onLiveTranscript: (text) => {
         setLiveTranscript(text);

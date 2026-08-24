@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AssistantProvider, useAssistant } from './context/AssistantContext';
+import { stopSpeaking } from './services/speechSynthesis';
 import { LiveChatView } from './components/LiveChatView';
 import { ThoughtActionHub } from './components/ThoughtActionHub';
 import { KPIDashboard } from './components/KPIDashboard';
@@ -23,7 +24,32 @@ import { LLMPromptStudioModal } from './components/LLMPromptStudioModal';
 import { ArrowLeft } from 'lucide-react';
 
 const AppContent: React.FC = () => {
-  const { activeView, setActiveView, isActivityLogOpen, setIsActivityLogOpen } = useAssistant();
+  const { 
+    activeView, 
+    setActiveView, 
+    isActivityLogOpen, 
+    setIsActivityLogOpen,
+    stopVoiceListening,
+    setIsSettingsOpen,
+    setIsPromptStudioOpen,
+    setIsRecordModalOpen
+  } = useAssistant();
+
+  // Global Emergency Stop via Escape Key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        stopVoiceListening();
+        stopSpeaking();
+        setIsActivityLogOpen(false);
+        setIsSettingsOpen(false);
+        setIsPromptStudioOpen(false);
+        setIsRecordModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [stopVoiceListening, setIsActivityLogOpen, setIsSettingsOpen, setIsPromptStudioOpen, setIsRecordModalOpen]);
 
   // If in pure chat mode (default), render LiveChatView exclusively for a 100% clean experience
   if (activeView === 'transcript' || !activeView) {

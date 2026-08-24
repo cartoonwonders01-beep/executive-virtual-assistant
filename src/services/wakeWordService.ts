@@ -1,5 +1,6 @@
 import { logger } from './loggerService';
 import { stopSpeaking } from './speechSynthesis';
+import { isVerbalStopCommand } from './audioRecorder';
 
 export interface WakeWordListenerConfig {
   onWakeWord?: (detectedTrigger: string, trailingSpeech?: string) => void;
@@ -136,6 +137,12 @@ export class WakeWordService {
 
         if (this.config?.onSpeechDetected) {
           this.config.onSpeechDetected(lower);
+        }
+
+        if (isVerbalStopCommand(lower)) {
+          stopSpeaking();
+          logger.log('info', 'wake_word', `🛑 Verbal stop command recognized: "${lower}". Silencing assistant.`);
+          return;
         }
 
         // 1. Direct Trigger Matching

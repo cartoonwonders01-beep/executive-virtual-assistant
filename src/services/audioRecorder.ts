@@ -9,6 +9,14 @@ import { stopSpeaking } from './speechSynthesis';
 // Production MediaRecorder & Web Audio monitoring with intelligent Voice Activity Detection (VAD)
 // and Concurrent Web Speech API Real-Time Speech Recognition
 
+// Verbal Stop / Cancel Command Matcher across English, French, German, Spanish
+export function isVerbalStopCommand(text: string): boolean {
+  if (!text) return false;
+  const lower = text.toLowerCase().trim();
+  return /^(stop|eve stop|hey eve stop|stop listening|stop talking|be quiet|quiet|shut up|cancel|cancel that|pause|halt|stopp|arrête|arrête-toi|arrete|tais-toi|silence|para|parar|enough)$/i.test(lower) ||
+    /\b(?:stop listening|stop talking|be quiet|shut up|arrête-toi|tais-toi)\b/i.test(lower);
+}
+
 export interface AudioRecorderConfig {
   onAudioLevel: (level: number) => void;
   onRecordingComplete: (blob: Blob, mimeType: string, liveTranscript?: string) => void;
@@ -16,6 +24,7 @@ export interface AudioRecorderConfig {
   onLiveTranscript?: (text: string) => void;
   onError: (error: string) => void;
   onVADSilenceCountdown?: (secondsRemaining: number) => void;
+  onVerbalStopDetected?: (command: string) => void;
 }
 
 export interface VADOptions {
@@ -130,6 +139,14 @@ export class AudioRecorderService {
                 config.onLiveTranscript(current);
               }
 
+              if (isVerbalStopCommand(current)) {
+                if (config.onVerbalStopDetected) {
+                  config.onVerbalStopDetected(current);
+                }
+                this.stop();
+                return;
+              }
+
               // Auto-stop after user finishes speaking their sentence (Adaptive Low-Latency VAD: 450ms)
               if (this.vadOptions.autoStopOnSilence) {
                 if (this.speechFinishTimer) clearTimeout(this.speechFinishTimer);
@@ -152,12 +169,12 @@ export class AudioRecorderService {
         }
       }
 
-      // Max safety duration per utterance (15 seconds) to prevent infinite recording loops
+      // Max safety duration per utterance (8 seconds) to prevent infinite recording loops
       this.maxDurationTimer = setTimeout(() => {
         if (this.isRecordingActive) {
           this.stop();
         }
-      }, 15000);
+      }, 8000);
 
       // Setup Web Audio Analyser for glowing visualizer & VAD
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;

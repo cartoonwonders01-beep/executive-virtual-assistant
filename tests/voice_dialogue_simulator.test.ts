@@ -273,4 +273,33 @@ test('Autonomous Voice & Dialogue Interactive Simulation Suite', async (t) => {
     assert.equal(explicitTask.intent, 'task_create', 'Explicit French task command correctly creates task');
   });
 
+  await t.test('Simulation 14: Robust Verbal Stop Commands & Instant Silencing (English, French, German, Spanish)', async () => {
+    const { isVerbalStopCommand } = await import('../src/services/audioRecorder');
+
+    // English stop variations
+    assert.equal(isVerbalStopCommand('stop'), true, '"stop" recognized as verbal stop command');
+    assert.equal(isVerbalStopCommand('eve stop'), true, '"eve stop" recognized');
+    assert.equal(isVerbalStopCommand('hey eve stop'), true, '"hey eve stop" recognized');
+    assert.equal(isVerbalStopCommand('stop listening'), true, '"stop listening" recognized');
+    assert.equal(isVerbalStopCommand('stop talking'), true, '"stop talking" recognized');
+    assert.equal(isVerbalStopCommand('be quiet'), true, '"be quiet" recognized');
+    assert.equal(isVerbalStopCommand('shut up'), true, '"shut up" recognized');
+    assert.equal(isVerbalStopCommand('cancel'), true, '"cancel" recognized');
+
+    // French stop variations
+    assert.equal(isVerbalStopCommand('arrête'), true, '"arrête" recognized');
+    assert.equal(isVerbalStopCommand('arrête-toi'), true, '"arrête-toi" recognized');
+    assert.equal(isVerbalStopCommand('tais-toi'), true, '"tais-toi" recognized');
+
+    // German & Spanish stop variations
+    assert.equal(isVerbalStopCommand('stopp'), true, '"stopp" recognized');
+    assert.equal(isVerbalStopCommand('halt'), true, '"halt" recognized');
+    assert.equal(isVerbalStopCommand('para'), true, '"para" recognized');
+
+    // Negative tests (normal conversational queries should NOT match stop)
+    assert.equal(isVerbalStopCommand("What's going on"), false, 'Conversational query is NOT stop');
+    assert.equal(isVerbalStopCommand("Tell me a joke"), false, 'Joke request is NOT stop');
+    assert.equal(isVerbalStopCommand("Create a task for tomorrow"), false, 'Task creation is NOT stop');
+  });
+
 });
