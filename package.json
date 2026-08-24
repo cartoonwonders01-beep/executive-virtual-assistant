@@ -19,6 +19,7 @@
     "test:bridge": "tsx tests/antigravity_bridge.test.ts",
     "test:dialogue-sim": "tsx tests/voice_dialogue_simulator.test.ts",
     "test:real-world": "tsx tests/real_world_transcript_suite.test.ts",
+    "test:depth": "tsx tests/voice_action_depth_suite.test.ts",
     "test:browser": "tsx tests/headless_browser_render.test.ts",
     "preview": "vite preview --host 0.0.0.0 --port 5173"
   },

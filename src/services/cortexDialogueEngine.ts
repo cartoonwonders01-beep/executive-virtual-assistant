@@ -104,8 +104,8 @@ export class CortexDialogueEngine {
     const cleanLower = cleanedText.toLowerCase();
 
     // A. Tool: Web Search & Weather Grounding (Prioritized over calendar)
-    if (/weather|forecast|rain|temperature|degrees|meteo/i.test(textLower) || webSearchService.isWebSearchQuery(cleanedText || textTrimmed)) {
-      const query = /weather|forecast|rain|temperature/i.test(textLower) ? (cleanedText || 'weather forecast') : (cleanedText || textTrimmed);
+    if (/weather|forecast|rain|temperature|degrees|meteo|hot\b|cold\b|sunny|outside/i.test(textLower) || webSearchService.isWebSearchQuery(cleanedText || textTrimmed)) {
+      const query = /weather|forecast|rain|temperature|hot|cold|sunny|outside/i.test(textLower) ? (cleanedText || 'weather forecast') : (cleanedText || textTrimmed);
       const searchRes = await webSearchService.searchWeb(query);
       return {
         actionCard: {

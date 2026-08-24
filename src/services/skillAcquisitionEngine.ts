@@ -29,8 +29,12 @@ export class SkillAcquisitionEngine {
   private state: AcquisitionState = 'idle';
   private pendingSkill: PendingSkillBlueprint | null = null;
   private pendingEntity: PendingEntityRequest | null = null;
+  private lastStateChangeTs = 0;
 
   public getState(): AcquisitionState {
+    if (this.state !== 'idle' && this.lastStateChangeTs > 0 && (Date.now() - this.lastStateChangeTs > 60000)) {
+      this.reset();
+    }
     return this.state;
   }
 
@@ -46,6 +50,7 @@ export class SkillAcquisitionEngine {
     this.state = 'idle';
     this.pendingSkill = null;
     this.pendingEntity = null;
+    this.lastStateChangeTs = 0;
   }
 
   /**
@@ -57,6 +62,7 @@ export class SkillAcquisitionEngine {
     originalTranscript: string
   ): { spokenPrompt: string; summaryPrompt: string } {
     this.state = 'awaiting_missing_entity';
+    this.lastStateChangeTs = Date.now();
     this.pendingEntity = {
       relationType,
       entityRoleName,
@@ -79,6 +85,7 @@ export class SkillAcquisitionEngine {
     originalQuery: string
   ): { spokenPrompt: string; summaryPrompt: string } {
     this.state = 'awaiting_skill_explanation';
+    this.lastStateChangeTs = Date.now();
     this.pendingSkill = {
       skillName,
       triggerPhrase: skillName.toLowerCase().trim(),

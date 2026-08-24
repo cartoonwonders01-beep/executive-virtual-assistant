@@ -837,9 +837,9 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         };
       }
 
-      // 0.3 Unknown Action / Routine Interview Trigger ("Generate monthly update", "Prepare board deck")
-      if (!actionCard && /^(generate|prepare|organize|learn\s+how\s+to|build\s+workflow)\s+/i.test(textLower) && !/task|email|calendar|appointment|timer|alarm|weather|matrix|whatsapp/i.test(textLower)) {
-        const skillName = text.replace(/^(generate|prepare|organize|learn\s+how\s+to|build\s+workflow)\s+(?:the\s+|my\s+|a\s+)?/i, '').trim();
+      // 0.3 Explicit Routine Learning Interview Trigger ("Learn how to...", "Teach me how to...")
+      if (!actionCard && /^(?:learn\s+how\s+to|teach\s+(?:me\s+)?how\s+to|create\s+routine\s+for)\s+/i.test(textLower)) {
+        const skillName = text.replace(/^(?:learn\s+how\s+to|teach\s+(?:me\s+)?how\s+to|create\s+routine\s+for)\s+(?:the\s+|my\s+|a\s+)?/i, '').trim();
         const { spokenPrompt, summaryPrompt } = skillAcquisitionEngine.startSkillInterview(skillName || 'Custom Workflow', text);
         spokenResponseText = spokenPrompt;
         actionCard = {
