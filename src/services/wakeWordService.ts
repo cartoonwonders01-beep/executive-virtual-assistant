@@ -16,6 +16,7 @@ export class WakeWordService {
   private primaryWakeWord = 'hey eve';
   private sensitivity: 'high' | 'normal' = 'high';
   private restartTimeout: any = null;
+  private debounceTimer: any = null;
 
   // Expanded phonetic wake triggers
   private wakeTriggers = [
@@ -173,20 +174,28 @@ export class WakeWordService {
         }
 
         if (matchedTrigger) {
-          logger.log('success', 'wake_word', `🎯 Voice Command/Trigger DETECTED: "${matchedTrigger}"`, { command: command || 'none' });
+          // Debounce: Wait 650ms of silence after the user finishes speaking their full thought
+          if (this.debounceTimer) clearTimeout(this.debounceTimer);
+          const capturedTrigger = matchedTrigger;
+          const capturedCommand = command;
 
-          // Play Google-style double-tone wake chime
-          this.playGoogleAssistantChime();
+          this.debounceTimer = setTimeout(() => {
+            if (this.isPaused) return;
+            logger.log('success', 'wake_word', `🎯 Voice Command DETECTED: "${capturedTrigger}"`, { command: capturedCommand || 'none' });
 
-          // Temporarily pause passive recognition so dialogue execution takes place
-          this.pause();
+            // Play Google-style double-tone wake chime
+            this.playGoogleAssistantChime();
 
-          if (this.config?.onWakeWord) {
-            this.config.onWakeWord(matchedTrigger, command);
-          }
-          if (this.config?.onWakeWordDetected) {
-            this.config.onWakeWordDetected(matchedTrigger, command);
-          }
+            // Temporarily pause passive recognition so dialogue execution takes place
+            this.pause();
+
+            if (this.config?.onWakeWord) {
+              this.config.onWakeWord(capturedTrigger, capturedCommand);
+            }
+            if (this.config?.onWakeWordDetected) {
+              this.config.onWakeWordDetected(capturedTrigger, capturedCommand);
+            }
+          }, 650);
         }
       };
 

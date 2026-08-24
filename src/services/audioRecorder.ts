@@ -45,13 +45,15 @@ export class AudioRecorderService {
   // VAD & Slicing State (Hydrated from persistent config)
   private vadOptions: VADOptions = {
     autoStopOnSilence: true,
-    silenceThreshold: 0.06,
+    silenceThreshold: 0.02,
     silenceDurationMs: getStoredSilenceDurationMs(),
-    speechTriggerThreshold: 0.12,
+    speechTriggerThreshold: 0.03,
     chunkIntervalMs: getStoredChunkIntervalMs()
   };
   private hasDetectedSpeech = false;
   private silenceStartTime: number | null = null;
+  private speechFinishTimer: any = null;
+  private maxDurationTimer: any = null;
   private configRef: AudioRecorderConfig | null = null;
 
   public setVADOptions(options: Partial<VADOptions>): void {
@@ -83,6 +85,9 @@ export class AudioRecorderService {
       this.silenceStartTime = null;
       this.configRef = config;
       this.capturedLiveTranscript = '';
+
+      if (this.speechFinishTimer) clearTimeout(this.speechFinishTimer);
+      if (this.maxDurationTimer) clearTimeout(this.maxDurationTimer);
 
       this.mediaStream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -116,9 +121,23 @@ export class AudioRecorderService {
 
             const current = fullAccumulated.trim();
             if (current) {
+              this.hasDetectedSpeech = true;
+              this.silenceStartTime = null;
               this.capturedLiveTranscript = current;
+              stopSpeaking(); // Barge-in
+
               if (config.onLiveTranscript) {
                 config.onLiveTranscript(current);
+              }
+
+              // Auto-stop after user finishes speaking their sentence
+              if (this.vadOptions.autoStopOnSilence) {
+                if (this.speechFinishTimer) clearTimeout(this.speechFinishTimer);
+                this.speechFinishTimer = setTimeout(() => {
+                  if (this.isRecordingActive) {
+                    this.stop();
+                  }
+                }, Math.max(1200, this.vadOptions.silenceDurationMs));
               }
             }
           };
@@ -132,6 +151,13 @@ export class AudioRecorderService {
           console.log('Web Speech initial start notice:', srErr);
         }
       }
+
+      // Max safety duration per utterance (15 seconds) to prevent infinite recording loops
+      this.maxDurationTimer = setTimeout(() => {
+        if (this.isRecordingActive) {
+          this.stop();
+        }
+      }, 15000);
 
       // Setup Web Audio Analyser for glowing visualizer & VAD
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -158,7 +184,6 @@ export class AudioRecorderService {
           if (normalized >= this.vadOptions.speechTriggerThreshold) {
             this.hasDetectedSpeech = true;
             this.silenceStartTime = null;
-            // Full-duplex barge-in: silence assistant if user interrupts
             stopSpeaking();
           } else if (this.hasDetectedSpeech && normalized <= this.vadOptions.silenceThreshold) {
             if (!this.silenceStartTime) {
@@ -166,7 +191,7 @@ export class AudioRecorderService {
             } else {
               const elapsedSilence = now - this.silenceStartTime;
               if (this.vadOptions.autoStopOnSilence && elapsedSilence >= this.vadOptions.silenceDurationMs) {
-                // Auto-stop triggered by silence!
+                // Auto-stop triggered by audio level silence!
                 this.stop();
                 return;
               }
@@ -256,6 +281,14 @@ export class AudioRecorderService {
       clearTimeout(this.segmentTimer);
       this.segmentTimer = null;
     }
+    if (this.speechFinishTimer) {
+      clearTimeout(this.speechFinishTimer);
+      this.speechFinishTimer = null;
+    }
+    if (this.maxDurationTimer) {
+      clearTimeout(this.maxDurationTimer);
+      this.maxDurationTimer = null;
+    }
 
     if (this.speechRecognition) {
       try { this.speechRecognition.stop(); } catch {}
@@ -288,6 +321,14 @@ export class AudioRecorderService {
     if (this.animFrameId) {
       cancelAnimationFrame(this.animFrameId);
       this.animFrameId = null;
+    }
+    if (this.speechFinishTimer) {
+      clearTimeout(this.speechFinishTimer);
+      this.speechFinishTimer = null;
+    }
+    if (this.maxDurationTimer) {
+      clearTimeout(this.maxDurationTimer);
+      this.maxDurationTimer = null;
     }
     if (this.audioContext && this.audioContext.state !== 'closed') {
       this.audioContext.close().catch(() => {});
