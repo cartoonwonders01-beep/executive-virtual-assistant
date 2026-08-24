@@ -329,6 +329,47 @@ export class IntelligentAdvisor {
     // =========================================================================
     // 5. ENGLISH (Standard Default)
     // =========================================================================
+    // Clarification & Curiosity Inquiries (Handling ambiguous, incomplete, or underspecified requests)
+    if (/^(i\s+have\s+a\s+problem|there'?s\s+an\s+issue|what\s+should\s+i\s+do\??$|what\s+do\s+you\s+think\??$|help\s+me\??$|i\s+need\s+help\??$|let'?s\s+fix\s+this|something\s+is\s+wrong|i\s+need\s+advice\??$|can\s+you\s+help\s+me\??$|i\s+have\s+a\s+question\??$|i\s+need\s+to\s+make\s+a\s+decision)/i.test(lower)) {
+      return {
+        title: 'Interactive Clarification & Alignment',
+        category: 'General',
+        spokenResponse: "I'm right here with you, Andrew. Could you share a bit more about the specific challenge or decision you're facing so we can think through it together?",
+        summary: "I'm ready to help you navigate this decision or challenge. Tell me what's on your mind:",
+        keyInsights: [
+          'Active Listening & Diagnosis: Clear problem framing is 80% of the solution.',
+          'Collaborative Brainstorming: We can break down strategic trade-offs, operational hurdles, or team decisions.'
+        ],
+        actionSteps: [
+          'Describe the decision: e.g. "I need to choose between hiring or outsourcing."',
+          'Describe the bottleneck: e.g. "Our product release is blocked by QA delays."',
+          'Say "Hey Eve, let\'s brainstorm solutions" to explore alternative approaches.'
+        ],
+        language: 'en'
+      };
+    }
+
+    // Chain-of-Thought Strategic Action Planning & Roadmaps
+    if (/^(plan|create\s+a\s+plan|build\s+a\s+plan|formulate\s+a\s+plan|roadmap|strategy\s+for|how\s+do\s+i\s+scale|next\s+30\s+days|next\s+90\s+days|step\s+by\s+step\s+plan)/i.test(lower) || /plan\s+(?:my|our|for|the)\s+/i.test(lower)) {
+      return {
+        title: `Strategic Action Plan: ${text.length > 35 ? text.substring(0, 32) + '...' : text}`,
+        category: 'Business & Strategy',
+        spokenResponse: "I've structured a 3-phase action plan for you. Phase 1 focuses on diagnosis and high-leverage alignment, Phase 2 on core sprint execution, and Phase 3 on automated measurement. You can review the complete roadmap on your screen.",
+        summary: "Comprehensive 3-Phase Strategic Roadmap & Execution Protocol:",
+        keyInsights: [
+          'Phase 1: Alignment & Diagnosis (Days 1–7): Identify core bottlenecks, establish KPI baselines, and eliminate immediate friction.',
+          'Phase 2: High-Leverage Sprint Execution (Days 8–21): Deploy the top 20% of initiatives that generate 80% of measurable impact.',
+          'Phase 3: Automation & Feedback Loops (Days 22–30): Institutionalize continuous monitoring, automated reporting, and retrospective refinement.'
+        ],
+        actionSteps: [
+          'Review the 3-phase milestones in the Work Hub.',
+          'Delegate execution steps across the domain Agent Swarm.',
+          'Say "Hey Eve, log these as tasks" to sync directly to your Monday.com board.'
+        ],
+        language: 'en'
+      };
+    }
+
     // Morning Routine & Executive Productivity
     if (/morning\s+routine|productivity|deep\s+work|time\s+management|focus|burnout|overwhelm/i.test(lower)) {
       return {

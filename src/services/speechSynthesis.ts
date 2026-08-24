@@ -169,9 +169,14 @@ export function detectLanguage(text: string): SupportedLanguage {
   }
 
   // English words
-  const enWords = ['what', 'why', 'how', 'when', 'where', 'strategies', 'deep', 'work', 'morning', 'routine', 'email', 'schedule', 'task', 'meeting', 'the', 'and', 'for', 'you', 'are'];
+  const enWords = [
+    'what', 'why', 'how', 'when', 'where', 'strategies', 'deep', 'work', 'morning', 'routine', 
+    'email', 'schedule', 'task', 'meeting', 'the', 'and', 'for', 'you', 'are', 'create', 'plan', 
+    'fix', 'with', 'about', 'problem', 'delays', 'client', 'help', 'have', 'this', 'that', 'should',
+    'think', 'need', 'let', 'make', 'decision', 'onboarding', 'grow', 'revenue', 'next', 'days'
+  ];
   for (const w of enWords) {
-    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.en += 1;
+    if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.en += 2;
   }
 
   let bestLang: SupportedLanguage = 'en';

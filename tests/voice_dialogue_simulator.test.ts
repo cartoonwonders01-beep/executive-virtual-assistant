@@ -148,4 +148,41 @@ test('Autonomous Voice & Dialogue Interactive Simulation Suite', async (t) => {
     assert.ok(!result.spokenResponse.includes('💡 Executive Pro-Tip:'), 'No pro-tip boilerplate in spoken voice');
   });
 
+  await t.test('Simulation 7: Clarification & Curiosity on Ambiguity ("I have a problem")', async () => {
+    const ambiguousQuery = 'I have a problem';
+    const result = intelligentAdvisor.solve(ambiguousQuery);
+
+    assert.equal(result.title, 'Interactive Clarification & Alignment');
+    assert.ok(result.spokenResponse.includes('share a bit more') || result.spokenResponse.includes('situation'), 'Asks clarifying question');
+    assert.ok(result.actionSteps.length >= 2, 'Provides exploration angles');
+  });
+
+  await t.test('Simulation 8: Chain-of-Thought 3-Phase Strategic Planning ("Plan my next 30 days")', async () => {
+    const planQuery = 'Plan my next 30 days for business growth';
+    const result = intelligentAdvisor.solve(planQuery);
+
+    assert.ok(result.title.includes('Strategic Action Plan'), 'Strategic plan generated');
+    assert.ok(result.spokenResponse.includes('3-phase action plan'), 'Spoken overview mentions 3-phase plan');
+    assert.ok(result.keyInsights.some(k => k.includes('Phase 1')), 'Contains Phase 1');
+    assert.ok(result.keyInsights.some(k => k.includes('Phase 2')), 'Contains Phase 2');
+    assert.ok(result.keyInsights.some(k => k.includes('Phase 3')), 'Contains Phase 3');
+  });
+
+  await t.test('Simulation 9: Multi-Turn Context & Pronoun Continuity', async () => {
+    dialogueManager.clearTurns();
+
+    // Turn 1: User mentions a problem with client onboarding
+    const t1 = intelligentAdvisor.solve('I have a problem with client onboarding delays');
+    dialogueManager.addTurn({ id: 't1', speaker: 'user', text: 'I have a problem with client onboarding delays', timestamp: new Date().toISOString() });
+    dialogueManager.addTurn({ id: 't2', speaker: 'assistant', text: t1.spokenResponse, timestamp: new Date().toISOString() });
+
+    // Turn 2: User asks for a plan to fix it
+    const t2 = intelligentAdvisor.solve('Create a plan to fix client onboarding delays');
+    dialogueManager.addTurn({ id: 't3', speaker: 'user', text: 'Create a plan to fix client onboarding delays', timestamp: new Date().toISOString() });
+    dialogueManager.addTurn({ id: 't4', speaker: 'assistant', text: t2.spokenResponse, timestamp: new Date().toISOString() });
+
+    assert.equal(dialogueManager.getTurns().length, 4, '4 turns tracked in dialogue memory');
+    assert.ok(t2.spokenResponse.includes('3-phase'), 'Generated plan for prior turn topic');
+  });
+
 });
