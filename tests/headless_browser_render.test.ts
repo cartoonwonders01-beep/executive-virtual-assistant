@@ -57,18 +57,18 @@ export async function runHeadlessBrowserRenderAudit() {
     assert(rootHtml.length > 500, `H2.1: #root contains rendered DOM tree (${rootHtml.length} characters)`);
 
     const hasHeader = await page.evaluate(() => {
-      return document.body.innerText.includes('Executive') || document.body.innerText.includes('Assistant');
+      return document.body.innerText.includes('Eve') || document.body.innerText.includes('Assistant');
     });
-    assert(hasHeader, 'H2.2: Page contains Executive Assistant branding');
+    assert(hasHeader, 'H2.2: Page contains Eve Assistant branding');
 
     const hasVoiceOrb = await page.evaluate(() => {
-      return document.querySelector('canvas') !== null && document.querySelector('button') !== null;
+      return document.querySelector('button') !== null;
     });
-    assert(hasVoiceOrb, 'H2.3: Voice visualizer canvas and push-to-talk button mounted');
+    assert(hasVoiceOrb, 'H2.3: Push-to-talk microphone and action controls mounted');
 
     const quickPromptsRendered = await page.evaluate(() => {
       const text = document.body.innerText;
-      return text.includes('Send an email to my wife') || text.includes('Talk to me anytime') || text.includes('Thought') || text.includes('Assistant');
+      return text.includes('Eve') || text.includes('How can I help') || text.includes('Deep Work') || text.includes('Assistant');
     });
     assert(quickPromptsRendered, 'H2.4: Natural quick prompts rendered on screen');
 

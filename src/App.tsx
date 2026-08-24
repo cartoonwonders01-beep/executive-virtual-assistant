@@ -1,8 +1,6 @@
 import React from 'react';
 import { AssistantProvider, useAssistant } from './context/AssistantContext';
-import { Navigation } from './components/Navigation';
-import { MobileVoiceHUD } from './components/MobileVoiceHUD';
-import { LiveTranscriptView } from './components/LiveTranscriptView';
+import { LiveChatView } from './components/LiveChatView';
 import { ThoughtActionHub } from './components/ThoughtActionHub';
 import { KPIDashboard } from './components/KPIDashboard';
 import { TaskTableView } from './components/TaskTableView';
@@ -21,84 +19,74 @@ import { TaskDetailModal } from './components/TaskDetailModal';
 import { InteractiveTourModal } from './components/InteractiveTourModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ActivityLogDrawer } from './components/ActivityLogDrawer';
+import { ArrowLeft } from 'lucide-react';
 
 const AppContent: React.FC = () => {
-  const { activeView, isActivityLogOpen, setIsActivityLogOpen } = useAssistant();
+  const { activeView, setActiveView, isActivityLogOpen, setIsActivityLogOpen } = useAssistant();
 
+  // If in pure chat mode (default), render LiveChatView exclusively for a 100% clean experience
+  if (activeView === 'transcript' || !activeView) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-teal-500 selection:text-slate-950">
+        <LiveChatView />
+
+        {/* Global Modals */}
+        <AutomationStudioModal />
+        <VoiceRecorderModal />
+        <TaskDetailModal />
+        <InteractiveTourModal />
+        <SettingsModal />
+        <ActivityLogDrawer isOpen={isActivityLogOpen} onClose={() => setIsActivityLogOpen(false)} />
+      </div>
+    );
+  }
+
+  // Secondary Tools View (when explicitly navigated to from menu)
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-brand-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-teal-500 selection:text-slate-950">
       
-      {/* Universal Navigation */}
-      <Navigation />
+      {/* Minimal Top Header for Secondary Views */}
+      <header className="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+        <button
+          onClick={() => setActiveView('transcript')}
+          className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-teal-300 hover:text-teal-200 text-xs font-semibold transition cursor-pointer"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Chat</span>
+        </button>
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider font-mono">
+          {activeView.replace('_', ' ')}
+        </span>
+      </header>
 
-      {/* Main Container */}
+      {/* Main Secondary View Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {activeView === 'thought_hub' && <ThoughtActionHub />}
-        {activeView === 'voice_hud' && <MobileVoiceHUD />}
-        {activeView === 'transcript' && <LiveTranscriptView />}
-
-        {activeView === 'gmail' && (
-          <div className="space-y-6">
-            <GmailSuiteView />
-          </div>
-        )}
-
-        {activeView === 'calendar' && (
-          <div className="space-y-6">
-            <CalendarAppointmentsView />
-          </div>
-        )}
-
-        {activeView === 'comms' && (
-          <div className="space-y-6">
-            <CommunicationsHubView />
-          </div>
-        )}
-
+        {activeView === 'gmail' && <GmailSuiteView />}
+        {activeView === 'calendar' && <CalendarAppointmentsView />}
+        {activeView === 'comms' && <CommunicationsHubView />}
+        {activeView === 'skills' && <SkillLearningHub />}
         {activeView === 'table' && (
           <div className="space-y-6">
             <KPIDashboard />
             <TaskTableView />
           </div>
         )}
-
         {activeView === 'gantt' && (
           <div className="space-y-6">
             <KPIDashboard />
             <GanttChartView />
           </div>
         )}
-
         {activeView === 'matrix' && (
           <div className="space-y-6">
             <KPIDashboard />
             <EisenhowerMatrixView />
           </div>
         )}
-
-        {activeView === 'autonomous' && (
-          <div className="space-y-6">
-            <AutonomousWorkerDeck />
-          </div>
-        )}
-
-        {activeView === 'swarm' && (
-          <div className="space-y-6">
-            <MultiAgentSwarmView />
-          </div>
-        )}
-
-        {activeView === 'wiki' && (
-          <div className="space-y-6">
-            <WikiKnowledgeHub />
-          </div>
-        )}
-
-        {activeView === 'skills' && (
-          <div className="space-y-6">
-            <SkillLearningHub />
-          </div>
-        )}
+        {activeView === 'autonomous' && <AutonomousWorkerDeck />}
+        {activeView === 'swarm' && <MultiAgentSwarmView />}
+        {activeView === 'wiki' && <WikiKnowledgeHub />}
       </main>
 
       {/* Global Modals */}
