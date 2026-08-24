@@ -29,8 +29,8 @@ export function draftEmailFromSpeech(speechText: string, contactHint?: string): 
     const wifeContact = contacts.find(c => (c.role && /wife|family/i.test(c.role)) || /celine|emily/i.test(c.name));
     
     if (textLower.includes('wife') || textLower.includes('celine')) {
-      toName = wifeContact ? wifeContact.name : 'Celine Baxter';
-      toEmail = wifeContact?.email || 'celine.baxter@executive.co';
+      toName = wifeContact ? wifeContact.name : 'Celine Loeuille';
+      toEmail = wifeContact?.email || 'celine.loeuille@gmail.com';
     } else if (textLower.includes('elizabeth') || textLower.includes('eliza')) {
       toName = 'Elizabeth Baxter';
       toEmail = 'elizabeth.baxter@executive.co';

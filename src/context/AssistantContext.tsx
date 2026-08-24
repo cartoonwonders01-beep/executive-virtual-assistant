@@ -868,7 +868,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
         if (/wife|celine|emily|love/i.test(textLower)) {
           const resolvedWife = memoryGraph.findEntityByRelationOrAlias('wife');
-          steps.push({ id: 's4', order: steps.length + 1, actionType: 'send_email', label: `Draft Love Note to ${resolvedWife?.entityName || 'Celine'}`, target: resolvedWife?.email || 'celine.baxter@executive.co' });
+          steps.push({ id: 's4', order: steps.length + 1, actionType: 'send_email', label: `Draft Love Note to ${resolvedWife?.entityName || 'Celine'}`, target: resolvedWife?.email || 'celine.loeuille@gmail.com' });
         }
         if (steps.length === 0) {
           steps.push({ id: 's1', order: 1, actionType: 'triage_inbox', label: 'Triage VIP Inbox' });

@@ -315,6 +315,7 @@ test('Autonomous Voice & Dialogue Interactive Simulation Suite', async (t) => {
     const wife = memoryGraph.findEntityByRelationOrAlias('wife');
     assert.ok(wife !== null, 'Wife entity resolved from memory graph');
     assert.ok(wife?.entityName.includes('Celine'), 'Wife name is Celine');
+    assert.equal(wife?.email, 'celine.loeuille@gmail.com', 'Wife email is celine.loeuille@gmail.com');
 
     // 2. Learn a new contact/entity dynamically
     const newEntity = memoryGraph.learnEntity(
