@@ -1,6 +1,7 @@
-// Production Human Voice Synthesis Engine with Natural Multilingual European Voice Resolution
-
 export type VoicePersona = 
+  | 'google_journey_female' // en-US-Journey-F (Studio Conversational Human Female - Podcast Quality)
+  | 'google_journey_british' // en-GB-Journey-F (Studio Executive British Female)
+  | 'google_journey_male'    // en-US-Journey-D (Studio Conversational Male)
   | 'studio_american_female' // Aria, Jenny, Ava Premium, Samantha Enhanced
   | 'executive_british_male' // Daniel Enhanced, Ryan Natural, Oliver, George
   | 'crisp_american_male'    // Guy Natural, Christopher, Tom Enhanced, Alex
@@ -17,7 +18,8 @@ export type VoicePersona =
 export type SupportedLanguage = 'en' | 'de' | 'fr' | 'es' | 'it' | 'nl' | 'pl' | 'pt' | 'ru';
 
 let cachedVoices: SpeechSynthesisVoice[] = [];
-let activePersona: VoicePersona = 'studio_american_female';
+let activePersona: VoicePersona = 'google_journey_female';
+let activeAudioElement: HTMLAudioElement | null = null;
 let speechRate = 1.02;
 let speechPitch = 1.0;
 let preferredLanguage: SupportedLanguage | 'auto' = 'auto';
@@ -429,62 +431,102 @@ export function speakResponse(text: string, onEnd?: () => void, persona?: VoiceP
   }
 
   recordAssistantSpokenText(cleanText);
-  const detectedLang = targetLang || detectLanguage(cleanText);
-  const utterance = new SpeechSynthesisUtterance(cleanText);
-  activeUtteranceRef = utterance; // Retain top-level reference to prevent V8 garbage collection
-  isSpeakingState = true;
+  const selectedPersona = persona || activePersona;
 
-  utterance.rate = speechRate;
-  utterance.pitch = speechPitch;
-  utterance.lang = detectedLang;
-
-  const targetVoice = resolveBestVoice(persona || activePersona, detectedLang);
-  if (targetVoice) {
-    utterance.voice = targetVoice;
-  }
-
-  let ended = false;
   const finish = () => {
-    if (!ended) {
-      ended = true;
-      isSpeakingState = false;
-      lastSpeechEndedTs = Date.now();
-      activeUtteranceRef = null;
-      if (watchdogInterval) {
-        clearInterval(watchdogInterval);
-        watchdogInterval = null;
-      }
-      if (onEnd) onEnd();
+    isSpeakingState = false;
+    lastSpeechEndedTs = Date.now();
+    activeUtteranceRef = null;
+    activeAudioElement = null;
+    if (watchdogInterval) {
+      clearInterval(watchdogInterval);
+      watchdogInterval = null;
+    }
+    if (onEnd) onEnd();
+  };
+
+  const fallbackBrowserSynthesis = () => {
+    const detectedLang = targetLang || detectLanguage(cleanText);
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    activeUtteranceRef = utterance;
+    isSpeakingState = true;
+
+    utterance.rate = speechRate;
+    utterance.pitch = speechPitch;
+    utterance.lang = detectedLang;
+
+    const targetVoice = resolveBestVoice(selectedPersona, detectedLang);
+    if (targetVoice) {
+      utterance.voice = targetVoice;
+    }
+
+    utterance.onend = finish;
+    utterance.onerror = finish;
+
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      watchdogInterval = setInterval(() => {
+        if (window.speechSynthesis.speaking) {
+          window.speechSynthesis.pause();
+          window.speechSynthesis.resume();
+        } else {
+          if (watchdogInterval) clearInterval(watchdogInterval);
+        }
+      }, 6000);
+
+      try {
+        window.speechSynthesis.resume();
+      } catch {}
+      window.speechSynthesis.speak(utterance);
+    } else {
+      finish();
     }
   };
 
-  utterance.onend = finish;
-  utterance.onerror = finish;
+  // Google Journey Neural Studio Synthesis
+  if (selectedPersona.startsWith('google_journey') && typeof window !== 'undefined' && typeof fetch !== 'undefined') {
+    let journeyVoice = 'en-US-Journey-F';
+    if (selectedPersona === 'google_journey_british') journeyVoice = 'en-GB-Journey-F';
+    if (selectedPersona === 'google_journey_male') journeyVoice = 'en-US-Journey-D';
 
-  // Chromium TTS Keepalive Watchdog (prevents Chrome speech queue freeze on long utterances)
-  watchdogInterval = setInterval(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window && window.speechSynthesis.speaking) {
-      window.speechSynthesis.pause();
-      window.speechSynthesis.resume();
-    } else {
-      if (watchdogInterval) clearInterval(watchdogInterval);
-    }
-  }, 6000);
+    fetch('/api/tts/journey', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: cleanText, voiceName: journeyVoice, speakingRate: speechRate })
+    })
+      .then(res => res.json())
+      .then((data: any) => {
+        if (data.success && data.audioBase64) {
+          isSpeakingState = true;
+          const audio = new Audio(`data:audio/mp3;base64,${data.audioBase64}`);
+          activeAudioElement = audio;
+          audio.onended = finish;
+          audio.onerror = finish;
+          audio.play().catch(() => {
+            fallbackBrowserSynthesis();
+          });
+          return;
+        }
+        fallbackBrowserSynthesis();
+      })
+      .catch(() => {
+        fallbackBrowserSynthesis();
+      });
+    return;
+  }
 
-  // Fallback safety timeout in case browser TTS hangs
-  const approxDurationMs = (cleanText.split(' ').length / (speechRate * 2.5)) * 1000 + 2000;
-  setTimeout(() => finish(), Math.max(4000, approxDurationMs));
-
-  // Resume synthesis queue and speak
-  try {
-    window.speechSynthesis.resume();
-  } catch {}
-  window.speechSynthesis.speak(utterance);
+  fallbackBrowserSynthesis();
 }
 
 export function stopSpeaking(): void {
   isSpeakingState = false;
   activeUtteranceRef = null;
+  if (activeAudioElement) {
+    try {
+      activeAudioElement.pause();
+      activeAudioElement.currentTime = 0;
+    } catch {}
+    activeAudioElement = null;
+  }
   if (watchdogInterval) {
     clearInterval(watchdogInterval);
     watchdogInterval = null;

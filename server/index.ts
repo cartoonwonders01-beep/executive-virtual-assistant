@@ -14,6 +14,7 @@ import { InboxEmail, ChatMessage, CallLog } from '../src/types';
 import { skillRegistry } from './skillRegistry';
 import { dialogueEngine } from './dialogueEngine';
 import { bigQueryService } from './bigqueryService';
+import { googleTTS } from './googleTTS';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -567,6 +568,27 @@ app.post('/api/bigquery/vector-search', async (req, res) => {
   const { queryVector, topK } = req.body;
   const rows = await bigQueryService.searchSemanticVectors(queryVector || [], topK || 3);
   res.json({ success: true, count: rows.length, rows });
+});
+
+// =========================================================================
+// GOOGLE JOURNEY STUDIO TTS ENDPOINT
+// =========================================================================
+app.post('/api/tts/journey', async (req, res) => {
+  const { text, voiceName, speakingRate } = req.body;
+  if (!text) {
+    return res.status(400).json({ error: 'Text is required for TTS synthesis' });
+  }
+
+  const audioRes = await googleTTS.synthesizeSpeech(text, voiceName || 'en-US-Journey-F', speakingRate || 1.05);
+  if (!audioRes) {
+    return res.status(500).json({ error: 'Failed to synthesize speech via Google Journey TTS' });
+  }
+
+  res.json({
+    success: true,
+    audioBase64: audioRes.audioBase64,
+    mimeType: audioRes.mimeType
+  });
 });
 
 // Interactive Multi-Turn Dialogue Turn Endpoint

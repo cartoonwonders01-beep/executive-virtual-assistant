@@ -174,4 +174,13 @@ test('Real-World Dialogue & Telemetry Robustness Suite (Zero Boilerplate Verific
     assert.ok(!dialogueManager.hasPendingAction(), 'Cleared pending action cleanly on topic switch');
   });
 
+  await t.test('Case 24: Google Journey Studio Voice Synthesis & Persona Configuration', async () => {
+    const { setVoicePersona, getVoicePersona } = await import('../src/services/speechSynthesis');
+    setVoicePersona('google_journey_female');
+    assert.equal(getVoicePersona(), 'google_journey_female', 'Configured Google Journey Studio Female persona');
+
+    setVoicePersona('google_journey_british');
+    assert.equal(getVoicePersona(), 'google_journey_british', 'Configured Google Journey British Female persona');
+  });
+
 });

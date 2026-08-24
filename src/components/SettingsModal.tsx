@@ -289,6 +289,9 @@ export const SettingsModal: React.FC = () => {
   ];
 
   const voicePersonas = [
+    { id: 'google_journey_female' as VoicePersona, title: 'Google Journey Studio Female ⭐', desc: 'en-US-Journey-F (Conversational Podcast Quality)' },
+    { id: 'google_journey_british' as VoicePersona, title: 'Google Journey British Female ⭐', desc: 'en-GB-Journey-F (Executive British Natural)' },
+    { id: 'google_journey_male' as VoicePersona, title: 'Google Journey Studio Male ⭐', desc: 'en-US-Journey-D (Conversational Male)' },
     { id: 'studio_american_female' as VoicePersona, title: 'Studio American Female', desc: 'Aria/Jenny (Natural & Studio-Grade)' },
     { id: 'executive_british_male' as VoicePersona, title: 'Executive British Male', desc: 'Daniel/Ryan (Refined & Authoritative)' },
     { id: 'crisp_american_male' as VoicePersona, title: 'Crisp American Male', desc: 'Guy/Christopher (Dynamic & Clear)' },

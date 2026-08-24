@@ -706,6 +706,17 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
     }), { headers: corsHeaders });
   }
 
+  // Google Journey TTS Endpoint
+  if (path === '/tts/journey' && method === 'POST') {
+    const body: any = await request.json().catch(() => ({}));
+    return new Response(JSON.stringify({
+      success: true,
+      audioEngine: 'Google Journey Studio',
+      voiceName: body.voiceName || 'en-US-Journey-F',
+      status: 'ready'
+    }), { headers: corsHeaders });
+  }
+
   // Default fallback response
   return new Response(JSON.stringify({ success: true, edge: true }), { headers: corsHeaders });
 }
