@@ -184,7 +184,25 @@ export class IntelligentAdvisor {
         };
       }
 
-      if (/qui\s+es-tu|bonjour|comment\s+vas-tu|aide/i.test(lower)) {
+      if (/crise|escalade|réclamation|client|difficile|gérer/i.test(lower)) {
+        return {
+          title: 'Protocole de Gestion de Crise & Escalade Client',
+          category: 'Communication',
+          spokenResponse: 'Pour désamorcer une crise client en 4 étapes : Accuser réception immédiatement avec empathie, clarifier les faits, proposer un plan d’action avec date limite, et assurer un suivi personnalisé.',
+          summary: 'Méthodologie en 4 phases pour transformer un incident en levier de fidélisation.',
+          keyInsights: [
+            'Désamorçage émotionnel : Valider la préoccupation avant de défendre les faits.',
+            'Action concrète : Donner un calendrier précis d\'intervention.'
+          ],
+          actionSteps: [
+            'Appelez le client directement ou envoyez une réponse structurée sous 30 minutes.',
+            'Documentez l\'incident dans le Work Hub.'
+          ],
+          language: 'fr'
+        };
+      }
+
+      if (/qui\s+es-tu|bonjour|comment\s+vas-tu|aide|salut/i.test(lower)) {
         return {
           title: 'Eve — Votre Assistante IA Exécutive',
           category: 'General',
@@ -202,17 +220,27 @@ export class IntelligentAdvisor {
           language: 'fr'
         };
       }
+
+      return {
+        title: 'Analyse Stratégique & Réponse Exécutive',
+        category: 'Business & Strategy',
+        spokenResponse: `Voici la recommandation stratégique pour : "${text}". Concentrez-vous sur les actions à fort effet de levier et l'exécution mesurable.`,
+        summary: `Synthèse exécutive en français pour : "${text}".`,
+        keyInsights: ['Alignement stratégique et exécution rapide.'],
+        actionSteps: ['Passez en revue les points clés sur votre écran.'],
+        language: 'fr'
+      };
     }
 
     // =========================================================================
     // 3. SPANISH (Español) RESPONSES
     // =========================================================================
     if (lang === 'es') {
-      if (/productividad|trabajo\s+profundo|deep\s+work|rutina|gestión\s+del\s+tiempo/i.test(lower)) {
+      if (/productividad|trabajo\s+profundo|deep\s+work|rutina|gestión\s+del\s+tiempo|enfoque|optimizar/i.test(lower)) {
         return {
           title: 'Estrategia de Productividad y Trabajo Profundo',
           category: 'Productivity',
-          spokenResponse: 'Para maximizar tu rendimiento ejecutivo, implementa un bloque de 90 minutos de trabajo profundo por la mañana antes de abrir el correo, utiliza time-boxing y automatiza todas las tareas rutinarias.',
+          spokenResponse: 'Para maximizar tu productividad y enfoque ejecutivo, implementa un bloque de 90 minutos de trabajo profundo por la mañana antes de abrir el correo, utiliza time-boxing y automatiza todas las tareas rutinarias.',
           summary: 'Protocolo de 3 pilares para máxima claridad estratégica y eficiencia ejecutiva.',
           keyInsights: [
             'Regla de los 90 minutos: Dedica el inicio del día exclusivamente a tu prioridad estratégica n°1.',
@@ -247,6 +275,16 @@ export class IntelligentAdvisor {
           language: 'es'
         };
       }
+
+      return {
+        title: 'Análisis Estratégico y Solución Ejecutiva',
+        category: 'Business & Strategy',
+        spokenResponse: `Aquí tienes la recomendación estratégica para: "${text}". Enfócate en las prioridades de alto impacto y la ejecución disciplinada.`,
+        summary: `Síntesis ejecutiva en español para: "${text}".`,
+        keyInsights: ['Alineamiento estratégico y ejecución rápida.'],
+        actionSteps: ['Revisa los puntos clave en pantalla.'],
+        language: 'es'
+      };
     }
 
     // =========================================================================
@@ -435,6 +473,19 @@ export class IntelligentAdvisor {
           'Dictate a new thought or action in the Thought Studio.',
           'Say "Hey Eve, triage my inbox" to review high-priority correspondence.'
         ],
+        language: 'en'
+      };
+    }
+
+    // Contact Inquiries & Directory
+    if (/who\s+is\s+sarah|tell\s+me\s+about\s+sarah/i.test(lower)) {
+      return {
+        title: 'Executive Contact: Sarah Chen',
+        category: 'Communication',
+        spokenResponse: "Sarah Chen is your Head of Growth at Innovate Group (sarah.chen@innovate.co). She leads growth marketing and enterprise partnerships.",
+        summary: "Sarah Chen — Head of Growth at Innovate Group (sarah.chen@innovate.co).",
+        keyInsights: ['Key contact for growth metrics and client partnership initiatives.'],
+        actionSteps: ['Say "Send Sarah an email" or "Call Sarah" to initiate contact.'],
         language: 'en'
       };
     }

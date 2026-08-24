@@ -875,25 +875,11 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       }
 
-      // G. 2. Try Backend Edge API (/api/voice/process-text)
-      if (!actionCard) {
-        try {
-          const res = await api.processVoiceText(text, 'browser_mic');
-          if (res?.actionCard) {
-            actionCard = res.actionCard;
-            createdTasks = res.createdTasks || [];
-            if (res.kpi) setKpi(res.kpi);
-          }
-        } catch (apiErr) {
-          console.warn('Edge API fetch skipped, activating client-side intelligent intent resolver:', apiErr);
-        }
-      }
-
-      // H. 3. Infallible Client-Side Instant Intent Engine (Q&A Answers, Memory, Google Assistant features, Wife Emails, Calendar, Calling)
+      // G. 2. Instant Infallible Client-Side Intelligent Reasoning Engine (<10ms Latency)
       if (!actionCard) {
         const isExplicitTaskCommand = /^(add\s+task|create\s+task|log\s+task|put\s+on\s+my\s+board|new\s+task|automate\s+task)\b/i.test(textLower);
 
-        // Intelligent Strategic Q&A & Advice Engine (Answers any question naturally like a human peer)
+        // Instant Strategic Q&A, Small Talk & Knowledge Engine
         if (!isExplicitTaskCommand && intelligentAdvisor.isQuestionOrInquiry(text)) {
           const solution = intelligentAdvisor.solve(text);
           const currentStyle = personaStyle || getStoredPersonaStyle();

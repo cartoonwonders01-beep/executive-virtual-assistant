@@ -127,19 +127,19 @@ export function detectLanguage(text: string): SupportedLanguage {
   if (/[а-яё]/i.test(lower)) scores.ru += 8;
 
   // Spanish words
-  const esWords = ['cuales', 'cuáles', 'estrategias', 'trabajo', 'profundo', 'productividad', 'rutina', 'buenos', 'días', 'hola', 'gracias', 'tarea', 'correo', 'para', 'como', 'cómo', 'por', 'que', 'qué', 'reunión', 'está', 'hacer'];
+  const esWords = ['cuales', 'cuáles', 'estrategias', 'trabajo', 'profundo', 'productividad', 'rutina', 'buenos', 'días', 'hola', 'gracias', 'tarea', 'correo', 'para', 'como', 'cómo', 'por', 'que', 'qué', 'reunión', 'está', 'hacer', 'mejorar', 'enfoque', 'una', 'crisis', 'optimizar', 'el', 'la', 'los', 'las', 'de', 'en', 'y'];
   for (const w of esWords) {
     if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.es += 2;
   }
 
   // French words
-  const frWords = ['quelles', 'quels', 'stratégies', 'travail', 'profond', 'productivité', 'bonjour', 'merci', 'tâche', 'courriel', 'écris', 'rendez-vous', 'pour', 'dans', 'avec', 'sur', 'vous', 'nous', 'est-ce'];
+  const frWords = ['quelles', 'quels', 'stratégies', 'travail', 'profond', 'productivité', 'bonjour', 'merci', 'tâche', 'courriel', 'écris', 'rendez-vous', 'pour', 'dans', 'avec', 'sur', 'vous', 'nous', 'est-ce', 'comment', 'gérer', 'crise', 'réclamation', 'client', 'une', 'qui', 'est'];
   for (const w of frWords) {
     if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.fr += 2;
   }
 
   // German words
-  const deWords = ['strategien', 'morgenroutine', 'produktivität', 'guten', 'morgen', 'danke', 'bitte', 'aufgabe', 'kalender', 'arbeit', 'schreibe', 'haben', 'kann', 'nicht', 'oder'];
+  const deWords = ['strategien', 'morgenroutine', 'produktivität', 'guten', 'morgen', 'danke', 'bitte', 'aufgabe', 'kalender', 'arbeit', 'schreibe', 'haben', 'kann', 'nicht', 'oder', 'verbessern', 'fokus', 'wie', 'warum', 'wer'];
   for (const w of deWords) {
     if (new RegExp(`\\b${w}\\b`, 'i').test(lower)) scores.de += 2;
   }

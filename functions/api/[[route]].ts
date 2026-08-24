@@ -178,21 +178,24 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
       const nowStr = new Date().toISOString();
 
       let intent = 'knowledge_qa';
-      let title = `Analysis: ${text}`;
-      let spokenResponse = `I've analyzed your voice input: "${text}".`;
+      let title = `Conversation with Eve`;
+      let spokenResponse = `I'm here with you. What would you like to explore or accomplish today?`;
       let emailData: any = undefined;
       let calendarData: any = undefined;
 
-      if (/how\s+are\s+you|how\s+is\s+it\s+going/i.test(textLower)) {
+      if (/joke/i.test(textLower)) {
+        title = `A Quick Joke`;
+        spokenResponse = `Why do programmers prefer dark mode? Because light attracts bugs!`;
+      } else if (/how\s+are\s+you|how\s+is\s+it\s+going|how's\s+it\s+going/i.test(textLower)) {
         title = `Conversational Check-in`;
-        spokenResponse = `I'm doing fantastic, Andrew! My neural engines are primed, your calendar is synchronized, and I'm ready to help you tackle your highest-leverage priorities today. How are you feeling?`;
+        spokenResponse = `I'm doing wonderfully! Ready to help you tackle your highest-leverage goals. How are you feeling today?`;
       } else if (/who\s+are\s+you|what\s+can\s+you\s+do/i.test(textLower)) {
-        title = `Eve — Executive Assistant`;
-        spokenResponse = `I am Eve, your Executive AI Assistant. I manage your emails, calendar, Monday.com work hub, and voice automations, and provide high-level strategic reasoning and answers to any question you have. What would you like to accomplish?`;
-      } else if (/wife|love/i.test(textLower)) {
+        title = `Eve — Executive AI Partner`;
+        spokenResponse = `I'm Eve, your executive assistant and strategic partner. I help manage your schedule, inbox, and priorities, brainstorm ideas, and automate your workflows.`;
+      } else if (/wife|love|emily/i.test(textLower)) {
         intent = 'email_draft';
-        title = `Sent Email to Emily Baxter (Wife)`;
-        spokenResponse = `I've sent an email to Emily saying you love her ❤️`;
+        title = `Sent Email to Emily Baxter`;
+        spokenResponse = `I've drafted a warm note to Emily saying you're thinking of her ❤️`;
         emailData = {
           id: 'em-' + Date.now().toString(36),
           toName: 'Emily Baxter (Wife)',
@@ -216,6 +219,9 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
           attendees: [{ name: 'David Miller', email: 'david.m@cloudscale.io' }],
           status: 'confirmed'
         };
+      } else if (text && text.trim().length > 3) {
+        title = text.length > 40 ? text.substring(0, 37) + '...' : text;
+        spokenResponse = `I understand you're asking about "${text}". Let me assist you with that directly.`;
       }
 
       const actionCard = {
