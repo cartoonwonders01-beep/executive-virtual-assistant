@@ -1,17 +1,18 @@
 -- ==============================================================================
--- Google BigQuery Schema: Executive AI Assistant Data Warehouse
+-- Google BigQuery Schema: Executive AI Assistant Data Warehouse & Vector Search
+-- Project: homeassistant-506520
 -- Dataset: executive_assistant_hub
 -- ==============================================================================
 
--- 1. Create Dataset
-CREATE SCHEMA IF NOT EXISTS `executive_assistant_hub`
+-- 1. Create Dataset (EU Region for European Compliance)
+CREATE SCHEMA IF NOT EXISTS `homeassistant-506520.executive_assistant_hub`
 OPTIONS (
   location = 'EU',
-  description = 'Data Warehouse for Executive AI Personal Assistant & Monday Work Hub'
+  description = 'Data Warehouse & Vector RAG Memory for Executive AI Assistant'
 );
 
 -- 2. Tasks Ledger Table
-CREATE TABLE IF NOT EXISTS `executive_assistant_hub.tasks_ledger` (
+CREATE TABLE IF NOT EXISTS `homeassistant-506520.executive_assistant_hub.tasks_ledger` (
   task_id STRING NOT NULL,
   title STRING NOT NULL,
   description STRING,
@@ -35,21 +36,51 @@ CREATE TABLE IF NOT EXISTS `executive_assistant_hub.tasks_ledger` (
 PARTITION BY start_date
 CLUSTER BY category, status, feasibility;
 
--- 3. Voice Memos Ledger Table
-CREATE TABLE IF NOT EXISTS `executive_assistant_hub.voice_memos` (
+-- 3. Voice Memos & Semantic Vector RAG Table (768-dim Google text-embedding-004)
+CREATE TABLE IF NOT EXISTS `homeassistant-506520.executive_assistant_hub.voice_memos_vectors` (
   memo_id STRING NOT NULL,
+  title STRING,
   transcript STRING NOT NULL,
+  summary STRING,
+  category STRING NOT NULL,
+  source STRING NOT NULL, -- browser_mic, mobile_pwa, apple_watch
   duration_seconds INT64 DEFAULT 15,
-  source STRING NOT NULL, -- mobile_pwa, browser_mic, ios_shortcut, apple_watch
-  status STRING DEFAULT 'analyzed',
   extracted_tasks_count INT64 DEFAULT 0,
-  audio_url STRING,
+  embedding ARRAY<FLOAT64>, -- 768-dimensional dense vector from text-embedding-004
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
 )
-PARTITION BY DATE(created_at);
+PARTITION BY DATE(created_at)
+CLUSTER BY category;
 
--- 4. Calendar Appointments Table
-CREATE TABLE IF NOT EXISTS `executive_assistant_hub.calendar_appointments` (
+-- 4. Baxter Family & VIP Contacts Roster Table
+CREATE TABLE IF NOT EXISTS `homeassistant-506520.executive_assistant_hub.contacts_roster` (
+  contact_id STRING NOT NULL,
+  name STRING NOT NULL,
+  role STRING,
+  email STRING NOT NULL,
+  relationship STRING, -- wife, daughter, son, partner, team_lead
+  phone STRING,
+  is_vip BOOL DEFAULT TRUE,
+  notes STRING,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
+);
+
+-- Seed Baxter Family Roster
+MERGE INTO `homeassistant-506520.executive_assistant_hub.contacts_roster` T
+USING (
+  SELECT 'c-celine' AS contact_id, 'Celine Loeuille' AS name, 'Operations Partner & Wife' AS role, 'celine.loeuille@gmail.com' AS email, 'wife' AS relationship, '+33600000001' AS phone, TRUE AS is_vip, 'Wife & core partner' AS notes UNION ALL
+  SELECT 'c-eleonore', 'Eleonore Baxter', 'Daughter', 'eleonore.a.baxter@gmail.com', 'daughter', '+33600000002', TRUE, 'Daughter (Eleanor / Ellie)' UNION ALL
+  SELECT 'c-elizabeth', 'Elizabeth Baxter', 'Daughter', 'elizabth.js.baxter@gmail.com', 'daughter', '+33600000003', TRUE, 'Daughter (Eliza / Liz)' UNION ALL
+  SELECT 'c-alexander', 'Alexander Baxter', 'Son', 'alexander.j.baxter@gmail.com', 'son', '+33600000004', TRUE, 'Son (Alex)' UNION ALL
+  SELECT 'c-angelina', 'Angelina Baxter', 'Daughter', 'angelina.c.baxter@gmail.com', 'daughter', '+33600000005', TRUE, 'Daughter (Lina)'
+) S
+ON T.contact_id = S.contact_id
+WHEN NOT MATCHED THEN
+  INSERT (contact_id, name, role, email, relationship, phone, is_vip, notes, updated_at)
+  VALUES (S.contact_id, S.name, S.role, S.email, S.relationship, S.phone, S.is_vip, S.notes, CURRENT_TIMESTAMP());
+
+-- 5. Calendar Appointments Table
+CREATE TABLE IF NOT EXISTS `homeassistant-506520.executive_assistant_hub.calendar_appointments` (
   appointment_id STRING NOT NULL,
   title STRING NOT NULL,
   start_time TIMESTAMP NOT NULL,
@@ -61,8 +92,8 @@ CREATE TABLE IF NOT EXISTS `executive_assistant_hub.calendar_appointments` (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
 );
 
--- 5. KPI Snapshot Table (For Historical Trend Analysis in Looker Studio)
-CREATE TABLE IF NOT EXISTS `executive_assistant_hub.kpi_snapshots` (
+-- 6. KPI Snapshot Table (For Historical Trend Analysis in Looker Studio)
+CREATE TABLE IF NOT EXISTS `homeassistant-506520.executive_assistant_hub.kpi_snapshots` (
   snapshot_date DATE NOT NULL,
   total_tasks INT64,
   total_hours_won_back FLOAT64,
@@ -79,8 +110,8 @@ CREATE TABLE IF NOT EXISTS `executive_assistant_hub.kpi_snapshots` (
 )
 PARTITION BY snapshot_date;
 
--- 6. Analytical View for Google Looker Studio
-CREATE OR REPLACE VIEW `executive_assistant_hub.v_looker_studio_summary` AS
+-- 7. Analytical View for Google Looker Studio Dashboard
+CREATE OR REPLACE VIEW `homeassistant-506520.executive_assistant_hub.v_looker_studio_summary` AS
 SELECT
   category,
   feasibility,
@@ -93,6 +124,11 @@ SELECT
   SUM(financial_value_won) AS total_financial_value_usd,
   AVG(progress_percent) AS avg_progress_percent
 FROM
-  `executive_assistant_hub.tasks_ledger`
+  `homeassistant-506520.executive_assistant_hub.tasks_ledger`
 GROUP BY
   category, feasibility, user_priority, ai_priority, status;
+
+-- 8. Vector Search Inverted File (IVF) Index on Voice Memos
+CREATE VECTOR INDEX IF NOT EXISTS `memo_vector_idx`
+ON `homeassistant-506520.executive_assistant_hub.voice_memos_vectors`(embedding)
+OPTIONS(distance_type = 'COSINE', index_type = 'IVF');

@@ -145,4 +145,14 @@ test('Real-World Dialogue & Telemetry Robustness Suite (Zero Boilerplate Verific
     assert.ok(isEcho, 'Correctly identified reverberated assistant speech as acoustic echo');
   });
 
+  await t.test('Case 22: Google Native Vector Embeddings & Semantic Search (text-embedding-004)', async () => {
+    const { googleEmbeddings } = await import('../src/services/googleEmbeddingsService');
+    const vec = await googleEmbeddings.generateEmbedding('Andrew Baxter executive virtual assistant');
+    assert.equal(vec.length, 768, 'Generated 768-dimensional dense vector');
+
+    const searchResults = await googleEmbeddings.searchSemanticContext('Who is Celine?', 2);
+    assert.ok(searchResults.length > 0, 'Returned semantic vector search results');
+    assert.ok(searchResults[0].record.text.includes('Celine Loeuille'), 'Top vector match identifies Celine Loeuille');
+  });
+
 });

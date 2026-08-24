@@ -18,6 +18,10 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+service_account.json
+server/service_account.json
+*service_account*.json
+*.key.json
 
 # OS Artifacts
 .DS_Store

@@ -13,6 +13,7 @@ import { getSwarmStatus, triggerSwarmCycle } from './agentSwarm';
 import { InboxEmail, ChatMessage, CallLog } from '../src/types';
 import { skillRegistry } from './skillRegistry';
 import { dialogueEngine } from './dialogueEngine';
+import { bigQueryService } from './bigqueryService';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -548,10 +549,24 @@ app.post('/api/skills/:id/execute', async (req, res) => {
   skillRegistry.incrementExecutionCount(skill.id);
   res.json({
     success: true,
-    skill,
-    message: `Executed ${skill.name} successfully.`,
+    message: `Skill "${skill.name}" executed successfully.`,
+    executionCount: skill.executionCount + 1,
     executedAt: new Date().toISOString()
   });
+});
+
+// =========================================================================
+// GOOGLE BIGQUERY VECTOR ENGINE ENDPOINTS
+// =========================================================================
+app.post('/api/bigquery/init', async (req, res) => {
+  const result = await bigQueryService.initializeDatabase();
+  res.json(result);
+});
+
+app.post('/api/bigquery/vector-search', async (req, res) => {
+  const { queryVector, topK } = req.body;
+  const rows = await bigQueryService.searchSemanticVectors(queryVector || [], topK || 3);
+  res.json({ success: true, count: rows.length, rows });
 });
 
 // Interactive Multi-Turn Dialogue Turn Endpoint
