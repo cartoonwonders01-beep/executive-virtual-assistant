@@ -398,3 +398,32 @@ export type AppView =
   | 'swarm'
   | 'wiki'
   | 'skills';
+
+// =========================================================================
+// CUSTOM LLM PROMPT STUDIO & MULTI-USER PERSONA PROFILES
+// =========================================================================
+
+export interface UserProfileContext {
+  userName: string;
+  userRole: string;
+  organization: string;
+  strategicGoals: string[];
+  communicationRules: string[];
+  personalNotes?: string;
+}
+
+export interface CustomLLMProfile {
+  id: string;
+  name: string;
+  description: string;
+  isDefault?: boolean;
+  systemPrompt: string;
+  userContext: UserProfileContext;
+  model: string;
+  temperature: number;
+  tone: 'executive_peer' | 'direct_operator' | 'thought_partner' | 'technical_architect' | 'socratic_mentor' | 'custom';
+  responseVerbosity: 'ultra_concise' | 'balanced' | 'comprehensive';
+  customInstructions: string;
+  createdAt: string;
+  updatedAt: string;
+}

@@ -111,6 +111,8 @@ interface AssistantContextType {
   setIsSettingsOpen: (open: boolean) => void;
   isActivityLogOpen: boolean;
   setIsActivityLogOpen: (open: boolean) => void;
+  isPromptStudioOpen: boolean;
+  setIsPromptStudioOpen: (open: boolean) => void;
 
   // Cloud API Keys & Webhooks
   groqApiKey: string;
@@ -303,6 +305,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isActivityLogOpen, setIsActivityLogOpen] = useState<boolean>(false);
+  const [isPromptStudioOpen, setIsPromptStudioOpen] = useState<boolean>(false);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -1600,6 +1603,8 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setIsSettingsOpen,
         isActivityLogOpen,
         setIsActivityLogOpen,
+        isPromptStudioOpen,
+        setIsPromptStudioOpen,
         groqApiKey,
         setGroqApiKey,
         geminiApiKey,

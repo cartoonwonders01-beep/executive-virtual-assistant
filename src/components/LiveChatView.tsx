@@ -50,7 +50,9 @@ export const LiveChatView: React.FC = () => {
     activeView,
     setActiveView,
     continuousTimeoutSeconds,
-    isContinuousSessionActive
+    isContinuousSessionActive,
+    isPromptStudioOpen,
+    setIsPromptStudioOpen
   } = useAssistant();
 
   const [inputMessage, setInputMessage] = useState('');
@@ -215,6 +217,17 @@ export const LiveChatView: React.FC = () => {
             <span className="hidden sm:inline">{quietMode ? 'Quiet Mode' : 'Spoken'}</span>
           </button>
 
+          {/* LLM Prompt Studio Button */}
+          <button
+            type="button"
+            onClick={() => setIsPromptStudioOpen(true)}
+            className="px-2.5 py-1.5 rounded-xl text-xs bg-gradient-to-r from-teal-950 to-purple-950 hover:from-teal-900 hover:to-purple-900 border border-teal-500/40 text-teal-200 flex items-center space-x-1.5 transition cursor-pointer shadow-sm hover:shadow-teal-500/20 active:scale-95"
+            title="Open LLM Prompt Studio & Persona Customizer"
+          >
+            <Brain className="w-3.5 h-3.5 text-teal-400 animate-pulse" />
+            <span className="hidden sm:inline font-semibold">Prompt Studio</span>
+          </button>
+
           {/* Activity Logs */}
           <button
             type="button"
@@ -270,6 +283,19 @@ export const LiveChatView: React.FC = () => {
                   Additional Views
                 </div>
                 <div className="max-h-80 overflow-y-auto py-1 space-y-0.5 custom-scrollbar">
+                  <button
+                    onClick={() => {
+                      setIsPromptStudioOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full px-3 py-2 rounded-xl text-left bg-gradient-to-r from-teal-950/40 to-purple-950/40 hover:from-teal-900/60 hover:to-purple-900/60 border border-teal-500/30 text-teal-300 transition cursor-pointer mb-1"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Brain className="w-4 h-4 text-teal-400" />
+                      <span className="text-xs font-bold">🧠 LLM Prompt Studio</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Customize system prompt & user profile</p>
+                  </button>
                   {secondaryViews.map((item) => (
                     <button
                       key={item.id}

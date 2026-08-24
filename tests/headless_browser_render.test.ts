@@ -66,9 +66,9 @@ export async function runHeadlessBrowserRenderAudit() {
 
     const hasControls = await page.evaluate(() => {
       const text = document.body.innerText;
-      return text.includes('Eve') && (text.includes('Quiet') || text.includes('Logs') || text.includes('Config'));
+      return text.includes('Eve') && (text.includes('Quiet') || text.includes('Logs') || text.includes('Config') || text.includes('Prompt Studio'));
     });
-    assert(hasControls, 'H2.3: Header controls (Quiet Mode / Logs / Config) are rendered');
+    assert(hasControls, 'H2.3: Header controls (Quiet Mode / Prompt Studio / Logs / Config) are rendered');
 
     const quickPromptsRendered = await page.evaluate(() => {
       const text = document.body.innerText;

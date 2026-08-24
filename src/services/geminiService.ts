@@ -1,5 +1,5 @@
-import { TaskCategory, FeasibilityType, UserPriority, AIPriority, AutomationBlueprint } from '../types';
-import { getStoredPersonaPrompt } from '../config';
+import { TaskCategory, FeasibilityType, UserPriority, AIPriority, AutomationBlueprint, CustomLLMProfile } from '../types';
+import { buildUnifiedSystemPrompt, getActiveLLMProfile } from '../config';
 
 export interface GeminiAnalysisResult {
   actionCard: {
@@ -57,24 +57,24 @@ export interface GeminiAnalysisResult {
 export async function processSpeechWithGemini(
   transcript: string,
   apiKey: string,
-  model: 'gemini-1.5-pro' | 'gemini-1.5-flash' = 'gemini-1.5-flash'
+  model: 'gemini-1.5-pro' | 'gemini-1.5-flash' = 'gemini-1.5-flash',
+  customProfile?: CustomLLMProfile
 ): Promise<GeminiAnalysisResult | null> {
   if (!apiKey || !transcript.trim()) return null;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const activeProfile = customProfile || getActiveLLMProfile();
+  const selectedModel = (activeProfile.model.includes('gemini-1.5-pro') ? 'gemini-1.5-pro' : model);
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
 
   const todayStr = new Date().toISOString().split('T')[0];
   const nowISO = new Date().toISOString();
 
-  const personaPrompt = getStoredPersonaPrompt();
+  const unifiedPrompt = buildUnifiedSystemPrompt(activeProfile);
 
-  const systemPrompt = `${personaPrompt}
-
-ROLE & CAPABILITIES:
-You are pairing with Andrew, an executive leader. Your job is to converse with Andrew with exceptional intelligence and depth, answer questions, explore strategic ideas, compose emails, coordinate calendar events, and manage task flows.
+  const systemPrompt = `${unifiedPrompt}
 
 MULTILINGUAL EUROPEAN LANGUAGE SUPPORT:
-- Detect the language of Andrew's speech or message (English, German/Deutsch, French/Français, Spanish/Español, Italian/Italiano, Dutch/Nederlands, Polish/Polski, Portuguese/Português, Russian, etc.).
+- Detect the language of ${activeProfile.userContext.userName || 'Andrew'}'s speech or message (English, German/Deutsch, French/Français, Spanish/Español, Italian/Italiano, Dutch/Nederlands, Polish/Polski, Portuguese/Português, Russian, etc.).
 - Always formulate both your "spokenResponse" and "description" in that exact language with natural native phrasing and high executive IQ.
 - Ensure "spokenResponse" is concise (1-3 sentences) and perfect for text-to-speech audio playback.
 
@@ -83,10 +83,10 @@ CURRENT DATE & TIME: ${nowISO} (Today: ${todayStr})
 GUIDELINES FOR INTENT RESOLUTION:
 1. If the user asks a question, seeks advice, asks for an explanation, discusses a decision, or converses:
    - Set "intent": "knowledge_qa"
-   - In "spokenResponse": Provide an intelligent, conversational, and direct spoken answer in the user's language.
-   - In "description": Provide a thoughtful, articulate response matching the configured persona prompt without rigid boilerplate.
+   - In "spokenResponse": Provide an intelligent, conversational, and direct spoken answer in the user's language matching the configured tone.
+   - In "description": Provide a thoughtful, articulate response matching the configured persona and user profile without rigid boilerplate.
    - Set "tasks": [] (Do not force task creation when answering questions).
-2. If the user dictates an email (e.g. to his wife Emily, colleagues Sarah/David): Set "intent": "email_draft".
+2. If the user dictates an email (e.g. to his wife ${activeProfile.userContext.personalNotes?.includes('Emily') ? 'Emily' : 'partner'}, colleagues Sarah/David): Set "intent": "email_draft".
 3. If the user schedules a meeting: Set "intent": "calendar_booking".
 4. If the user explicitly asks to create/log a task: Set "intent": "task_create".
 
@@ -158,7 +158,7 @@ Analyze the user's transcript and return a STRICT JSON object matching this sche
         ],
         generationConfig: {
           responseMimeType: 'application/json',
-          temperature: 0.2
+          temperature: activeProfile.temperature ?? 0.7
         }
       })
     });

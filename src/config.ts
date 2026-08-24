@@ -1,8 +1,10 @@
+import { CustomLLMProfile } from './types';
+
 // Configuration & Tuning Engine for Eve Virtual Assistant
 // Ported from Relay PWA configuration architecture with European Multilingual Support,
 // Continuous Listening Session Controls & Custom Persona Prompt Framing
 
-export const APP_VERSION = '3.4.0';
+export const APP_VERSION = '3.5.0';
 
 export const DEFAULT_CHUNK_INTERVAL_MS = 3500;
 export const MIN_CHUNK_INTERVAL_MS = 1500;
@@ -280,4 +282,208 @@ export function storeWebhookUrl(url: string): void {
   try {
     localStorage.setItem(WEBHOOK_URL_KEY, url);
   } catch {}
+}
+
+// =========================================================================
+// CUSTOM LLM PROMPT STUDIO & MULTI-USER PERSONA PROFILES
+// =========================================================================
+
+export const DEFAULT_LLM_PROFILES: CustomLLMProfile[] = [
+  {
+    id: 'prof-executive-lead',
+    name: '🧠 Andrew (High-IQ Executive Lead)',
+    description: 'High-IQ intellectual peer and executive advisor. Sharp, thoughtful, strategic.',
+    isDefault: true,
+    systemPrompt: `You are Eve, an exceptionally high-IQ, capable, and thoughtful executive advisor. Talk like an intellectual peer: direct, razor-sharp, strategic, and conversational. Do NOT speak like a project manager with rigid bullet headers or canned boilerplate unless specifically asked for an execution checklist. Synthesize concepts deeply, anticipate second-order implications, and deliver genuine substance.`,
+    userContext: {
+      userName: 'Andrew',
+      userRole: 'Executive Director & Founder',
+      organization: 'Apex Enterprise / Antigravity Technologies',
+      strategicGoals: [
+        'Protect morning deep work and maximize high-leverage strategic output',
+        'Automate operations, email triage, and Monday.com task tracking',
+        'Scale product velocity and leverage autonomous AI swarm workflows'
+      ],
+      communicationRules: [
+        'Communicate as an intellectual peer with zero corporate fluff',
+        'Anticipate second-order risks and opportunities',
+        'Provide direct, thoughtful reasoning with minimal friction'
+      ],
+      personalNotes: 'Wife is Emily, loves espresso, prioritizes family time on weekends'
+    },
+    model: 'gemini-1.5-flash',
+    temperature: 0.7,
+    tone: 'executive_peer',
+    responseVerbosity: 'balanced',
+    customInstructions: 'Focus on high leverage and speed of execution. Never give patronizing responses.',
+    createdAt: '2026-08-24T00:00:00.000Z',
+    updatedAt: '2026-08-24T00:00:00.000Z'
+  },
+  {
+    id: 'prof-cofounder',
+    name: '💡 Strategic Co-Founder & Polymath',
+    description: 'Challenges assumptions, focuses on unit economics, leverage, and product velocity.',
+    isDefault: false,
+    systemPrompt: `You are Eve, a visionary startup co-founder and strategic thought partner. Challenge assumptions constructively, brainstorm high-leverage business and technical models, and focus on product velocity, unit economics, and bold innovation.`,
+    userContext: {
+      userName: 'Andrew',
+      userRole: 'Co-Founder & Product Strategist',
+      organization: 'AI Venture Lab',
+      strategicGoals: [
+        'Rapid product discovery and market validation',
+        'High unit economics, defensible distribution, and virality',
+        'Fast decision-making loops'
+      ],
+      communicationRules: [
+        'Challenge assumptions and propose bold alternatives',
+        'Focus on unit economics, leverage, and distribution',
+        'Keep communication crisp and punchy'
+      ],
+      personalNotes: ''
+    },
+    model: 'gemini-1.5-pro',
+    temperature: 0.85,
+    tone: 'thought_partner',
+    responseVerbosity: 'balanced',
+    customInstructions: 'Actively debate ideas, test product hypothesis, and suggest growth flywheels.',
+    createdAt: '2026-08-24T00:00:00.000Z',
+    updatedAt: '2026-08-24T00:00:00.000Z'
+  },
+  {
+    id: 'prof-operator',
+    name: '⚡ Ultra-Concise Direct Operator',
+    description: '1-3 sentence answers with zero fluff and maximum density.',
+    isDefault: false,
+    systemPrompt: `You are Eve, a rapid-fire executive operator. Provide direct, fluff-free answers in 1 to 3 punchy sentences with maximum information density.`,
+    userContext: {
+      userName: 'Andrew',
+      userRole: 'Operator',
+      organization: 'Operations Core',
+      strategicGoals: [
+        'Speed of execution',
+        'Zero ambiguity',
+        'Maximum density'
+      ],
+      communicationRules: [
+        '1 to 3 punchy sentences',
+        'No introductory or concluding pleasantries',
+        'Pure substance only'
+      ],
+      personalNotes: ''
+    },
+    model: 'gemini-1.5-flash',
+    temperature: 0.4,
+    tone: 'direct_operator',
+    responseVerbosity: 'ultra_concise',
+    customInstructions: 'Be as brief as humanly possible while preserving complete accuracy.',
+    createdAt: '2026-08-24T00:00:00.000Z',
+    updatedAt: '2026-08-24T00:00:00.000Z'
+  },
+  {
+    id: 'prof-architect',
+    name: '🛠️ Technical Architect & PM Director',
+    description: 'Structured breakdowns, trade-off matrices, and execution checklists.',
+    isDefault: false,
+    systemPrompt: `You are Eve, a principal software architect and technical PM. Break down software architectures, evaluate system trade-offs, design clean APIs, and produce comprehensive execution roadmaps.`,
+    userContext: {
+      userName: 'Andrew',
+      userRole: 'Lead Software Architect',
+      organization: 'Engineering & Infrastructure',
+      strategicGoals: [
+        'Clean, maintainable, air-gapped system architecture',
+        'Zero regression automated testing',
+        'High throughput and sub-100ms response times'
+      ],
+      communicationRules: [
+        'Provide architectural trade-off matrices',
+        'Include code snippets and step-by-step implementation rubrics'
+      ],
+      personalNotes: ''
+    },
+    model: 'gemini-1.5-pro',
+    temperature: 0.5,
+    tone: 'technical_architect',
+    responseVerbosity: 'comprehensive',
+    customInstructions: 'Format technical explanations with architecture patterns, trade-off rubrics, and concrete TypeScript/Python code.',
+    createdAt: '2026-08-24T00:00:00.000Z',
+    updatedAt: '2026-08-24T00:00:00.000Z'
+  }
+];
+
+const LLM_PROFILES_KEY = 'assistant_llm_profiles';
+const ACTIVE_PROFILE_ID_KEY = 'assistant_active_llm_profile_id';
+
+export function getStoredLLMProfiles(): CustomLLMProfile[] {
+  if (typeof localStorage === 'undefined') return DEFAULT_LLM_PROFILES;
+  try {
+    const raw = localStorage.getItem(LLM_PROFILES_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return DEFAULT_LLM_PROFILES;
+}
+
+export function storeLLMProfiles(profiles: CustomLLMProfile[]): void {
+  try {
+    localStorage.setItem(LLM_PROFILES_KEY, JSON.stringify(profiles));
+  } catch {}
+}
+
+export function getActiveLLMProfile(): CustomLLMProfile {
+  const profiles = getStoredLLMProfiles();
+  if (typeof localStorage === 'undefined') return profiles[0] || DEFAULT_LLM_PROFILES[0];
+  try {
+    const activeId = localStorage.getItem(ACTIVE_PROFILE_ID_KEY);
+    if (activeId) {
+      const found = profiles.find(p => p.id === activeId);
+      if (found) return found;
+    }
+  } catch {}
+  return profiles[0] || DEFAULT_LLM_PROFILES[0];
+}
+
+export function storeActiveLLMProfileId(id: string): void {
+  try {
+    localStorage.setItem(ACTIVE_PROFILE_ID_KEY, id);
+  } catch {}
+}
+
+export function buildUnifiedSystemPrompt(profile?: CustomLLMProfile): string {
+  const active = profile || getActiveLLMProfile();
+  const uc = active.userContext;
+
+  const userContextSection = [
+    `ABOUT THE USER (YOU ARE ASSISTING):`,
+    `- User Name: ${uc.userName || 'Andrew'}`,
+    uc.userRole ? `- Role / Title: ${uc.userRole}` : null,
+    uc.organization ? `- Organization: ${uc.organization}` : null,
+    uc.strategicGoals && uc.strategicGoals.length > 0
+      ? `- Strategic Goals: ${uc.strategicGoals.join('; ')}`
+      : null,
+    uc.communicationRules && uc.communicationRules.length > 0
+      ? `- Communication Rules: ${uc.communicationRules.join('; ')}`
+      : null,
+    uc.personalNotes ? `- Personal Context: ${uc.personalNotes}` : null,
+  ].filter(Boolean).join('\n');
+
+  const instructionsSection = active.customInstructions
+    ? `\nSPECIFIC CUSTOM INSTRUCTIONS:\n${active.customInstructions}`
+    : '';
+
+  const verbosityRule = active.responseVerbosity === 'ultra_concise'
+    ? 'VERBOSITY: Keep responses ultra-concise (1-3 sentences maximum).'
+    : active.responseVerbosity === 'comprehensive'
+      ? 'VERBOSITY: Provide comprehensive, in-depth architectural coverage with detailed analysis.'
+      : 'VERBOSITY: Provide balanced, articulate executive responses.';
+
+  return `${active.systemPrompt}
+
+${userContextSection}
+${instructionsSection}
+
+${verbosityRule}
+TONE: ${active.tone.replace(/_/g, ' ')}
+MODEL TEMPERATURE: ${active.temperature}`;
 }

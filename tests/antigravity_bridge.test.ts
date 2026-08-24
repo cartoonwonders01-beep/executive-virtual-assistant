@@ -148,7 +148,7 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     assert.equal(config.DEFAULT_AUDIO_BITRATE_KBPS, 64);
     assert.equal(config.DEFAULT_SILENCE_DURATION_MS, 1600);
     assert.ok(config.AUDIO_BITRATE_OPTIONS.length >= 3, 'Provides bitrate options');
-    assert.equal(config.APP_VERSION, '3.4.0');
+    assert.equal(config.APP_VERSION, '3.5.0');
     assert.ok(config.LANGUAGE_OPTIONS.length >= 8, 'Provides European language options');
   });
 
@@ -253,6 +253,70 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     const testCustomPrompt = 'You are Eve, speaking with executive clarity and zero corporate boilerplate.';
     storePersonaPrompt(testCustomPrompt);
     assert.equal(getStoredPersonaPrompt(), testCustomPrompt);
+  });
+
+  await t.test('Module 12: LLM Prompt Studio & Multi-User Persona Customizer Engine', async () => {
+    const { 
+      getStoredLLMProfiles, 
+      storeLLMProfiles, 
+      getActiveLLMProfile, 
+      storeActiveLLMProfileId, 
+      buildUnifiedSystemPrompt,
+      DEFAULT_LLM_PROFILES 
+    } = await import('../src/config');
+
+    // Default profiles loaded
+    const profiles = getStoredLLMProfiles();
+    assert.ok(profiles.length >= 4, 'Loaded default LLM profiles');
+    assert.ok(profiles.some(p => p.id === 'prof-executive-lead'));
+    assert.ok(profiles.some(p => p.id === 'prof-cofounder'));
+    assert.ok(profiles.some(p => p.id === 'prof-operator'));
+    assert.ok(profiles.some(p => p.id === 'prof-architect'));
+
+    // Active profile resolution
+    const active = getActiveLLMProfile();
+    assert.ok(active.id.length > 0);
+    assert.equal(active.userContext.userName, 'Andrew');
+    assert.ok(active.userContext.strategicGoals.length > 0);
+
+    // Unified prompt builder combines system prompt, user profile context, and behavioral rules
+    const unifiedPrompt = buildUnifiedSystemPrompt(active);
+    assert.ok(unifiedPrompt.includes('ABOUT THE USER (YOU ARE ASSISTING):'));
+    assert.ok(unifiedPrompt.includes('Andrew'));
+    assert.ok(unifiedPrompt.includes('Strategic Goals:'));
+    assert.ok(unifiedPrompt.includes('MODEL TEMPERATURE:'));
+
+    // Custom profile creation and switching
+    const customUser: any = {
+      id: 'prof-user-sarah',
+      name: 'Sarah (Venture Partner)',
+      description: 'VC investor and portfolio strategist',
+      systemPrompt: 'You are Eve, evaluating deal flow and portfolio unit economics.',
+      userContext: {
+        userName: 'Sarah',
+        userRole: 'General Partner',
+        organization: 'A100 Ventures',
+        strategicGoals: ['Evaluate Series A pipeline', 'Support founders'],
+        communicationRules: ['High-signal memo formatting']
+      },
+      model: 'gemini-1.5-pro',
+      temperature: 0.8,
+      tone: 'thought_partner',
+      responseVerbosity: 'balanced',
+      customInstructions: 'Prioritize ARR growth benchmarks.'
+    };
+
+    storeLLMProfiles([...profiles, customUser]);
+    storeActiveLLMProfileId('prof-user-sarah');
+
+    const sarahActive = getActiveLLMProfile();
+    assert.equal(sarahActive.id, 'prof-user-sarah');
+    assert.equal(sarahActive.userContext.userName, 'Sarah');
+
+    const sarahUnified = buildUnifiedSystemPrompt(sarahActive);
+    assert.ok(sarahUnified.includes('User Name: Sarah'));
+    assert.ok(sarahUnified.includes('General Partner'));
+    assert.ok(sarahUnified.includes('A100 Ventures'));
   });
 
 });

@@ -19,6 +19,7 @@ import { TaskDetailModal } from './components/TaskDetailModal';
 import { InteractiveTourModal } from './components/InteractiveTourModal';
 import { SettingsModal } from './components/SettingsModal';
 import { ActivityLogDrawer } from './components/ActivityLogDrawer';
+import { LLMPromptStudioModal } from './components/LLMPromptStudioModal';
 import { ArrowLeft } from 'lucide-react';
 
 const AppContent: React.FC = () => {
@@ -36,6 +37,7 @@ const AppContent: React.FC = () => {
         <TaskDetailModal />
         <InteractiveTourModal />
         <SettingsModal />
+        <LLMPromptStudioModal />
         <ActivityLogDrawer isOpen={isActivityLogOpen} onClose={() => setIsActivityLogOpen(false)} />
       </div>
     );
@@ -95,6 +97,7 @@ const AppContent: React.FC = () => {
       <TaskDetailModal />
       <InteractiveTourModal />
       <SettingsModal />
+      <LLMPromptStudioModal />
       <ActivityLogDrawer isOpen={isActivityLogOpen} onClose={() => setIsActivityLogOpen(false)} />
     </div>
   );

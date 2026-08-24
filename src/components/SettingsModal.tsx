@@ -96,7 +96,8 @@ export const SettingsModal: React.FC = () => {
     personaStyle,
     setPersonaStyle,
     personaPrompt,
-    setPersonaPrompt
+    setPersonaPrompt,
+    setIsPromptStudioOpen
   } = useAssistant();
 
   const [groqKeyInput, setGroqKeyInput] = useState(groqApiKey);
@@ -396,9 +397,22 @@ export const SettingsModal: React.FC = () => {
                 placeholder="Write detailed instructions for how Eve should frame responses and interact with you..."
                 className="w-full bg-slate-900 border border-slate-800 focus:border-teal-500 rounded-xl p-2.5 text-slate-100 placeholder-slate-600 focus:outline-none font-sans text-xs leading-relaxed custom-scrollbar"
               />
-              <p className="text-[10px] text-slate-500">
-                {customPersonaPromptInput.length} characters • Applied directly to live reasoning core.
-              </p>
+              <div className="pt-2 flex items-center justify-between">
+                <p className="text-[10px] text-slate-500">
+                  {customPersonaPromptInput.length} characters • Applied directly to live reasoning core.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSettingsOpen(false);
+                    setIsPromptStudioOpen(true);
+                  }}
+                  className="px-3 py-1 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 border border-teal-500/40 text-teal-300 text-[11px] font-semibold flex items-center gap-1 transition cursor-pointer"
+                >
+                  <Sparkles className="w-3 h-3 text-teal-400" />
+                  <span>Open Full LLM Prompt Studio ↗</span>
+                </button>
+              </div>
             </div>
           </div>
 
