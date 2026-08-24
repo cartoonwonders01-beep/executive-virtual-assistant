@@ -31,18 +31,18 @@ export function draftEmailFromSpeech(speechText: string, contactHint?: string): 
     if (textLower.includes('wife') || textLower.includes('celine')) {
       toName = wifeContact ? wifeContact.name : 'Celine Loeuille';
       toEmail = wifeContact?.email || 'celine.loeuille@gmail.com';
-    } else if (textLower.includes('elizabeth') || textLower.includes('eliza')) {
+    } else if (textLower.includes('elizabeth') || textLower.includes('eliza') || textLower.includes('elizabth')) {
       toName = 'Elizabeth Baxter';
-      toEmail = 'elizabeth.baxter@executive.co';
+      toEmail = 'elizabth.js.baxter@gmail.com';
     } else if (textLower.includes('alexander') || textLower.includes('alex')) {
       toName = 'Alexander Baxter';
-      toEmail = 'alexander.baxter@executive.co';
+      toEmail = 'alexander.j.baxter@gmail.com';
     } else if (textLower.includes('eleonore') || textLower.includes('eléonore')) {
       toName = 'Eleonore Baxter';
-      toEmail = 'eleonore.baxter@executive.co';
+      toEmail = 'eleonore.a.baxter@gmail.com';
     } else if (textLower.includes('angelina') || textLower.includes('lina')) {
       toName = 'Angelina Baxter';
-      toEmail = 'angelina.baxter@executive.co';
+      toEmail = 'angelina.c.baxter@gmail.com';
     } else if (textLower.includes('husband')) {
       toName = 'My Husband';
       toEmail = 'husband@personal.com';

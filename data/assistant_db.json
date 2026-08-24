@@ -45,15 +45,48 @@
       "notes": "Handles quarterly VAT filing and Stripe automated reconciliation."
     },
     {
-      "id": "c5",
-      "name": "Emily Baxter",
-      "role": "Wife / Personal",
-      "email": "emily.baxter@personal.com",
-      "phone": "+1 (555) 987-6543",
+      "id": "c-elizabeth",
+      "name": "Elizabeth Baxter",
+      "role": "Daughter",
+      "email": "elizabth.js.baxter@gmail.com",
+      "phone": "+33 6 22 33 44 55",
       "company": "Family",
       "isVIP": true,
       "avatarUrl": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
-      "notes": "Family calendar coordination and personal reminders."
+      "notes": "Daughter of Andrew and Celine."
+    },
+    {
+      "id": "c-alexander",
+      "name": "Alexander Baxter",
+      "role": "Son",
+      "email": "alexander.j.baxter@gmail.com",
+      "phone": "+33 6 33 44 55 66",
+      "company": "Family",
+      "isVIP": true,
+      "avatarUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      "notes": "Son of Andrew and Celine."
+    },
+    {
+      "id": "c-eleonore",
+      "name": "Eleonore Baxter",
+      "role": "Daughter",
+      "email": "eleonore.a.baxter@gmail.com",
+      "phone": "+33 6 44 55 66 77",
+      "company": "Family",
+      "isVIP": true,
+      "avatarUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "notes": "Daughter of Andrew and Celine."
+    },
+    {
+      "id": "c-angelina",
+      "name": "Angelina Baxter",
+      "role": "Daughter",
+      "email": "angelina.c.baxter@gmail.com",
+      "phone": "+33 6 55 66 77 88",
+      "company": "Family",
+      "isVIP": true,
+      "avatarUrl": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
+      "notes": "Daughter of Andrew and Celine."
     }
   ],
   "inboxEmails": [
