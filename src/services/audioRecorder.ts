@@ -265,12 +265,12 @@ export class AudioRecorderService {
           if (this.isRecordingActive) {
             startNextSegment();
           } else {
-            // Final recording cleanup & completion callback
-            this.cleanupAudioMonitoring();
+            // Final recording cleanup & hardware track release
             const liveText = this.capturedLiveTranscript;
             const finalBlob = this.masterChunks.length > 0 
               ? new Blob(this.masterChunks, { type: resolvedMimeType || 'audio/webm' }) 
               : new Blob([], { type: resolvedMimeType || 'audio/webm' });
+            this.cleanup();
             config.onRecordingComplete(finalBlob, resolvedMimeType || 'audio/webm', liveText);
           }
         };

@@ -187,4 +187,15 @@ test('Comprehensive Multi-Turn Voice Action Depth Suite', async (t) => {
     assert.ok(debugEntries.some(e => e.category === 'tts_speech'), 'TTS Speech telemetry captured');
   });
 
+  await t.test('12. Complete Microphone Track Hardware Release & State Invariants', async () => {
+    const { audioRecorder } = await import('../src/services/audioRecorder');
+    const { wakeWordService } = await import('../src/services/wakeWordService');
+
+    audioRecorder.abort();
+    wakeWordService.hardHalt();
+
+    assert.equal(audioRecorder.isActive(), false, 'Audio recorder is cleanly deactivated');
+    assert.equal(wakeWordService.isPassiveListeningActive(), false, 'Passive wake listener is halted');
+  });
+
 });

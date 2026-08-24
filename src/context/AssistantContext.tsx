@@ -1467,11 +1467,12 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     stopSpeaking();
     setLiveTranscript('');
     setIsListening(true);
-    setIsContinuousSessionActive(true);
-    isContinuousSessionActiveRef.current = true;
+    const isContinuous = continuousTimeoutSeconds > 0;
+    setIsContinuousSessionActive(isContinuous);
+    isContinuousSessionActiveRef.current = isContinuous;
     resetSessionInactivityTimer();
 
-    logger.log('info', 'audio', `🎙️ Active microphone stream started (Continuous Mode: ${continuousTimeoutSeconds === 0 ? 'Manual Toggle' : continuousTimeoutSeconds + 's timeout'}). Speak to Eve now...`);
+    logger.log('info', 'audio', `🎙️ Active microphone stream started (Mode: ${isContinuous ? continuousTimeoutSeconds + 's continuous' : 'Discrete Push-to-Talk'}). Speak to Eve now...`);
 
     const streamedSegmentTranscripts: string[] = [];
 
@@ -1549,6 +1550,9 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             textToProcess = lastHeardPassiveSpeechRef.current.text;
             logger.log('info', 'speech_stt', `🎙️ Recovered speech from passive audio stream: "${textToProcess}"`);
           }
+
+          setIsListening(false);
+          setAudioLevel(0);
 
           // Dispatch to AI Reasoning Core
           if (textToProcess) {
