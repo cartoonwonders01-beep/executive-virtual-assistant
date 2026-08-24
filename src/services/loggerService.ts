@@ -28,10 +28,21 @@ export interface HourlyLogSummary {
   topEvents: string[];
 }
 
+export interface ArchivedLogSession {
+  id: string;
+  sessionId: string;
+  title: string;
+  startedAt: string;
+  archivedAt: string;
+  entryCount: number;
+  entries: LogEntry[];
+}
+
 type LogListener = (entry: LogEntry) => void;
 
 const LOG_STORAGE_KEY = 'assistant_gui_logs';
 const LOG_ARCHIVE_KEY = 'assistant_logs_archive';
+const SESSIONS_ARCHIVE_KEY = 'assistant_archived_sessions';
 const MAX_LOGS = 500;
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
@@ -66,6 +77,7 @@ function saveStoredLogs(entries: LogEntry[]): void {
 
 class LoggerService {
   private entries: LogEntry[] = [];
+  private archivedSessions: ArchivedLogSession[] = [];
   private listeners: Set<LogListener> = new Set();
   private sessionId: string;
   private userId: string = 'andrew';
@@ -73,6 +85,7 @@ class LoggerService {
   constructor() {
     this.sessionId = getOrCreateSessionId();
     this.entries = loadStoredLogs();
+    this.loadArchivedSessions();
     this.curateHourlyLogs();
     this.log('info', 'system', `Eve Assistant Telemetry initialized for user [${this.userId}] (Session: ${this.sessionId}).`);
 
@@ -92,6 +105,17 @@ class LoggerService {
       setInterval(() => {
         this.curateHourlyLogs();
       }, 15 * 60 * 1000);
+    }
+  }
+
+  private loadArchivedSessions(): void {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(SESSIONS_ARCHIVE_KEY);
+        if (raw) {
+          this.archivedSessions = JSON.parse(raw);
+        }
+      } catch {}
     }
   }
 
@@ -216,6 +240,69 @@ class LoggerService {
     this.entries = [];
     saveStoredLogs([]);
     this.log('info', 'system', 'Activity log cleared for current session.');
+  }
+
+  /**
+   * Archives current session log entries and starts a brand new fresh session log
+   */
+  public archiveCurrentSession(title?: string): ArchivedLogSession {
+    const archiveId = 'arch-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6);
+    const sessionRecord: ArchivedLogSession = {
+      id: archiveId,
+      sessionId: this.sessionId,
+      title: title || `Chat Session — ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      startedAt: this.entries.length > 0 ? new Date(this.entries[this.entries.length - 1].ts).toISOString() : new Date().toISOString(),
+      archivedAt: new Date().toISOString(),
+      entryCount: this.entries.length,
+      entries: [...this.entries]
+    };
+
+    this.archivedSessions = [sessionRecord, ...this.archivedSessions].slice(0, 50);
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(SESSIONS_ARCHIVE_KEY, JSON.stringify(this.archivedSessions));
+      } catch {}
+    }
+
+    // Start brand new session
+    this.sessionId = 'session-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('assistant_session_id', this.sessionId);
+    }
+    this.entries = [];
+    saveStoredLogs([]);
+    this.log('info', 'system', `✨ New chat session started (Session: ${this.sessionId}). Previous session archived (${sessionRecord.entryCount} logs).`);
+
+    return sessionRecord;
+  }
+
+  public getArchivedSessions(): ArchivedLogSession[] {
+    if (typeof window !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(SESSIONS_ARCHIVE_KEY);
+        if (raw) {
+          this.archivedSessions = JSON.parse(raw);
+        }
+      } catch {}
+    }
+    return [...this.archivedSessions];
+  }
+
+  public deleteArchivedSession(id: string): void {
+    this.archivedSessions = this.archivedSessions.filter(s => s.id !== id);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(SESSIONS_ARCHIVE_KEY, JSON.stringify(this.archivedSessions));
+      } catch {}
+    }
+  }
+
+  public clearAllArchivedSessions(): void {
+    this.archivedSessions = [];
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(SESSIONS_ARCHIVE_KEY);
+    }
   }
 }
 

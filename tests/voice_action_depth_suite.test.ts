@@ -151,4 +151,24 @@ test('Comprehensive Multi-Turn Voice Action Depth Suite', async (t) => {
     assert.ok(duration < 250, `Fast-path executed in ${duration}ms (target: <250ms)`);
   });
 
+  await t.test('10. Session Rotation & Log Archiving Verification', async () => {
+    const { logger } = await import('../src/services/loggerService');
+
+    const initialSessionId = logger.getSessionId();
+    logger.log('info', 'ai_reasoning', 'Testing session archiving turn 1');
+    logger.log('info', 'speech_stt', 'User asked about weather');
+
+    const archive = logger.archiveCurrentSession('Test Completed Chat Session');
+
+    assert.equal(archive.sessionId, initialSessionId, 'Archived record retains initial session id');
+    assert.equal(archive.title, 'Test Completed Chat Session');
+    assert.ok(archive.entryCount >= 2, 'Archived session contains entries');
+
+    const newSessionId = logger.getSessionId();
+    assert.notEqual(newSessionId, initialSessionId, 'New fresh session id was generated');
+
+    const archives = logger.getArchivedSessions();
+    assert.ok(archives.some(a => a.id === archive.id), 'Archive is retrievable via getArchivedSessions');
+  });
+
 });
