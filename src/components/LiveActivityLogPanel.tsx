@@ -310,7 +310,7 @@ export const LiveActivityLogPanel: React.FC<LiveActivityLogPanelProps> = ({ onCl
                 <p className="text-[10px] mt-1 text-slate-600">Speak or chat with Eve to watch live cognitive events stream in real time.</p>
               </div>
             ) : (
-              filteredLogs.map((entry) => {
+              [...filteredLogs].reverse().map((entry) => {
                 const style = LEVEL_STYLES[entry.level] || LEVEL_STYLES.info;
                 const badge = CATEGORY_BADGES[entry.category] || CATEGORY_BADGES.system;
                 const isExpanded = expandedId === entry.id;
@@ -365,19 +365,34 @@ export const LiveActivityLogPanel: React.FC<LiveActivityLogPanelProps> = ({ onCl
       <div className="px-4 py-2 border-t border-slate-800/80 bg-slate-900/60 flex items-center justify-between text-[10px] text-slate-400 font-mono shrink-0">
         <div className="flex items-center space-x-2">
           <span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
-          <span>Buffer: {filteredLogs.length} events</span>
+          <span>Active Session Buffer: {filteredLogs.length} events</span>
         </div>
 
-        {activeTab === 'live' && (
+        <div className="flex items-center space-x-2">
           <button
             type="button"
-            onClick={() => logger.clear()}
-            className="text-slate-500 hover:text-rose-400 transition cursor-pointer"
-            title="Clear active live buffer"
+            onClick={() => {
+              if (logsEndRef.current) {
+                logsEndRef.current.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+            className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-teal-300 transition text-[10px] border border-slate-700"
+            title="Scroll directly to the newest telemetry event"
           >
-            Clear Active Buffer
+            ⬇️ Latest Entry
           </button>
-        )}
+
+          {activeTab === 'live' && (
+            <button
+              type="button"
+              onClick={() => logger.clear()}
+              className="text-slate-500 hover:text-rose-400 transition cursor-pointer text-[10px]"
+              title="Clear active live buffer"
+            >
+              Clear Buffer
+            </button>
+          )}
+        </div>
       </div>
 
     </div>

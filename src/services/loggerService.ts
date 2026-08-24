@@ -70,15 +70,46 @@ function getOrCreateSessionId(): string {
   return sid;
 }
 
-function loadStoredLogs(): LogEntry[] {
-  if (typeof window === 'undefined') return [];
+function loadStoredLogs(currentSessionId: string): { currentEntries: LogEntry[]; pastSessionArchives: ArchivedLogSession[] } {
+  if (typeof window === 'undefined') return { currentEntries: [], pastSessionArchives: [] };
   try {
     const raw = localStorage.getItem(LOG_STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) return { currentEntries: [], pastSessionArchives: [] };
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.slice(0, MAX_LOGS) : [];
+    if (!Array.isArray(parsed)) return { currentEntries: [], pastSessionArchives: [] };
+
+    // Separate logs belonging to the active session vs historical sessions
+    const currentEntries = parsed.filter((e: LogEntry) => e.sessionId === currentSessionId);
+    const pastEntries = parsed.filter((e: LogEntry) => e.sessionId !== currentSessionId);
+
+    const pastSessionArchives: ArchivedLogSession[] = [];
+    if (pastEntries.length > 0) {
+      // Group past entries by sessionId
+      const grouped: Record<string, LogEntry[]> = {};
+      for (const e of pastEntries) {
+        const sid = e.sessionId || 'session-legacy';
+        if (!grouped[sid]) grouped[sid] = [];
+        grouped[sid].push(e);
+      }
+
+      for (const [sid, grp] of Object.entries(grouped)) {
+        if (grp.length > 0) {
+          pastSessionArchives.push({
+            id: 'arch-' + sid,
+            sessionId: sid,
+            title: `Archived Session — ${new Date(grp[0].ts).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}`,
+            startedAt: new Date(grp[grp.length - 1].ts).toISOString(),
+            archivedAt: new Date(grp[0].ts).toISOString(),
+            entryCount: grp.length,
+            entries: grp
+          });
+        }
+      }
+    }
+
+    return { currentEntries, pastSessionArchives };
   } catch {
-    return [];
+    return { currentEntries: [], pastSessionArchives: [] };
   }
 }
 
@@ -98,10 +129,29 @@ class LoggerService {
 
   constructor() {
     this.sessionId = getOrCreateSessionId();
-    this.entries = loadStoredLogs();
     this.loadArchivedSessions();
+    const { currentEntries, pastSessionArchives } = loadStoredLogs(this.sessionId);
+    this.entries = currentEntries;
+
+    // Merge auto-archived past sessions into archivedSessions
+    if (pastSessionArchives.length > 0) {
+      const existingIds = new Set(this.archivedSessions.map(s => s.sessionId));
+      for (const arch of pastSessionArchives) {
+        if (!existingIds.has(arch.sessionId)) {
+          this.archivedSessions.push(arch);
+        }
+      }
+      this.archivedSessions = this.archivedSessions.slice(0, 50);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(SESSIONS_ARCHIVE_KEY, JSON.stringify(this.archivedSessions));
+        } catch {}
+      }
+    }
+
+    saveStoredLogs(this.entries);
     this.curateHourlyLogs();
-    this.log('info', 'system', `Eve Assistant Telemetry initialized for user [${this.userId}] (Session: ${this.sessionId}).`);
+    this.log('info', 'system', `✨ Eve Assistant Telemetry initialized for user [${this.userId}] (Active Session: ${this.sessionId}).`);
 
     // Global uncaught error listener
     if (typeof window !== 'undefined') {
