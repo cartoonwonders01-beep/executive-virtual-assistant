@@ -10,11 +10,12 @@ export interface WakeWordListenerConfig {
 
 export class WakeWordService {
   private isListening = false;
+  private isPaused = false;
   private recognition: any = null;
   private config: WakeWordListenerConfig | null = null;
   private primaryWakeWord = 'hey eve';
   private sensitivity: 'high' | 'normal' = 'high';
-  private recentTranscripts: string[] = [];
+  private restartTimeout: any = null;
 
   // Expanded phonetic wake triggers
   private wakeTriggers = [
@@ -42,7 +43,7 @@ export class WakeWordService {
 
   // Regex patterns for phonetic fuzzy match
   private phoneticPatterns = [
-    /\b(?:hey|hay|hi|hello|ok|okay|a|pay)\s+(?:eve|eva|eave|eevee|eeve|ava|iva|iv|if|heave|leave|dave)\b/i,
+    /\b(?:hey|hay|hi|hello|ok|okay|a|pay)\s+(?:eve|eva|eave|eevee|eeve|ava|iva|if|heave|leave|dave)\b/i,
     /\b(?:eve|eva|eevee)\b/i,
     /\b(?:hey\s+assistant|hello\s+assistant|ok\s+assistant)\b/i
   ];
@@ -76,9 +77,30 @@ export class WakeWordService {
     return [...this.wakeTriggers];
   }
 
+  public pause(): void {
+    this.isPaused = true;
+    if (this.recognition) {
+      try { this.recognition.stop(); } catch {}
+    }
+  }
+
+  public resume(): void {
+    this.isPaused = false;
+    if (this.isListening && !this.recognition) {
+      if (this.config) {
+        this.startPassiveListening(this.config);
+      }
+    } else if (this.recognition) {
+      try {
+        this.recognition.start();
+      } catch {}
+    }
+  }
+
   public startPassiveListening(config: WakeWordListenerConfig): boolean {
     if (typeof window === 'undefined') return false;
     this.config = config;
+    this.isPaused = false;
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -89,6 +111,7 @@ export class WakeWordService {
     try {
       if (this.recognition) {
         try { this.recognition.stop(); } catch {}
+        this.recognition = null;
       }
 
       this.recognition = new SpeechRecognition();
@@ -96,10 +119,9 @@ export class WakeWordService {
       this.recognition.interimResults = true;
       this.recognition.lang = 'en-US';
 
-      logger.log('info', 'wake_word', `Passive wake-word listener activated (Mode: ${this.sensitivity.toUpperCase()}). Listening for "${this.primaryWakeWord}"...`);
+      logger.log('info', 'wake_word', `Passive wake-word listener activated. Listening for "${this.primaryWakeWord}" & direct voice input...`);
 
       this.recognition.onresult = (event: any) => {
-        // Collect full window across recent results to prevent split-word drops
         let fullTranscript = '';
         for (let i = 0; i < event.results.length; ++i) {
           fullTranscript += ' ' + event.results[i][0].transcript;
@@ -141,23 +163,23 @@ export class WakeWordService {
           }
         }
 
-        // 3. Direct Conversational Question & Intent Auto-Triggering (e.g. "tell me a joke", "what is X")
-        if (!matchedTrigger && this.sensitivity === 'high') {
-          const directQuestionRegex = /\b(?:tell\s+me|tell\s+a\s+joke|can\s+you|could\s+you|what\s+is|what\s+are|what's\s+going\s+on|how\s+do|how\s+can|how\s+to|why\s+is|who\s+is|explain|give\s+me|joke|was\s+ist|wie\s+geht|sag\s+mir|erkläre|raconte|dime|puedes)\b/i;
-          if (directQuestionRegex.test(lower) && lower.split(' ').length >= 3) {
+        // 3. Conversational Speech & Direct Commands (e.g. questions, greetings, jokes, queries)
+        if (!matchedTrigger && lower.split(' ').length >= 2) {
+          const directIntentRegex = /\b(?:tell|what|how|why|who|when|where|can\s+you|could\s+you|please|hi|hey|hello|good\s+morning|good\s+evening|remember|draft|send|book|schedule|task|joke|help|it'?s|this\s+is|explain|suggest|was|wie|warum|wer|hallo|dime|raconte)\b/i;
+          if (directIntentRegex.test(lower) || lower.split(' ').length >= 3) {
             matchedTrigger = 'Direct Voice Command';
             command = lower;
           }
         }
 
         if (matchedTrigger) {
-          logger.log('success', 'wake_word', `🎯 Voice Command/Trigger DETECTED: "${matchedTrigger}"`, { trailingCommand: command || 'none' });
+          logger.log('success', 'wake_word', `🎯 Voice Command/Trigger DETECTED: "${matchedTrigger}"`, { command: command || 'none' });
 
           // Play Google-style double-tone wake chime
           this.playGoogleAssistantChime();
 
-          // Temporarily pause passive recognition so active dialogue has exclusive mic access
-          try { this.recognition.stop(); } catch {}
+          // Temporarily pause passive recognition so dialogue execution takes place
+          this.pause();
 
           if (this.config?.onWakeWord) {
             this.config.onWakeWord(matchedTrigger, command);
@@ -169,21 +191,27 @@ export class WakeWordService {
       };
 
       this.recognition.onerror = (event: any) => {
-        if (event.error !== 'no-speech') {
+        if (event.error !== 'no-speech' && event.error !== 'aborted') {
           logger.log('warn', 'wake_word', `Passive recognition notice: ${event.error}`);
         }
       };
 
       this.recognition.onend = () => {
-        if (this.isListening) {
-          try {
-            this.recognition.start();
-          } catch {}
+        if (this.isListening && !this.isPaused) {
+          if (this.restartTimeout) clearTimeout(this.restartTimeout);
+          this.restartTimeout = setTimeout(() => {
+            if (this.isListening && !this.isPaused) {
+              try {
+                this.recognition?.start();
+              } catch {}
+            }
+          }, 150);
         }
       };
 
       this.recognition.start();
       this.isListening = true;
+      this.isPaused = false;
       return true;
     } catch (err: any) {
       logger.log('error', 'wake_word', `Failed to start passive wake-word listener: ${err?.message}`);
@@ -194,6 +222,11 @@ export class WakeWordService {
 
   public stopPassiveListening(): void {
     this.isListening = false;
+    this.isPaused = false;
+    if (this.restartTimeout) {
+      clearTimeout(this.restartTimeout);
+      this.restartTimeout = null;
+    }
     if (this.recognition) {
       try { this.recognition.stop(); } catch {}
       this.recognition = null;
@@ -201,7 +234,7 @@ export class WakeWordService {
   }
 
   public isPassiveListeningActive(): boolean {
-    return this.isListening;
+    return this.isListening && !this.isPaused;
   }
 
   /**

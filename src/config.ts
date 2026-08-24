@@ -4,7 +4,7 @@ import { CustomLLMProfile } from './types';
 // Ported from Relay PWA configuration architecture with European Multilingual Support,
 // Continuous Listening Session Controls & Custom Persona Prompt Framing
 
-export const APP_VERSION = '3.6.0';
+export const APP_VERSION = '3.7.0';
 
 export const DEFAULT_CHUNK_INTERVAL_MS = 2000;
 export const MIN_CHUNK_INTERVAL_MS = 1200;
@@ -13,7 +13,7 @@ export const MAX_CHUNK_INTERVAL_MS = 15000;
 export const DEFAULT_AUDIO_BITRATE_KBPS = 64;
 export const DEFAULT_MIME_TYPE = 'auto';
 
-export const DEFAULT_SILENCE_DURATION_MS = 1500;
+export const DEFAULT_SILENCE_DURATION_MS = 2200;
 export const DEFAULT_SILENCE_THRESHOLD = 0.06;
 export const DEFAULT_SPEECH_TRIGGER_THRESHOLD = 0.12;
 

@@ -1242,13 +1242,15 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           logger.log('info', 'tts_speech', `🔊 Speaking response (Voice: Studio American Female, Speed: 1.05x): "${actionCard.spokenResponse}"`);
           speakResponse(actionCard.spokenResponse, () => {
             logger.log('success', 'tts_speech', '✅ Voice playback complete.');
-            // Re-arm continuous listening if session is still active!
+            // Re-arm continuous listening or wake-word listener!
             if (isContinuousSessionActiveRef.current) {
               setTimeout(() => {
                 if (isContinuousSessionActiveRef.current) {
                   startVoiceListening();
                 }
               }, 300);
+            } else if (isWakeWordActive) {
+              wakeWordService.resume();
             }
           });
         } else if (quietMode) {
@@ -1258,7 +1260,9 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               if (isContinuousSessionActiveRef.current) {
                 startVoiceListening();
               }
-            }, 500);
+            }, 400);
+          } else if (isWakeWordActive) {
+            wakeWordService.resume();
           }
         }
 
@@ -1275,6 +1279,9 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch (err: any) {
       logger.log('error', 'ai_reasoning', `Failed to process voice transcript: ${err?.message || err}`);
       try { playChime('error_alert'); } catch {}
+      if (!isContinuousSessionActiveRef.current && isWakeWordActive) {
+        wakeWordService.resume();
+      }
     } finally {
       setIsProcessingSpeech(false);
       setLiveTranscript('');
@@ -1283,6 +1290,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Real Audio Streaming with Relay-Style Segmented Slices & Groq Whisper Relay
   const startVoiceListening = async () => {
+    wakeWordService.pause();
     stopSpeaking();
     setLiveTranscript('');
     setIsListening(true);
@@ -1380,10 +1388,15 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                   startVoiceListening();
                 }
               }, 400);
+            } else if (isWakeWordActive) {
+              wakeWordService.resume();
             }
           }
         } catch (err: any) {
           logger.log('error', 'audio', `Audio processing pipeline error: ${err?.message || err}`);
+          if (!isContinuousSessionActiveRef.current && isWakeWordActive) {
+            wakeWordService.resume();
+          }
         } finally {
           setIsProcessingSpeech(false);
         }
@@ -1392,12 +1405,18 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         logger.log('error', 'audio', `Microphone hardware error: ${err}`);
         setIsListening(false);
         setAudioLevel(0);
+        if (isWakeWordActive) {
+          wakeWordService.resume();
+        }
       }
     });
 
     if (!started) {
       logger.log('warn', 'audio', 'Failed to initialize active audio recording stream.');
       setIsListening(false);
+      if (isWakeWordActive) {
+        wakeWordService.resume();
+      }
     }
   };
 
@@ -1414,6 +1433,9 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     audioRecorder.stop();
     setIsListening(false);
     setAudioLevel(0);
+    if (isWakeWordActive) {
+      wakeWordService.resume();
+    }
   };
 
   const stopVoiceListening = () => {
