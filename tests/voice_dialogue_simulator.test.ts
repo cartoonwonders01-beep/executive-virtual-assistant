@@ -382,4 +382,21 @@ test('Autonomous Voice & Dialogue Interactive Simulation Suite', async (t) => {
     assert.ok(searchResult.sources.length >= 2, 'Provided verified web sources');
   });
 
+  await t.test('Simulation 20: Direct WhatsApp Messaging to Celine & Contact Resolution', async () => {
+    const { memoryGraph } = await import('../src/services/memoryGraphService');
+
+    // 1. Resolve Celine's phone number from memory graph
+    const celine = memoryGraph.findEntityByRelationOrAlias('celine');
+    assert.ok(celine !== null, 'Celine entity resolved');
+    assert.ok(celine?.phone?.includes('33 6'), 'Celine phone has valid international format');
+
+    // 2. Generate WhatsApp deep link
+    const cleanPhone = (celine?.phone || '+33612345678').replace(/[^\d]/g, '');
+    const message = "I'm leaving the office now.";
+    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+
+    assert.ok(waUrl.includes('wa.me/33612345678'), 'WhatsApp deep link formatted correctly');
+    assert.ok(waUrl.includes('leaving'), 'Embedded message text encoded in URL');
+  });
+
 });

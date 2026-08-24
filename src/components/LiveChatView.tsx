@@ -30,7 +30,8 @@ import {
   ThumbsDown,
   Globe,
   Brain,
-  ChevronDown
+  ChevronDown,
+  MessageSquare
 } from 'lucide-react';
 import { AppView } from '../types';
 
@@ -608,6 +609,24 @@ export const LiveChatView: React.FC = () => {
                           className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs transition border border-slate-700 cursor-pointer"
                         >
                           <span>Cancel</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {!isUser && (turn.intent === 'whatsapp_message' || turn.text.includes('wa.me')) && (
+                      <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const match = turn.text.match(/https:\/\/wa\.me\/[^\s\)]+/);
+                            if (match) {
+                              window.open(match[0], '_blank');
+                            }
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-1.5"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>💬 Open in WhatsApp & Send</span>
                         </button>
                       </div>
                     )}

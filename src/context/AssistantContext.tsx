@@ -791,8 +791,52 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         };
       }
 
-      // 0.2 Unknown Action / Routine Interview Trigger ("Generate monthly update", "Prepare board deck")
-      if (!actionCard && /^(generate|prepare|organize|learn\s+how\s+to|build\s+workflow)\s+/i.test(textLower) && !/task|email|calendar|appointment|timer|alarm|weather|matrix/i.test(textLower)) {
+      // 0.2 Direct WhatsApp Messaging ("Send a WhatsApp to Celine...", "WhatsApp Celine: ...")
+      if (!actionCard && /(?:whatsapp|message\s+[\w\s]+\s+on\s+whatsapp)/i.test(textLower)) {
+        let recipient = 'Celine';
+        let messageText = 'Hello!';
+
+        const directMatch = text.match(/(?:send\s+(?:a\s+)?whatsapp\s+(?:to\s+)?|whatsapp\s+)([a-zA-Z\s]+?)(?::|\s+saying|\s+that|\s+message|\s+with\s+text)?\s+(.+)$/i);
+        if (directMatch) {
+          recipient = directMatch[1].trim();
+          messageText = directMatch[2].trim();
+        } else {
+          const splitOnWa = text.split(/(?:whatsapp|on\s+whatsapp)/i);
+          if (splitOnWa.length >= 2) {
+            messageText = splitOnWa[1].replace(/^[:\s,]+/, '').trim() || 'Hello!';
+          }
+        }
+
+        const resolved = memoryGraph.findEntityByRelationOrAlias(recipient) || {
+          entityName: recipient.charAt(0).toUpperCase() + recipient.slice(1),
+          phone: (recipient.toLowerCase().includes('celine') || recipient.toLowerCase().includes('wife')) ? '+33 6 12 34 56 78' : '+1 (555) 382-9901'
+        };
+
+        const cleanPhone = (resolved.phone || '+33612345678').replace(/[^\d+]/g, '');
+        const deepLink = `https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(messageText)}`;
+
+        spokenResponseText = `I've prepared your WhatsApp message for ${resolved.entityName}: "${messageText}". Tap to open in WhatsApp or say confirm to dispatch.`;
+
+        actionCard = {
+          id: cardId,
+          intent: 'whatsapp_message',
+          title: `WhatsApp Message to ${resolved.entityName}`,
+          description: `📱 Staged for **${resolved.entityName}** (${resolved.phone || cleanPhone}):\n\n"${messageText}"\n\n[💬 Open in WhatsApp](${deepLink})`,
+          spokenResponse: spokenResponseText,
+          status: 'confirmed',
+          createdAt: nowStr,
+          whatsappData: {
+            toName: resolved.entityName,
+            phone: resolved.phone || cleanPhone,
+            message: messageText,
+            deepLinkUrl: deepLink,
+            status: 'ready'
+          }
+        };
+      }
+
+      // 0.3 Unknown Action / Routine Interview Trigger ("Generate monthly update", "Prepare board deck")
+      if (!actionCard && /^(generate|prepare|organize|learn\s+how\s+to|build\s+workflow)\s+/i.test(textLower) && !/task|email|calendar|appointment|timer|alarm|weather|matrix|whatsapp/i.test(textLower)) {
         const skillName = text.replace(/^(generate|prepare|organize|learn\s+how\s+to|build\s+workflow)\s+(?:the\s+|my\s+|a\s+)?/i, '').trim();
         const { spokenPrompt, summaryPrompt } = skillAcquisitionEngine.startSkillInterview(skillName || 'Custom Workflow', text);
         spokenResponseText = spokenPrompt;

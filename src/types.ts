@@ -99,6 +99,7 @@ export interface ReminderItem {
 
 export type ActionIntentType = 
   | 'email_draft'
+  | 'whatsapp_message'
   | 'calendar_booking'
   | 'calendar_reschedule'
   | 'calendar_cancel'
@@ -202,6 +203,13 @@ export interface ActionCard {
   status: 'pending' | 'confirmed' | 'executed' | 'dismissed';
   createdAt: string;
   emailData?: EmailDraft;
+  whatsappData?: {
+    toName: string;
+    phone: string;
+    message: string;
+    deepLinkUrl: string;
+    status: 'ready' | 'sent';
+  };
   calendarData?: CalendarAppointment;
   contactData?: ContactPerson;
   taskData?: Partial<TaskItem>;
@@ -345,6 +353,7 @@ export interface DialogueSession {
 export type SkillActionType = 
   | 'triage_inbox'
   | 'send_email'
+  | 'send_whatsapp'
   | 'check_calendar'
   | 'book_appointment'
   | 'list_tasks'
