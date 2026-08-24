@@ -814,6 +814,24 @@ export class IntelligentAdvisor {
       };
     }
 
+    if (/family|who'?s\s+in\s+my\s+family|relatives|children|kids/i.test(lower)) {
+      return {
+        title: 'Baxter Family Roster',
+        category: 'Communication',
+        spokenResponse: "Your family includes your wife Celine Loeuille, and your children Elizabeth, Alexander, Eleonore, and Angelina.",
+        summary: "Baxter Family Roster: Celine (Wife), Elizabeth, Alexander, Eleonore, and Angelina.",
+        keyInsights: [
+          'Celine Loeuille: celine.loeuille@gmail.com',
+          'Eleonore Baxter: eleonore.a.baxter@gmail.com',
+          'Elizabeth Baxter: elizabth.js.baxter@gmail.com',
+          'Alexander Baxter: alexander.j.baxter@gmail.com',
+          'Angelina Baxter: angelina.c.baxter@gmail.com'
+        ],
+        actionSteps: ['Try: "Send an email to Celine..."', 'Try: "Send Eleanor a quick note..."'],
+        language: 'en'
+      };
+    }
+
     if (/what.*(?:can\s+you\s+do|you\s+can\s+do|are\s+your\s+capabilities|capabilities|do\s+you\s+do)/i.test(lower)) {
       return {
         title: 'Eve Capabilities & Tools',

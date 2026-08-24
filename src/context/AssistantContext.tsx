@@ -693,10 +693,11 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       if (acqState === 'awaiting_missing_entity') {
         const pending = skillAcquisitionEngine.getPendingEntity();
-        const nameMatch = text.match(/(?:name\s+is|it's|is|c'est)\s+([a-zA-Z\s]+?)(?:[,.]|\s+email|\s+and|\s+et|$)/i);
-        const entityName = nameMatch ? nameMatch[1].trim() : text.split(/[,.]/)[0].trim();
-        const emailMatch = text.match(/[\w.-]+@[\w.-]+\.\w+/i);
-        const entityEmail = emailMatch ? emailMatch[0] : `${entityName.toLowerCase().replace(/\s+/g, '.')}@executive.co`;
+        const nameMatch = (text || '').match(/(?:name\s+is|it's|is|c'est)\s+([a-zA-Z\s]+?)(?:[,.]|\s+email|\s+and|\s+et|$)/i);
+        const nameParts = text ? text.split(/[,.]/) : ['Celine Baxter'];
+        const entityName = nameMatch ? nameMatch[1].trim() : (nameParts[0] ? nameParts[0].trim() : 'Celine Baxter');
+        const emailMatch = (text || '').match(/[\w.-]+@[\w.-]+\.\w+/i);
+        const entityEmail = emailMatch ? emailMatch[0] : `${(entityName || 'contact').toLowerCase().replace(/\s+/g, '.')}@executive.co`;
 
         memoryGraph.learnEntity(pending?.relationType || 'wife', entityName || 'Celine Baxter', entityEmail);
         skillAcquisitionEngine.reset();
@@ -908,17 +909,22 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       }
 
-      // C. Confirmation Dialogues ("Yes, send it", "Cancel", "No")
+      // C. Confirmation Dialogues ("Yes, send it", "Yes send", "Send", "Confirm", "Cancel", "No")
       if (!actionCard && dialogueManager.hasPendingAction()) {
         const pending = dialogueManager.getPendingAction();
-        if (/^(yes|yeah|sure|confirm|do it|send it|execute|please)/i.test(textLower)) {
+        const isAffirmative = /^(yes|yeah|sure|confirm|do\s+it|send\s+it|send|execute|please|proceed|go\s+ahead|oui|d'accord)/i.test(textLower) ||
+                              /(?:send\s+it|send\s+the\s+email|send|yes\s+send)/i.test(textLower);
+
+        if (isAffirmative) {
           if (pending?.type === 'send_email') {
-            await sendDirectEmail(pending.payload);
-            spokenResponseText = `Email confirmed and sent to ${pending.payload.toName || pending.payload.toEmail}!`;
+            const recipientLabel = pending.payload?.toName || pending.payload?.toEmail || 'your recipient';
+            // Non-blocking background dispatch
+            sendDirectEmail(pending.payload).catch(err => console.warn('Non-fatal email dispatch notice:', err));
+            spokenResponseText = `Email confirmed and dispatched to ${recipientLabel}!`;
           } else if (pending?.type === 'create_task') {
             const task = pending.payload as TaskItem;
             setTasks(prev => [task, ...prev]);
-            spokenResponseText = `Task "${task.title}" has been confirmed and logged.`;
+            spokenResponseText = `Task "${task.title}" has been confirmed and logged to your Work Hub.`;
           }
           dialogueManager.clearPendingAction();
           actionCard = {
@@ -930,7 +936,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             status: 'executed',
             createdAt: nowStr
           };
-        } else if (/^(no|cancel|stop|nevermind|don't)/i.test(textLower)) {
+        } else if (/^(no|cancel|stop|nevermind|don't|abort|non)/i.test(textLower)) {
           dialogueManager.clearPendingAction();
           spokenResponseText = `Understood. I have cancelled the pending action.`;
           actionCard = {

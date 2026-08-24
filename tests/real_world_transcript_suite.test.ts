@@ -101,4 +101,18 @@ test('Real-World Dialogue & Telemetry Robustness Suite (Zero Boilerplate Verific
     assert.ok(exportText.length > 0, 'Clean log export produced formatted records');
   });
 
+  await t.test('Case 15: Family Roster Inquiry ("Who\'s in my family")', async () => {
+    const res = await cortexEngine.reasonAndAct("Who's in my family");
+    assert.ok(!res.spokenResponse.includes(BANNED_BOILERPLATE), 'Did not return banned boilerplate');
+    assert.ok(/celine/i.test(res.spokenResponse), 'Mentions Celine');
+    assert.ok(/elizabeth|alexander|eleonore|angelina/i.test(res.spokenResponse), 'Mentions children');
+  });
+
+  await t.test('Case 16: Email Modification ("I would like you to modify the email to say I love you")', async () => {
+    const res = await cortexEngine.reasonAndAct('I would like you to modify the email to say I love you');
+    assert.equal(res.actionCard.intent, 'email_draft');
+    assert.equal(res.actionCard.emailData?.toEmail, 'celine.loeuille@gmail.com');
+    assert.ok(res.actionCard.emailData?.body.includes('love you'));
+  });
+
 });

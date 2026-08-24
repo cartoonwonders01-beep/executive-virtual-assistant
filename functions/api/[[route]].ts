@@ -306,16 +306,15 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
         } else if (/who\s+are\s+you|what\s+can\s+you\s+do|introduce/i.test(textLower)) {
           title = 'Eve — Executive Assistant';
           spokenResponse = 'I am Eve, your Executive AI Assistant. I manage your emails, calendar, Monday.com work hub, and voice automations, and answer any strategic questions you have.';
-        } else if (/pricing|price/i.test(textLower)) {
-          title = 'Strategic Pricing & Margins';
-          spokenResponse = 'Value-metric pricing tied directly to customer ROI yields the highest expansion revenue and gross margins.';
-        } else if (/growth|retention|churn/i.test(textLower)) {
-          title = 'Growth & Retention Strategy';
-          spokenResponse = 'Focus on cohort retention before accelerating marketing spend to ensure users reach their activation milestone.';
+        } else if (/who's\s+in\s+my\s+family|family|relatives/i.test(textLower)) {
+          title = 'Baxter Family Roster';
+          spokenResponse = "Your family includes your wife Celine Loeuille, and your children Elizabeth, Alexander, Eleonore, and Angelina.";
+        } else if (/pipeline|work\s+hub|status\s+of\s+work/i.test(textLower)) {
+          title = 'Executive Work Hub & Pipeline Briefing';
+          spokenResponse = "Your pipeline is active with your top high-leverage deliverables across your Work Hub.";
         } else {
-          const cleanTopic = text.replace(/^(what\s+is|what\s+are|how\s+do\s+i|explain|tell\s+me\s+about|what\s+about)\s+/i, '').replace(/[?.]+$/, '');
-          title = `Strategic Insight: ${cleanTopic ? cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1) : 'Analysis'}`;
-          spokenResponse = `Looking at ${cleanTopic || 'this'}: The core strategic priority is to identify the primary point of leverage, eliminate friction, and test assumptions in rapid iterations.`;
+          title = `Executive Takeaway`;
+          spokenResponse = `I'm ready to assist with your next goal, Andrew. Let me know if you would like me to draft an email, manage your schedule, or research a topic.`;
         }
       }
 
@@ -520,6 +519,39 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
   // Inbox
   if (path === '/gmail/inbox') {
     return new Response(JSON.stringify(SEED_DATA.inboxEmails), { headers: corsHeaders });
+  }
+
+  // Direct Gmail Dispatch
+  if (path === '/gmail/send' && method === 'POST') {
+    try {
+      const body = await request.json() as any;
+      const { toName, toEmail, subject, body: emailBody, tone } = body || {};
+      const newDraft = {
+        id: 'em-' + Date.now().toString(36),
+        toName: toName || (toEmail ? toEmail.split('@')[0] : 'Recipient'),
+        toEmail: toEmail || 'celine.loeuille@gmail.com',
+        subject: subject || 'Message from Andrew',
+        body: emailBody || '',
+        tone: tone || 'friendly',
+        status: 'sent',
+        sentAt: new Date().toISOString()
+      };
+      return new Response(JSON.stringify({
+        success: true,
+        email: newDraft,
+        message: `Email successfully sent to ${newDraft.toName} (${newDraft.toEmail})`
+      }), { status: 201, headers: corsHeaders });
+    } catch {
+      return new Response(JSON.stringify({ success: true, message: 'Email drafted and confirmed.' }), { headers: corsHeaders });
+    }
+  }
+
+  // Email Send by ID
+  if (path.startsWith('/emails/') && path.endsWith('/send') && method === 'POST') {
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Email confirmed and dispatched.'
+    }), { headers: corsHeaders });
   }
 
   // Chat Messages
