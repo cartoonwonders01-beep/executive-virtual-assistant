@@ -62,7 +62,10 @@ export class ClientDialogueManager {
   }
 
   public setPendingAction(action: { type: any; payload: any; prompt: string }): void {
-    this.session.context.pendingAction = action;
+    this.session.context.pendingAction = {
+      ...action,
+      createdAtTimestamp: Date.now()
+    } as any;
     this.session.status = 'waiting_for_confirmation';
   }
 
@@ -72,11 +75,18 @@ export class ClientDialogueManager {
   }
 
   public hasPendingAction(): boolean {
-    return Boolean(this.session.context.pendingAction);
+    const action = this.session.context.pendingAction as any;
+    if (!action) return false;
+    // Auto-expire stale pending actions after 90 seconds
+    if (action.createdAtTimestamp && (Date.now() - action.createdAtTimestamp > 90000)) {
+      this.clearPendingAction();
+      return false;
+    }
+    return true;
   }
 
   public getPendingAction() {
-    return this.session.context.pendingAction;
+    return this.hasPendingAction() ? this.session.context.pendingAction : undefined;
   }
 
   public getLastMentionedContact(): ContactPerson | undefined {

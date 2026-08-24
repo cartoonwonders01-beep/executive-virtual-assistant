@@ -989,6 +989,8 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             payload: actionCard.emailData,
             prompt: spokenResponseText
           });
+        } else if (actionCard.intent !== 'email_draft') {
+          dialogueManager.clearPendingAction();
         }
       }
 

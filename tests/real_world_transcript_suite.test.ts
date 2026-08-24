@@ -155,4 +155,23 @@ test('Real-World Dialogue & Telemetry Robustness Suite (Zero Boilerplate Verific
     assert.ok(searchResults[0].record.text.includes('Celine Loeuille'), 'Top vector match identifies Celine Loeuille');
   });
 
+  await t.test('Case 23: Topic-Shift & Dialogue Freshness (Zero Historic Loop Trap)', async () => {
+    const { dialogueManager } = await import('../src/services/dialogueManager');
+    dialogueManager.setPendingAction({
+      type: 'send_email',
+      payload: { toName: 'Celine', toEmail: 'celine.loeuille@gmail.com', subject: 'Old Action', body: 'Old', tone: 'friendly', status: 'draft', id: '1' },
+      prompt: 'Send old email?'
+    });
+
+    assert.ok(dialogueManager.hasPendingAction(), 'Pending action set');
+
+    // Simulate topic shift: user asks for a joke
+    const res = await cortexEngine.reasonAndAct('Tell me a joke');
+    assert.equal(res.actionCard.intent, 'knowledge_qa');
+
+    // Clear stale action
+    dialogueManager.clearPendingAction();
+    assert.ok(!dialogueManager.hasPendingAction(), 'Cleared pending action cleanly on topic switch');
+  });
+
 });

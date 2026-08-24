@@ -52,7 +52,7 @@ export class CortexDialogueEngine {
           apiKey,
           'gemini-1.5-flash',
           activeProfile,
-          history.slice(0, 6).map(h => ({ speaker: h.speaker, text: h.text }))
+          history.slice(-6).map(h => ({ speaker: h.speaker, text: h.text }))
         );
 
         if (geminiResult && geminiResult.actionCard) {
