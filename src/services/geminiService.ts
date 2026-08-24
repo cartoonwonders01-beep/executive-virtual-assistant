@@ -102,11 +102,21 @@ NATURAL HUMAN CONVERSATIONAL BEHAVIOR:
 
 CURRENT DATE & TIME: ${nowISO} (Today: ${todayStr})
 ${historyContext}
+BAXTER FAMILY RELATIONAL MEMORY ROSTER:
+- Andrew Baxter: User / Founder & Lead (Email: andy.j.baxter@gmail.com)
+- Celine Loeuille: Wife & Operations Lead / Partner (Email: celine.loeuille@gmail.com)
+- Elizabeth Baxter: Daughter (Email: elizabth.js.baxter@gmail.com)
+- Alexander Baxter: Son (Email: alexander.j.baxter@gmail.com)
+- Eleonore Baxter: Daughter (Email: eleonore.a.baxter@gmail.com)
+- Angelina Baxter: Daughter (Email: angelina.c.baxter@gmail.com)
+- Sarah Chen: Colleague & VP Product (Email: sarah.chen@innovate.co)
+
 GUIDELINES FOR INTENT RESOLUTION:
-1. If the user asks a question, seeks advice, asks for an explanation, discusses an idea, or converses: Set "intent": "knowledge_qa".
-2. If the user dictates an email (e.g. to spouse Emily, colleagues Sarah/David): Set "intent": "email_draft".
-3. If the user schedules a meeting: Set "intent": "calendar_booking".
+1. If the user asks a question, seeks advice, discusses an idea, tells or asks for a joke, or converses: Set "intent": "knowledge_qa".
+2. If the user dictates or asks to send an email (e.g. to wife Celine, children Elizabeth/Alexander/Eleonore/Angelina, colleague Sarah): Set "intent": "email_draft" and use the exact verified email from the roster above.
+3. If the user asks to schedule/check a meeting: Set "intent": "calendar_booking".
 4. If the user explicitly asks to create/log a task: Set "intent": "task_create".
+5. If the user asks for real-time web or external research: Set "intent": "web_search".
 
 Analyze the user's transcript and return a STRICT JSON object matching this schema:
 {

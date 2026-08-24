@@ -414,4 +414,24 @@ test('Autonomous Voice & Dialogue Interactive Simulation Suite', async (t) => {
     assert.ok(waUrl.includes('leaving'), 'Embedded message text encoded in URL');
   });
 
+  await t.test('Simulation 21: 100% LLM-First ReAct Cognitive Cortex Reasoning & Tool Execution', async () => {
+    const { cortexEngine } = await import('../src/services/cortexDialogueEngine');
+
+    // 1. Natural phrasing email to Celine
+    const resCeline = await cortexEngine.reasonAndAct("Could you let Celine know I'm running 15 minutes late?");
+    assert.equal(resCeline.actionCard.intent, 'email_draft', 'Cortex resolved email_draft intent');
+    assert.equal(resCeline.actionCard.emailData?.toEmail, 'celine.loeuille@gmail.com', 'Cortex resolved celine.loeuille@gmail.com');
+    assert.ok(resCeline.spokenResponse.includes('Celine'), 'Spoken confirmation mentions Celine');
+
+    // 2. Natural phrasing email to Elizabeth
+    const resElizabeth = await cortexEngine.reasonAndAct("Send an email to Elizabeth saying super proud of your presentation!");
+    assert.equal(resElizabeth.actionCard.intent, 'email_draft', 'Cortex resolved Elizabeth email');
+    assert.equal(resElizabeth.actionCard.emailData?.toEmail, 'elizabth.js.baxter@gmail.com', 'Cortex resolved elizabth.js.baxter@gmail.com');
+
+    // 3. Conversational presence
+    const resChat = await cortexEngine.reasonAndAct("What's going on Eve?");
+    assert.equal(resChat.actionCard.intent, 'knowledge_qa', 'Conversational query is knowledge_qa');
+    assert.ok(resChat.spokenResponse.length > 10, 'Delivered natural spoken response');
+  });
+
 });

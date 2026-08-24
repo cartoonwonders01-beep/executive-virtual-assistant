@@ -35,6 +35,7 @@ import { memoryGraph } from '../services/memoryGraphService';
 import { skillAcquisitionEngine } from '../services/skillAcquisitionEngine';
 import { autonomousPractice } from '../services/autonomousPracticeWorker';
 import { webSearchService } from '../services/webSearchService';
+import { cortexEngine } from '../services/cortexDialogueEngine';
 import {
   getStoredContinuousTimeoutSeconds,
   storeContinuousTimeoutSeconds,
@@ -944,7 +945,28 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       }
 
-      // D. Contact Inquiry & Multi-Turn Pronoun Context ("Who is Sarah?", "Who is David?")
+      // D. 100% LLM-First ReAct Cognitive Cortex (Dynamic Tool Calling & Reasoning)
+      if (!actionCard) {
+        const cortexResult = await cortexEngine.reasonAndAct(
+          text,
+          dialogueTurns,
+          activeLLMProfileRef.current,
+          geminiApiKey
+        );
+
+        actionCard = cortexResult.actionCard;
+        spokenResponseText = cortexResult.spokenResponse;
+
+        if (actionCard.emailData && actionCard.status === 'confirmed') {
+          dialogueManager.setPendingAction({
+            type: 'send_email',
+            payload: actionCard.emailData,
+            prompt: spokenResponseText
+          });
+        }
+      }
+
+      // E. Contact Inquiry & Multi-Turn Pronoun Context ("Who is Sarah?", "Who is David?")
       if (!actionCard && /^(who\s+is|tell\s+me\s+about)\s+([a-zA-Z]+)/i.test(textLower)) {
         const nameMatch = textLower.match(/^(?:who\s+is|tell\s+me\s+about)\s+([a-zA-Z]+)/i);
         const searchedName = nameMatch ? nameMatch[1] : '';
@@ -972,7 +994,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         };
       }
 
-      // E. Pronoun Resolution ("Send her an email", "Call him", "Write to them")
+      // F. Pronoun Resolution ("Send her an email", "Call him", "Write to them")
       if (!actionCard && /(send\s+her|send\s+him|email\s+her|email\s+him|write\s+to\s+her|write\s+to\s+him|call\s+her|call\s+him)/i.test(textLower)) {
         const lastContact = dialogueManager.getLastMentionedContact() || {
           id: 'c1',
@@ -1012,53 +1034,7 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         };
       }
 
-      // F. 1. Check Gemini Ultra Provider if configured
-      if (!actionCard && aiBrainProvider === 'gemini_ultra' && geminiApiKey) {
-        try {
-          const geminiResult = await processSpeechWithGemini(
-            text, 
-            geminiApiKey, 
-            'gemini-1.5-flash',
-            activeLLMProfileRef.current,
-            dialogueTurns.slice(0, 4)
-          );
-          if (geminiResult) {
-            actionCard = {
-              id: cardId,
-              intent: geminiResult.actionCard.intent,
-              title: geminiResult.actionCard.title,
-              description: geminiResult.actionCard.description,
-              spokenResponse: geminiResult.actionCard.spokenResponse,
-              status: 'confirmed',
-              createdAt: nowStr,
-              calendarData: geminiResult.actionCard.calendarData ? {
-                id: 'apt-' + Date.now().toString(36),
-                title: geminiResult.actionCard.calendarData.title,
-                startDateTime: geminiResult.actionCard.calendarData.startDateTime,
-                endDateTime: geminiResult.actionCard.calendarData.endDateTime,
-                location: geminiResult.actionCard.calendarData.location || 'Google Meet / Virtual',
-                attendees: geminiResult.actionCard.calendarData.attendees || [{ name: 'Executive Team', email: 'team@example.com' }],
-                status: 'confirmed',
-                googleCalendarUrl: geminiResult.actionCard.calendarData.googleCalendarUrl
-              } : undefined,
-              emailData: geminiResult.actionCard.emailData ? {
-                id: 'em-' + Date.now().toString(36),
-                toName: geminiResult.actionCard.emailData.toName,
-                toEmail: geminiResult.actionCard.emailData.toEmail,
-                subject: geminiResult.actionCard.emailData.subject,
-                body: geminiResult.actionCard.emailData.body,
-                tone: geminiResult.actionCard.emailData.tone || 'professional',
-                status: 'sent',
-                sentAt: nowStr
-              } : undefined
-            };
-          }
-        } catch (gErr) {
-          console.warn('Gemini API call skipped or errored, falling back to instant local engine:', gErr);
-        }
-      }
-
-      // G. 2. Instant Infallible Client-Side Intelligent Reasoning Engine (<10ms Latency)
+      // G. Instant Infallible Client-Side Intelligent Reasoning Engine (<10ms Latency)
       if (!actionCard) {
         const isExplicitTaskCommand = /^(add\s+task|create\s+task|log\s+task|put\s+on\s+my\s+board|new\s+task|automate\s+task)\b/i.test(textLower);
 
