@@ -112,13 +112,27 @@ export class WakeWordService {
       this.recognition = new SpeechRecognition();
       this.recognition.continuous = true;
       this.recognition.interimResults = true;
-      this.recognition.lang = 'en-US';
+      
+      let targetLangCode = 'en-US';
+      try {
+        const savedLang = localStorage.getItem('assistant_preferred_language');
+        if (savedLang && savedLang !== 'auto') {
+          const langMap: Record<string, string> = {
+            en: 'en-US', fr: 'fr-FR', de: 'de-DE', es: 'es-ES',
+            it: 'it-IT', nl: 'nl-NL', pl: 'pl-PL', pt: 'pt-BR'
+          };
+          targetLangCode = langMap[savedLang] || savedLang;
+        } else if (typeof navigator !== 'undefined' && navigator.language) {
+          targetLangCode = navigator.language;
+        }
+      } catch {}
+      this.recognition.lang = targetLangCode;
 
-      logger.log('info', 'wake_word', `Passive wake-word listener activated. Listening for "${this.primaryWakeWord}" & direct voice input...`);
+      logger.log('info', 'wake_word', `Passive wake-word listener activated (Lang: ${targetLangCode}). Listening for "${this.primaryWakeWord}"...`);
       logger.debug('wake_word', `SpeechRecognition initialized`, {
         continuous: true,
         interimResults: true,
-        lang: 'en-US',
+        lang: targetLangCode,
         triggers: this.wakeTriggers
       });
 

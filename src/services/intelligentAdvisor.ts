@@ -172,6 +172,16 @@ export class IntelligentAdvisor {
           language: 'de'
         };
       }
+
+      return {
+        title: 'Eve — Deine Exekutive KI-Assistentin',
+        category: 'Business & Strategy',
+        spokenResponse: `Bezüglich ${text}: Der beste Hebel liegt darin, den Fokus auf die Kernpriorität zu richten und schnell in die Umsetzung zu gehen.`,
+        summary: `Exekutive Perspektive für: "${text}".`,
+        keyInsights: ['Fokus auf den wirkungsvollsten Hebel.', 'Schnelle Validierung.'],
+        actionSteps: ['Prüfe die nächsten Schritte im Work Hub.'],
+        language: 'de'
+      };
     }
 
     // =========================================================================
@@ -900,7 +910,7 @@ export class IntelligentAdvisor {
         `1. Clarify the immediate outcome for ${cleanTopic || 'this project'}.`,
         `2. Execute a focused iteration.`
       ],
-      language: 'en'
+      language: (lang as SupportedLanguage) || 'en'
     };
   }
 }

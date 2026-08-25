@@ -120,7 +120,21 @@ export class AudioRecorderService {
           this.speechRecognition = new SpeechRecognition();
           this.speechRecognition.continuous = true;
           this.speechRecognition.interimResults = true;
-          this.speechRecognition.lang = 'en-US';
+          
+          let targetLangCode = 'en-US';
+          try {
+            const savedLang = localStorage.getItem('assistant_preferred_language');
+            if (savedLang && savedLang !== 'auto') {
+              const langMap: Record<string, string> = {
+                en: 'en-US', fr: 'fr-FR', de: 'de-DE', es: 'es-ES',
+                it: 'it-IT', nl: 'nl-NL', pl: 'pl-PL', pt: 'pt-BR'
+              };
+              targetLangCode = langMap[savedLang] || savedLang;
+            } else if (typeof navigator !== 'undefined' && navigator.language) {
+              targetLangCode = navigator.language;
+            }
+          } catch {}
+          this.speechRecognition.lang = targetLangCode;
 
           this.speechRecognition.onresult = (event: any) => {
             let fullAccumulated = '';

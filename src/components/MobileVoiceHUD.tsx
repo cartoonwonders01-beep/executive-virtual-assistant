@@ -146,14 +146,16 @@ export const MobileVoiceHUD: React.FC = () => {
         ctx.stroke();
       }
 
-      phase += isListening ? 0.08 + (audioLevel * 0.08) : 0.03;
-      animId = requestAnimationFrame(render);
+      if (isListening || isProcessingSpeech) {
+        phase += isListening ? 0.08 + (audioLevel * 0.08) : 0.03;
+        animId = requestAnimationFrame(render);
+      }
     };
 
     render();
 
     return () => {
-      cancelAnimationFrame(animId);
+      if (animId) cancelAnimationFrame(animId);
     };
   }, [isListening, audioLevel, isProcessingSpeech]);
 

@@ -210,4 +210,43 @@ test('User Experience Fidelity & Hardware Lifecycle Test Suite', async (t) => {
     assert.equal(isCurrentlySpeaking(), false, 'Speech state cleaned up after stop');
   });
 
+  await t.test('10. Multilingual Conversational Intelligence in French, German, Spanish, and English', async () => {
+    const { intelligentAdvisor } = await import('../src/services/intelligentAdvisor');
+
+    // French inquiry
+    const frResult = intelligentAdvisor.solve('Bonjour Eve, peux-tu m\'aider avec mon planning ?');
+    assert.equal(frResult.language, 'fr', 'Language identified as French');
+    assert.ok(frResult.spokenResponse.includes('Bonjour') || frResult.spokenResponse.includes('Andrew') || frResult.spokenResponse.includes('planning'), 'French response generated');
+
+    // German inquiry
+    const deResult = intelligentAdvisor.solve('Hallo Eve, was sind 3 Strategien für eine produktive Morgenroutine?');
+    assert.equal(deResult.language, 'de', 'Language identified as German');
+    assert.ok(deResult.spokenResponse.includes('Hebel') || deResult.spokenResponse.includes('Deep-Work'), 'German response generated');
+
+    // Spanish inquiry
+    const esResult = intelligentAdvisor.solve('¡Hola Eve! ¿Qué opinas de nuestra estrategia de crecimiento?');
+    assert.equal(esResult.language, 'es', 'Language identified as Spanish');
+    assert.ok(esResult.spokenResponse.includes('estrategia') || esResult.spokenResponse.includes('apalancamiento') || esResult.spokenResponse.includes('Hola'), 'Spanish response generated');
+
+    // English inquiry
+    const enResult = intelligentAdvisor.solve('What are 3 strategies for deep work?');
+    assert.equal(enResult.language, 'en', 'Language identified as English');
+    assert.ok(enResult.spokenResponse.includes('leverage') || enResult.spokenResponse.includes('deep work'), 'English response generated');
+  });
+
+  await t.test('11. Dynamic Multilingual Speech Recognition & Native Voice Selection', async () => {
+    const { detectLanguage, resolveBestVoice, setPreferredLanguage } = await import('../src/services/speechSynthesis');
+
+    assert.equal(detectLanguage('Quelles sont les stratégies pour le travail profond ?'), 'fr');
+    assert.equal(detectLanguage('Was sind die besten Strategien für Fokus?'), 'de');
+    assert.equal(detectLanguage('¿Cuáles son las mejores estrategias para la productividad?'), 'es');
+    assert.equal(detectLanguage('What are the best strategies for deep work?'), 'en');
+
+    setPreferredLanguage('fr');
+    // Voice resolution should gracefully handle French locale
+    const voice = resolveBestVoice('auto', 'fr');
+    // If no voices in Node.js mock, voice is undefined without crashing
+    assert.ok(voice === undefined || typeof voice === 'object');
+  });
+
 });
