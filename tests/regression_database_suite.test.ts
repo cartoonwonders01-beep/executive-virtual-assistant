@@ -324,4 +324,31 @@ test('Automated Bug Regression Database Suite (Verified Against data/regression_
     assert.equal(reminderRes.toolCallExecuted?.toolName, 'set_reminder');
   });
 
+  // --- BUG-013: Encyclopedic Curiosity, Science & Situational Awareness Queries ---
+  await t.test('BUG-013: Encyclopedic Curiosity, Science & Situational Awareness Queries', async () => {
+    // 1. Avian biology: Bird flight speed
+    const birdRes = await cortexEngine.reasonAndAct("how fast does a bird fly");
+    assert.ok(birdRes.spokenResponse.includes('Peregrine Falcon') || birdRes.spokenResponse.includes('km/h') || birdRes.spokenResponse.includes('mph'), 'Answered bird flight speed accurately');
+
+    // 2. Marine biology: Fish in ocean
+    const fishRes = await cortexEngine.reasonAndAct("how many fish in the ocean");
+    assert.ok(fishRes.spokenResponse.includes('trillion') || fishRes.spokenResponse.includes('species'), 'Answered fish population census accurately');
+
+    // 3. Situational location awareness
+    const locRes = await cortexEngine.reasonAndAct("where am i");
+    assert.ok(locRes.spokenResponse.includes('Paris') || locRes.spokenResponse.includes('location'), 'Answered location inquiry');
+
+    // 4. Atmospheric science: Blue sky
+    const skyRes = await cortexEngine.reasonAndAct("why is the sky blue");
+    assert.ok(skyRes.spokenResponse.includes('Rayleigh') || skyRes.spokenResponse.includes('wavelengths') || skyRes.spokenResponse.includes('scatter'), 'Explained Rayleigh scattering for blue sky');
+
+    // 5. Astronomy: Distance to Moon
+    const moonRes = await cortexEngine.reasonAndAct("how far is the moon");
+    assert.ok(moonRes.spokenResponse.includes('384,400') || moonRes.spokenResponse.includes('kilometers') || moonRes.spokenResponse.includes('miles'), 'Calculated Moon distance');
+
+    // 6. World Geography: Capital of Australia
+    const ausRes = await cortexEngine.reasonAndAct("what is the capital of Australia");
+    assert.ok(ausRes.spokenResponse.includes('Canberra'), 'Answered Canberra as capital of Australia');
+  });
+
 });

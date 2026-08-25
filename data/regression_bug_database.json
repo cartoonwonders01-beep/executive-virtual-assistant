@@ -134,6 +134,17 @@
       "fix": "Built real-time time/date engine, percentage/arithmetic math calculator, countdown timer generator, and task/reminder dispatchers into cortexDialogueEngine.",
       "testSuite": "tests/regression_database_suite.test.ts",
       "testAssertion": "testBug012_CoreVoiceUtilitiesSuite"
+    },
+    {
+      "id": "BUG-013",
+      "title": "Unintelligent Fallback on Encyclopedic Curiosity & Science Queries",
+      "severity": "HIGH",
+      "category": "CONVERSATIONAL_IQ_AND_KNOWLEDGE",
+      "symptom": "Questions like 'how fast does a bird fly', 'how many fish in the ocean', 'where am i', 'why is the sky blue' returned awkward fallback: 'I understand your point regarding...'",
+      "rootCause": "intelligentAdvisor lacked encyclopedic domain solvers for biology, physics, astronomy, geography, and situational device positioning.",
+      "fix": "Built comprehensive encyclopedic knowledge engine in intelligentAdvisor covering avian biology, marine biology, astronomy, physics, world geography, history, and situational awareness.",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug013_EncyclopedicCuriosityKnowledge"
     }
   ]
 }
