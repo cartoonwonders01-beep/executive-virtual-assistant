@@ -319,16 +319,18 @@ export class AudioRecorderService {
     }
 
     if (this.currentSegmentRecorder && this.currentSegmentRecorder.state === 'recording') {
-      this.currentSegmentRecorder.stop();
-    } else {
-      this.cleanup();
-      if (this.configRef) {
-        const resolvedMimeType = this.resolveMimeType();
-        const finalBlob = this.masterChunks.length > 0 
-          ? new Blob(this.masterChunks, { type: resolvedMimeType || 'audio/webm' }) 
-          : new Blob([], { type: resolvedMimeType || 'audio/webm' });
-        this.configRef.onRecordingComplete(finalBlob, resolvedMimeType || 'audio/webm', this.capturedLiveTranscript);
-      }
+      try { this.currentSegmentRecorder.stop(); } catch {}
+    }
+
+    // Immediately stop & release all MediaStream microphone hardware tracks synchronously
+    this.cleanup();
+
+    if (this.configRef) {
+      const resolvedMimeType = this.resolveMimeType();
+      const finalBlob = this.masterChunks.length > 0 
+        ? new Blob(this.masterChunks, { type: resolvedMimeType || 'audio/webm' }) 
+        : new Blob([], { type: resolvedMimeType || 'audio/webm' });
+      this.configRef.onRecordingComplete(finalBlob, resolvedMimeType || 'audio/webm', this.capturedLiveTranscript);
     }
   }
 

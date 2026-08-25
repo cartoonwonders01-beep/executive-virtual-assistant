@@ -166,9 +166,12 @@ class LoggerService {
       });
 
       // Auto-curate every 15 minutes
-      setInterval(() => {
+      const curateTimer = setInterval(() => {
         this.curateHourlyLogs();
       }, 15 * 60 * 1000);
+      if (typeof (curateTimer as any)?.unref === 'function') {
+        (curateTimer as any).unref();
+      }
     }
   }
 
