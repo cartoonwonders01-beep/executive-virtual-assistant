@@ -310,24 +310,7 @@ export class CortexDialogueEngine {
       };
     }
 
-    // E. Conversational Strategic Dialogue, Capability Inquiries & Personal Q&A
-    if (intelligentAdvisor.isQuestionOrInquiry(cleanedText || textTrimmed)) {
-      const solution = intelligentAdvisor.solve(cleanedText || textTrimmed);
-      return {
-        actionCard: {
-          id: cardId,
-          intent: 'knowledge_qa',
-          title: solution.title,
-          description: solution.summary || solution.spokenResponse,
-          spokenResponse: solution.spokenResponse,
-          status: 'executed',
-          createdAt: nowStr
-        },
-        spokenResponse: solution.spokenResponse
-      };
-    }
-
-    // F. Gemini Cloud LLM Fallback for Complex Open-Ended Queries
+    // G. Gemini Cloud LLM / Edge Inference for Complex Open-Ended Queries & General Chat
     if (apiKey) {
       try {
         logger.debug('gemini_llm', `Dispatching open-ended query to Gemini Cloud API (gemini-1.5-flash)...`);
@@ -363,7 +346,7 @@ export class CortexDialogueEngine {
                 title: gCard.calendarData.title,
                 startDateTime: gCard.calendarData.startDateTime,
                 endDateTime: gCard.calendarData.endDateTime,
-                location: gCard.calendarData.location || 'Google Meet',
+                location: gCard.calendarData.location || 'Virtual / Google Meet',
                 attendees: gCard.calendarData.attendees || [],
                 status: 'confirmed'
               } : undefined
@@ -372,12 +355,12 @@ export class CortexDialogueEngine {
           };
         }
       } catch (err) {
-        logger.log('warn', 'ai_reasoning', `Gemini remote call notice: ${err}`);
+        logger.log('warn', 'gemini_llm', `Gemini cloud inference error, falling back to local cognitive solver: ${err}`);
       }
     }
 
-    // G. General Executive Inquiry Fallback
-    const solution = intelligentAdvisor.solve(textTrimmed);
+    // H. High-IQ Client Semantic Knowledge & Solution Engine Fallback
+    const solution = intelligentAdvisor.solve(cleanedText || textTrimmed);
     return {
       actionCard: {
         id: cardId,

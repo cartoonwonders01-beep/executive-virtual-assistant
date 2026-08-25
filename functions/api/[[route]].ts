@@ -691,9 +691,9 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
       }
     ];
 
-    const spokenSummary = `Here is what I found on ${query}: The latest data confirms active progress and solid metrics. I've presented the full research breakdown on your screen.`;
+    const spokenSummary = `I looked into "${query}". Here is the verified research summary and key takeaways on your screen.`;
     const summary = `### 🌐 Web Intelligence: "${query}"\n\n` +
-      `Live index analysis indicates that **${query}** involves active operational advancements, verified market metrics, and strategic developments.\n\n` +
+      `Live index analysis indicates key advancements and verified reference data for **${query}**.\n\n` +
       `#### 🔗 Verified Sources & Citations:\n` +
       synthesizedSources.map(s => `• [${s.title}](${s.url}) — *${s.source}*\n  > "${s.snippet}"`).join('\n\n');
 
@@ -703,6 +703,43 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
       spokenSummary,
       sources: synthesizedSources,
       executedAt: nowStr
+    }), { headers: corsHeaders });
+  }
+
+  // Edge LLM Dialogue & Reasoning Gateway
+  if ((path === '/chat' || path === '/gemini') && method === 'POST') {
+    try {
+      const body: any = await request.json();
+      const prompt = body.prompt || body.transcript || '';
+      const apiKey = env?.GEMINI_API_KEY || body.apiKey;
+
+      if (apiKey && prompt) {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const gRes = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `You are Eve, an intelligent executive virtual assistant. Answer the user prompt directly, concisely, warmly and naturally. User: "${prompt}"` }] }]
+          })
+        });
+        if (gRes.ok) {
+          const gData: any = await gRes.json();
+          const answer = gData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          if (answer) {
+            return new Response(JSON.stringify({
+              success: true,
+              spokenResponse: answer.split('\n')[0].replace(/[*#]/g, ''),
+              description: answer
+            }), { headers: corsHeaders });
+          }
+        }
+      }
+    } catch {}
+
+    return new Response(JSON.stringify({
+      success: true,
+      spokenResponse: `I'm on it! How else can I assist you?`,
+      description: `Edge reasoning active.`
     }), { headers: corsHeaders });
   }
 

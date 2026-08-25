@@ -878,6 +878,47 @@ export class IntelligentAdvisor {
       };
     }
 
+    if (/what\s+can\s+you\s+do|capabilities|help\s+me|how\s+can\s+you\s+help|what\s+are\s+your\s+features/i.test(lower)) {
+      return {
+        title: 'Eve Capabilities & Executive Suite',
+        category: 'General',
+        spokenResponse: "I can draft and send emails, manage your calendar and meetings, give live weather forecasts, search the web, track tasks, and answer complex questions. What would you like to do?",
+        summary: "Full suite of executive virtual assistant capabilities active.",
+        keyInsights: [
+          'Email Dispatch & Family Knowledge Graph',
+          'Live Meteorological & Web Search Grounding',
+          'Executive Calendar Coordination',
+          'Multilingual Natural Speech across EN, FR, DE, and ES'
+        ],
+        actionSteps: ['Ask for the weather, check your calendar, or dictate an email.'],
+        language: 'en'
+      };
+    }
+
+    if (/dinner|cook|meal|food|eat|lunch|recipe/i.test(lower)) {
+      return {
+        title: 'Executive Culinary & Meal Ideas',
+        category: 'General',
+        spokenResponse: "For a quick and healthy dinner, consider a fresh Mediterranean bowl with grilled salmon, roasted vegetables and quinoa, or a classic pasta with fresh herbs and olive oil.",
+        summary: "Healthy and efficient meal ideas.",
+        keyInsights: ['Balanced nutrition enhances focus and energy', 'Quick preparation under 25 minutes'],
+        actionSteps: ['Choose your preferred cuisine and let me know if you need ingredients.'],
+        language: 'en'
+      };
+    }
+
+    if (/travel|trip|flight|pack|packing|hotel/i.test(lower)) {
+      return {
+        title: 'Travel & Itinerary Preparation',
+        category: 'General',
+        spokenResponse: "When preparing for a trip, check the local weather forecast, verify your schedule and flight times, and pack essentials tailored to your destination.",
+        summary: "Travel preparation and logistics.",
+        keyInsights: ['Weather-aligned packing', 'Schedule verification in advance'],
+        actionSteps: ['Ask for the weather at your destination city.'],
+        language: 'en'
+      };
+    }
+
     if (/bye|goodbye|see\s+you|talk\s+later|adieu|au\s+revoir|tschüss|ciao/i.test(lower)) {
       return {
         title: 'Farewell',
