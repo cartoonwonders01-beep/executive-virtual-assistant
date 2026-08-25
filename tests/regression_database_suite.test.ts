@@ -186,4 +186,58 @@ test('Automated Bug Regression Database Suite (Verified Against data/regression_
     assert.equal(res2.actionCard.emailData?.toEmail, 'eleonore.a.baxter@gmail.com', 'Ellie resolved to Eleonore Baxter');
   });
 
+  // --- BUG-009: Strict Semantic & Factual Intelligence (Weather & Calendar) ---
+  await t.test('BUG-009: Strict Semantic & Factual Intelligence (Weather & Calendar)', async () => {
+    // 1. Weather Inquiries: Must contain actual degrees, conditions, and zero generic boilerplate
+    const weatherQueries = [
+      "What's the weather like in Paris today",
+      "Tell me the weather forecast for London",
+      "Quel temps fait-il à Paris ?",
+      "Wie ist das Wetter in Berlin?"
+    ];
+
+    const BANNED_GIBBERISH = [
+      'active progress and solid metrics',
+      'The verified data confirms recent developments',
+      'The clearest path is to focus on your primary point of leverage',
+      'Regarding to know what the weather'
+    ];
+
+    for (const q of weatherQueries) {
+      const res = await cortexEngine.reasonAndAct(q);
+      for (const banned of BANNED_GIBBERISH) {
+        assert.ok(
+          !res.spokenResponse.includes(banned),
+          `Weather response for "${q}" must NOT contain banned boilerplate "${banned}"`
+        );
+      }
+      assert.ok(
+        /°C|°F|degrees|cloudy|sunny|rain|clear|mild|température|wetter|grad/i.test(res.spokenResponse),
+        `Weather response for "${q}" must contain factual meteorological data (got: "${res.spokenResponse}")`
+      );
+    }
+
+    // 2. Calendar Inquiries: Must contain real meeting titles, times, and attendees
+    const calendarQueries = [
+      "What is on my calendar today",
+      "Check my calendar for meetings",
+      "Quel est mon planning aujourd'hui ?",
+      "Was steht heute in meinem Kalender?"
+    ];
+
+    for (const cq of calendarQueries) {
+      const cRes = await cortexEngine.reasonAndAct(cq);
+      for (const banned of BANNED_GIBBERISH) {
+        assert.ok(
+          !cRes.spokenResponse.includes(banned),
+          `Calendar response for "${cq}" must NOT contain banned boilerplate "${banned}"`
+        );
+      }
+      assert.ok(
+        /Strategy|Sync|Operations|David Miller|Celine|10:00|14:00|2:00|5:00|rendez-vous|Termin/i.test(cRes.spokenResponse),
+        `Calendar response for "${cq}" must contain real executive meeting details (got: "${cRes.spokenResponse}")`
+      );
+    }
+  });
+
 });

@@ -118,13 +118,16 @@ test('Inter-Tier Telemetry Flow & Cross-Layer Simulation Audit Suite', async (t)
     console.log('  📊 [Flow 3 Log Audit] German dialogue generated with voice:', voice?.name);
   });
 
-  await t.test('Flow 4: Live Web Search Grounding Inter-Tier Audit', async () => {
+  await t.test('Flow 4: Live Meteorological & Web Search Grounding Inter-Tier Audit', async () => {
     const query = "What's the weather in London tomorrow";
     const cortexResult = await cortexEngine.reasonAndAct(query);
 
     assert.equal(cortexResult.actionCard.intent, 'web_search', 'Web search intent executed');
-    assert.ok(cortexResult.toolCallExecuted?.toolName === 'search_web', 'search_web tool call recorded');
-    assert.ok(cortexResult.actionCard.description.length > 20, 'Weather summary generated');
+    assert.ok(
+      cortexResult.toolCallExecuted?.toolName === 'get_weather' || cortexResult.toolCallExecuted?.toolName === 'search_web',
+      'get_weather or search_web tool call recorded'
+    );
+    assert.ok(cortexResult.spokenResponse.includes('London') && (cortexResult.spokenResponse.includes('°C') || cortexResult.spokenResponse.includes('°F')), 'Delivered factual weather data');
 
     console.log('  📊 [Flow 4 Log Audit] Tool execution verified:', cortexResult.toolCallExecuted?.toolName);
   });

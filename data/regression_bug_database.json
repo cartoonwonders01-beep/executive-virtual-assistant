@@ -90,6 +90,17 @@
       "fix": "Added aliases array to memory graph entities and phonetic normalization in cortexDialogueEngine.",
       "testSuite": "tests/regression_database_suite.test.ts",
       "testAssertion": "testBug008_FamilyPhoneticAliasResolution"
+    },
+    {
+      "id": "BUG-009",
+      "title": "Vacuous Testing & Generic Weather/Calendar Gibberish",
+      "severity": "CRITICAL",
+      "category": "FACTUAL_SEMANTIC_INTELLIGENCE",
+      "symptom": "When asked for weather or calendar details, assistant returned generic boilerplate ('active progress and solid metrics') or hardcoded single appointments, while tests passed due to weak length > 20 assertions.",
+      "rootCause": "Tests used vacuous assertions (checking string length > 20) instead of verifying real factual content (temperatures in °C/°F, city names, actual calendar meeting titles and timestamps).",
+      "fix": "Built real-time weatherService and calendarService with accurate multilingual briefings, and upgraded test suites with strict factual/semantic assertions banning boilerplate.",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug009_StrictSemanticFactualIntelligence"
     }
   ]
 }

@@ -92,9 +92,11 @@ export async function runHeadlessBrowserRenderAudit() {
 
     const weatherTurnRendered = await page.evaluate(() => {
       const text = document.body.innerText;
-      return text.includes('weather') || text.includes('forecast') || text.includes('sunny') || text.includes('rain') || text.includes('temperature') || text.includes('Intelligence');
+      const hasWeatherData = text.includes('°C') || text.includes('°F') || text.includes('weather') || text.includes('forecast') || text.includes('temperature');
+      const hasNoGibberish = !text.includes('active progress and solid metrics') && !text.includes('The verified data confirms recent developments');
+      return hasWeatherData && hasNoGibberish;
     });
-    assert(weatherTurnRendered, 'H4.1: Weather intelligence response rendered in conversation stream');
+    assert(weatherTurnRendered, 'H4.1: Factual meteorological intelligence rendered in DOM (zero boilerplate)');
 
     console.log('\n--- [Step 5] Real-User UI Interaction: Executive Humor ---');
     await page.click('input[type="text"]');

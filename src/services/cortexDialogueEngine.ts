@@ -1,6 +1,8 @@
 import { ActionCard, DialogueTurn, EmailDraft, CalendarAppointment, TaskItem, CustomLLMProfile } from '../types';
 import { memoryGraph } from './memoryGraphService';
 import { webSearchService } from './webSearchService';
+import { weatherService } from './weatherService';
+import { calendarService } from './calendarService';
 import { autonomousPractice } from './autonomousPracticeWorker';
 import { processSpeechWithGemini } from './geminiService';
 import { intelligentAdvisor } from './intelligentAdvisor';
@@ -78,10 +80,31 @@ export class CortexDialogueEngine {
 
     logger.debug('ai_reasoning', `Cleaned ReAct transcript payload: "${cleanedText}"`, { cleanLower });
 
-    // A. Tool: Web Search & Weather Grounding (Prioritized over calendar)
-    if (/weather|forecast|rain|temperature|degrees|meteo|hot\b|cold\b|sunny|outside/i.test(textLower) || webSearchService.isWebSearchQuery(cleanedText || textTrimmed)) {
-      const query = /weather|forecast|rain|temperature|hot|cold|sunny|outside/i.test(textLower) ? (cleanedText || 'weather forecast') : (cleanedText || textTrimmed);
-      const searchRes = await webSearchService.searchWeb(query);
+    // A1. Tool: Real-Time Meteorological Intelligence & Weather Forecasting
+    if (/weather|forecast|rain|temperature|degrees|meteo|météo|wetter|tiempo|clima|hot\b|cold\b|sunny|outside|pluie|regen|lluvia|temps\s+fait|quel\s+temps|vorhersage|sonne|grad\b/i.test(textLower)) {
+      const weatherReport = await weatherService.getWeather(cleanedText || textTrimmed);
+      return {
+        actionCard: {
+          id: cardId,
+          intent: 'web_search',
+          title: `🌤️ Weather: ${weatherReport.city} (${weatherReport.temperatureC}°C / ${weatherReport.condition})`,
+          description: weatherReport.summary,
+          spokenResponse: weatherReport.spokenSummary,
+          status: 'executed',
+          createdAt: nowStr
+        },
+        spokenResponse: weatherReport.spokenSummary,
+        toolCallExecuted: {
+          toolName: 'get_weather',
+          params: { city: weatherReport.city },
+          result: weatherReport
+        }
+      };
+    }
+
+    // A2. Tool: Web Search Grounding & Current Events
+    if (webSearchService.isWebSearchQuery(cleanedText || textTrimmed)) {
+      const searchRes = await webSearchService.searchWeb(cleanedText || textTrimmed);
       return {
         actionCard: {
           id: cardId,
@@ -265,24 +288,24 @@ export class CortexDialogueEngine {
       };
     }
 
-    // F. Tool: Calendar Coordination ("My calendar", "What is on my schedule tomorrow")
-    if (/^(?:my\s+)?calendar$|^(?:check|view|show|what's\s+on)\s+(?:my\s+)?(?:calendar|schedule)|(?:calendar|schedule|agenda|appointment|meeting)/i.test(textLower)) {
-      const spoken = `You have your Q3 Product Strategy sync tomorrow at 10:00 AM, followed by an afternoon alignment call. Your schedule is clear from 2:00 PM onwards.`;
+    // F. Tool: Dynamic Calendar & Executive Schedule Intelligence
+    if (/(?:my\s+)?(?:calendar|kalender|calendario|schedule|agenda|planning|programme|horaire|horario|emploi\s+du\s+temps|tagesablauf|appointment|meeting|rendez-vous|termin|reuni[oó]n|reuniones)/i.test(textLower)) {
+      const briefing = calendarService.getScheduleBriefing(cleanedText || textTrimmed);
       return {
         actionCard: {
           id: cardId,
           intent: 'calendar_booking',
-          title: `Schedule Briefing`,
-          description: spoken,
-          spokenResponse: spoken,
+          title: `📅 Schedule Briefing (${briefing.totalEvents} Events)`,
+          description: briefing.summary,
+          spokenResponse: briefing.spokenSummary,
           status: 'executed',
           createdAt: nowStr
         },
-        spokenResponse: spoken,
+        spokenResponse: briefing.spokenSummary,
         toolCallExecuted: {
           toolName: 'check_calendar',
-          params: {},
-          result: { eventsFound: 2 }
+          params: { query: cleanedText || textTrimmed },
+          result: briefing
         }
       };
     }

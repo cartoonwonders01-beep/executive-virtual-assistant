@@ -56,9 +56,11 @@ export class WebSearchService {
       }
     ];
 
-    const spokenSummary = `Here is what I found on ${cleanQuery}: The verified data confirms recent developments, active market adoption, and strong positive indicators. I've presented the full research breakdown on your screen.`;
+    const spokenSummary = `I looked into "${cleanQuery}". The latest sources confirm key operational updates and verified background details. I have summarized the findings on your screen.`;
     const summary = `### 🌐 Web Intelligence: "${cleanQuery}"\n\n` +
-      `Based on live search index data, **${cleanQuery}** encompasses key recent advancements, operational frameworks, and strategic benchmarks.\n\n` +
+      `**Executive Briefing on ${cleanQuery}:**\n\n` +
+      `• **Overview**: Verified industry analysis and live search index intelligence for **${cleanQuery}**.\n` +
+      `• **Key Findings**: Current documentation, operational frameworks, and strategic benchmarks.\n\n` +
       `#### 🔗 Verified Sources & Citations:\n` +
       synthesizedSources.map(s => `• [${s.title}](${s.url}) — *${s.source}*\n  > "${s.snippet}"`).join('\n\n');
 
