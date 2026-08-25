@@ -293,4 +293,35 @@ test('Automated Bug Regression Database Suite (Verified Against data/regression_
     assert.ok(recent.length >= 3, 'Recent recoveries tracked in telemetry');
   });
 
+  // --- BUG-012: Core Voice Utilities Suite (Time, Math, Timers, Tasks, Reminders) ---
+  await t.test('BUG-012: Core Voice Utilities Suite (Time, Math, Timers, Tasks, Reminders)', async () => {
+    // 1. Time / Clock
+    const timeRes = await cortexEngine.reasonAndAct("What time is it right now?");
+    assert.ok(/AM|PM|:|heure|Uhr/i.test(timeRes.spokenResponse), 'Reported current time');
+    assert.equal(timeRes.toolCallExecuted?.toolName, 'get_time_date');
+
+    // 2. Percentage & Arithmetic Math
+    const mathRes1 = await cortexEngine.reasonAndAct("What is 15% of 2500?");
+    assert.ok(mathRes1.spokenResponse.includes('375'), 'Calculated 15% of 2500 = 375');
+    assert.equal(mathRes1.toolCallExecuted?.toolName, 'calculate_math');
+
+    const mathRes2 = await cortexEngine.reasonAndAct("Calculate 45 * 12");
+    assert.ok(mathRes2.spokenResponse.includes('540'), 'Calculated 45 * 12 = 540');
+
+    // 3. Countdown Timers
+    const timerRes = await cortexEngine.reasonAndAct("Set a timer for 10 minutes");
+    assert.ok(timerRes.spokenResponse.includes('10 minutes'), 'Created 10 minute timer');
+    assert.equal(timerRes.toolCallExecuted?.toolName, 'set_timer');
+
+    // 4. Executive Task Creation
+    const taskRes = await cortexEngine.reasonAndAct("Add task to review Q3 financial budget");
+    assert.ok(taskRes.spokenResponse.includes('Review Q3 financial budget') || taskRes.spokenResponse.includes('Added'), 'Created task in backlog');
+    assert.equal(taskRes.toolCallExecuted?.toolName, 'create_task');
+
+    // 5. Reminders
+    const reminderRes = await cortexEngine.reasonAndAct("Remind me to call David Miller at 3 PM");
+    assert.ok(reminderRes.spokenResponse.includes('David Miller') || reminderRes.spokenResponse.includes('reminder'), 'Saved reminder');
+    assert.equal(reminderRes.toolCallExecuted?.toolName, 'set_reminder');
+  });
+
 });

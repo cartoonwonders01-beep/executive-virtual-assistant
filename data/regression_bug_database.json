@@ -123,6 +123,17 @@
       "fix": "Built resilienceService (Self-Healing Feedback & Error Recovery Loop) providing transparent spoken recovery notices across EN, FR, DE, and ES, and automatic local fallback.",
       "testSuite": "tests/regression_database_suite.test.ts",
       "testAssertion": "testBug011_SelfHealingErrorRecoveryLoop"
+    },
+    {
+      "id": "BUG-012",
+      "title": "Missing Core Voice Assistant Utilities (Time, Math, Timers, Tasks, Reminders)",
+      "severity": "HIGH",
+      "category": "VOICE_UTILITIES_AND_DEVICE_TOOLS",
+      "symptom": "Asking 'What time is it', '15% of 2500', 'Set a timer for 10 minutes', or 'Add task...' returned generic text instead of executing the utility.",
+      "rootCause": "cortexDialogueEngine lacked dedicated fast-path voice tool handlers for temporal queries, arithmetic, timers, task creation, and reminders.",
+      "fix": "Built real-time time/date engine, percentage/arithmetic math calculator, countdown timer generator, and task/reminder dispatchers into cortexDialogueEngine.",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug012_CoreVoiceUtilitiesSuite"
     }
   ]
 }

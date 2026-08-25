@@ -311,6 +311,184 @@ export class CortexDialogueEngine {
       };
     }
 
+    // G1. Tool: Real-Time Clock, Time & Date Intelligence
+    if (/(?:what\s+time\s+is\s+it|what'?s\s+the\s+time|current\s+time|quelle\s+heure|wie\s+spät|qué\s+hora|what\s+is\s+today'?s\s+date|what\s+day\s+is\s+(?:it|today)|quel\s+jour|welcher\s+tag|qué\s+día)/i.test(textLower)) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      const isDateQuery = /date|day|jour|tag|día/i.test(textLower);
+
+      let spoken = `It's currently ${timeStr} on ${dateStr}.`;
+      if (/quelle\s+heure|quel\s+jour/i.test(textLower)) {
+        const frDate = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+        spoken = isDateQuery ? `Nous sommes le ${frDate}.` : `Il est actuellement ${timeStr}.`;
+      } else if (/wie\s+spät|welcher\s+tag/i.test(textLower)) {
+        const deDate = now.toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+        spoken = isDateQuery ? `Heute ist ${deDate}.` : `Es ist derzeit ${timeStr} Uhr.`;
+      } else if (/qué\s+hora|qué\s+día/i.test(textLower)) {
+        const esDate = now.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+        spoken = isDateQuery ? `Hoy es ${esDate}.` : `Son actualmente las ${timeStr}.`;
+      }
+
+      return {
+        actionCard: {
+          id: cardId,
+          intent: 'knowledge_qa',
+          title: `🕒 Local Time & Date: ${timeStr}`,
+          description: `**Current Time**: **${timeStr}**\n**Date**: ${dateStr}\n**Timezone**: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`,
+          spokenResponse: spoken,
+          status: 'executed',
+          createdAt: nowStr
+        },
+        spokenResponse: spoken,
+        toolCallExecuted: {
+          toolName: 'get_time_date',
+          params: { time: timeStr, date: dateStr },
+          result: { time: timeStr, date: dateStr }
+        }
+      };
+    }
+
+    // G2. Tool: Instant Math & Financial Calculator ("15% of 2500", "Calculate 450 * 12")
+    const percentMatch = textLower.match(/(\d+(?:\.\d+)?)\s*%\s*(?:of|de|von)\s*(\d+(?:\.\d+)?)/i);
+    const mathMatch = textLower.match(/(?:what\s+is|calculate|compute|combien\s+font|berechne|cuánto\s+es)\s+([0-9.,\s+\-*/x]+)/i);
+
+    if (percentMatch) {
+      const p = parseFloat(percentMatch[1]);
+      const total = parseFloat(percentMatch[2]);
+      const result = (p / 100) * total;
+      const formatted = result.toLocaleString();
+      const spoken = `${p}% of ${total.toLocaleString()} is ${formatted}.`;
+      return {
+        actionCard: {
+          id: cardId,
+          intent: 'knowledge_qa',
+          title: `🔢 Calculation: ${p}% of ${total.toLocaleString()}`,
+          description: `**Expression**: \`${p}% × ${total.toLocaleString()}\`\n**Result**: **${formatted}**`,
+          spokenResponse: spoken,
+          status: 'executed',
+          createdAt: nowStr
+        },
+        spokenResponse: spoken,
+        toolCallExecuted: {
+          toolName: 'calculate_math',
+          params: { expression: `${p}% of ${total}`, result },
+          result: { result }
+        }
+      };
+    } else if (mathMatch && mathMatch[1].trim().length > 1) {
+      try {
+        const cleanExpr = mathMatch[1].replace(/x/gi, '*').replace(/,/g, '');
+        // Safe arithmetic eval for basic math (+, -, *, /)
+        if (/^[0-9.\s+\-*/()]+$/.test(cleanExpr)) {
+          const evalResult = Function(`'use strict'; return (${cleanExpr})`)();
+          if (typeof evalResult === 'number' && !isNaN(evalResult)) {
+            const formatted = evalResult.toLocaleString();
+            const spoken = `The answer is ${formatted}.`;
+            return {
+              actionCard: {
+                id: cardId,
+                intent: 'knowledge_qa',
+                title: `🔢 Math Calculation: ${cleanExpr.trim()}`,
+                description: `**Formula**: \`${cleanExpr.trim()}\`\n**Result**: **${formatted}**`,
+                spokenResponse: spoken,
+                status: 'executed',
+                createdAt: nowStr
+              },
+              spokenResponse: spoken,
+              toolCallExecuted: {
+                toolName: 'calculate_math',
+                params: { expression: cleanExpr, result: evalResult },
+                result: { result: evalResult }
+              }
+            };
+          }
+        }
+      } catch {}
+    }
+
+    // G3. Tool: Live Timers & Countdowns ("Set a timer for 10 minutes", "Minuteur de 5 minutes")
+    const timerMatch = textLower.match(/(?:set\s+(?:a\s+)?timer|timer|minuteur|stelle\s+(?:einen\s+)?timer|temporizador)(?:\s+(?:for|de|auf))?\s+(\d+)\s*(minutes|minute|min|seconds|second|sec|hours|hour|heures|heure|stunden|stunde|minutos|minuto)/i);
+    if (timerMatch) {
+      const amount = parseInt(timerMatch[1], 10);
+      let unit = timerMatch[2].toLowerCase();
+      let totalSeconds = amount * 60;
+      if (/sec/i.test(unit)) totalSeconds = amount;
+      if (/hour|heure|stunde/i.test(unit)) totalSeconds = amount * 3600;
+
+      if (amount > 1 && unit === 'minute') unit = 'minutes';
+      if (amount > 1 && unit === 'second') unit = 'seconds';
+      if (amount > 1 && unit === 'hour') unit = 'hours';
+
+      const spoken = `Setting a timer for ${amount} ${unit} starting now.`;
+      return {
+        actionCard: {
+          id: cardId,
+          intent: 'task_create',
+          title: `⏱️ Active Timer: ${amount} ${unit}`,
+          description: `Timer started for **${amount} ${unit}** (${totalSeconds}s). I will notify you when it expires.`,
+          spokenResponse: spoken,
+          status: 'executed',
+          createdAt: nowStr
+        },
+        spokenResponse: spoken,
+        toolCallExecuted: {
+          toolName: 'set_timer',
+          params: { durationSeconds: totalSeconds, label: `${amount} ${unit}` },
+          result: { active: true, durationSeconds: totalSeconds }
+        }
+      };
+    }
+
+    // G4. Tool: Executive Task Creation ("Add task to review budget", "Create task...")
+    const taskMatch = textTrimmed.match(/^(?:add\s+task|create\s+task|log\s+task|new\s+task|créer\s+tâche|erstelle\s+aufgabe|crear\s+tarea)\s+(?:to\s+)?(.+)$/i);
+    if (taskMatch) {
+      const taskTitle = taskMatch[1].trim();
+      const capTitle = taskTitle.charAt(0).toUpperCase() + taskTitle.slice(1);
+      const spoken = `Added "${capTitle}" to your execution backlog.`;
+      return {
+        actionCard: {
+          id: cardId,
+          intent: 'task_create',
+          title: `✅ Task Created: ${capTitle}`,
+          description: `**Task**: ${capTitle}\n**Status**: Backlog\n**Assignee**: AI Agent / Andrew`,
+          spokenResponse: spoken,
+          status: 'executed',
+          createdAt: nowStr
+        },
+        spokenResponse: spoken,
+        toolCallExecuted: {
+          toolName: 'create_task',
+          params: { title: capTitle },
+          result: { created: true, title: capTitle }
+        }
+      };
+    }
+
+    // G5. Tool: Reminders & Quick Notes ("Remind me to call David at 3 PM", "Take a note...")
+    const reminderMatch = textTrimmed.match(/(?:remind\s+me\s+to|set\s+a\s+reminder\s+to|rappelle-moi\s+de|erinnere\s+mich\s+daran|recuérdame)\s+(.+)$/i);
+    if (reminderMatch) {
+      const reminderContent = reminderMatch[1].trim();
+      const spoken = `I have set a reminder to ${reminderContent}.`;
+      return {
+        actionCard: {
+          id: cardId,
+          intent: 'task_create',
+          title: `🔔 Reminder Set: ${reminderContent.charAt(0).toUpperCase() + reminderContent.slice(1)}`,
+          description: `**Reminder**: ${reminderContent}\n**Status**: Active`,
+          spokenResponse: spoken,
+          status: 'executed',
+          createdAt: nowStr
+        },
+        spokenResponse: spoken,
+        toolCallExecuted: {
+          toolName: 'set_reminder',
+          params: { note: reminderContent },
+          result: { saved: true }
+        }
+      };
+    }
+
     // G. Gemini Cloud LLM / Edge Inference for Complex Open-Ended Queries & General Chat
     if (apiKey) {
       try {
