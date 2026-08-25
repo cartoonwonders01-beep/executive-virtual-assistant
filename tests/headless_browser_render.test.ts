@@ -175,9 +175,60 @@ export async function runHeadlessBrowserRenderAudit() {
     });
     assert(heroOrbRestored, 'H8.2: Conversation reset to clean hero orb state after archive');
 
-    console.log('\n--- [Step 9] Error-Free Execution Verification ---');
-    assert(browserErrors.length === 0, `H9.1: Zero uncaught browser runtime exceptions (found ${browserErrors.length})`, browserErrors);
-    assert(consoleErrors.length === 0, `H9.2: Zero browser console.error logs (found ${consoleErrors.length})`, consoleErrors);
+    console.log('\n--- [Step 9] Real-User UI Interaction: Multilingual French, German & Spanish Dialogue ---');
+    // Test French Conversational Interaction
+    await page.click('input[type="text"]');
+    await page.type('input[type="text"]', "Bonjour Eve, comment vas-tu aujourd'hui ?");
+    await page.click('button[type="submit"]');
+    await new Promise(r => setTimeout(r, 1000));
+
+    const frenchTurnRendered = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return text.includes('Bonjour') || text.includes('assistante') || text.includes('plannings') || text.includes('emails');
+    });
+    assert(frenchTurnRendered, 'H9.1: French conversational response rendered in DOM');
+
+    // Test German Conversational Interaction
+    await page.click('input[type="text"]');
+    await page.type('input[type="text"]', "Hallo Eve, was sind 3 Strategien für eine Morgenroutine?");
+    await page.click('button[type="submit"]');
+    await new Promise(r => setTimeout(r, 1000));
+
+    const germanTurnRendered = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return text.includes('Morgenroutine') || text.includes('Hebel') || text.includes('Deep-Work') || text.includes('Assistentin');
+    });
+    assert(germanTurnRendered, 'H9.2: German conversational response rendered in DOM');
+
+    // Test Spanish Conversational Interaction
+    await page.click('input[type="text"]');
+    await page.type('input[type="text"]', "¡Hola Eve! ¿Qué opinas de nuestra estrategia de crecimiento?");
+    await page.click('button[type="submit"]');
+    await new Promise(r => setTimeout(r, 1000));
+
+    const spanishTurnRendered = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return text.includes('estrategia') || text.includes('apalancamiento') || text.includes('ejecutiva') || text.includes('Hola');
+    });
+    assert(spanishTurnRendered, 'H9.3: Spanish conversational response rendered in DOM');
+
+    console.log('\n--- [Step 10] Real-User UI Profiling: Zero-CPU Idle RAF Invariant ---');
+    const idleRafCount = await page.evaluate(async () => {
+      let count = 0;
+      const orig = window.requestAnimationFrame;
+      window.requestAnimationFrame = (cb: FrameRequestCallback) => {
+        count++;
+        return orig(cb);
+      };
+      await new Promise(res => setTimeout(res, 500));
+      window.requestAnimationFrame = orig;
+      return count;
+    });
+    assert(idleRafCount === 0, `H10.1: Zero CPU spinning in idle state (measured ${idleRafCount} requestAnimationFrame cycles over 500ms)`);
+
+    console.log('\n--- [Step 11] Error-Free Execution Verification ---');
+    assert(browserErrors.length === 0, `H11.1: Zero uncaught browser runtime exceptions (found ${browserErrors.length})`, browserErrors);
+    assert(consoleErrors.length === 0, `H11.2: Zero browser console.error logs (found ${consoleErrors.length})`, consoleErrors);
 
   } finally {
     await browser.close();

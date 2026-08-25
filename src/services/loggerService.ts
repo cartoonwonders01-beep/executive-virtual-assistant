@@ -61,13 +61,17 @@ const MAX_LOGS = 500;
 const ONE_HOUR_MS = 60 * 60 * 1000;
 
 function getOrCreateSessionId(): string {
-  if (typeof window === 'undefined') return 'session-server';
-  let sid = sessionStorage.getItem('assistant_session_id');
-  if (!sid) {
-    sid = 'session-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6);
-    sessionStorage.setItem('assistant_session_id', sid);
+  if (typeof window === 'undefined' || typeof sessionStorage === 'undefined') return 'session-server';
+  try {
+    let sid = sessionStorage.getItem('assistant_session_id');
+    if (!sid) {
+      sid = 'session-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6);
+      sessionStorage.setItem('assistant_session_id', sid);
+    }
+    return sid;
+  } catch {
+    return 'session-fallback';
   }
-  return sid;
 }
 
 function loadStoredLogs(currentSessionId: string): { currentEntries: LogEntry[]; pastSessionArchives: ArchivedLogSession[] } {
@@ -154,7 +158,7 @@ class LoggerService {
     this.log('info', 'system', `✨ Eve Assistant Telemetry initialized for user [${this.userId}] (Active Session: ${this.sessionId}).`);
 
     // Global uncaught error listener
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
       window.addEventListener('error', (event) => {
         this.log('error', 'system', `Uncaught runtime error: ${event.message}`, {
           filename: event.filename,
