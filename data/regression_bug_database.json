@@ -112,6 +112,17 @@
       "fix": "Replaced PM template fallback with natural, intelligent conversational responses across English, French, German, and Spanish, eliminating leverage point / execution loop boilerplate.",
       "testSuite": "tests/regression_database_suite.test.ts",
       "testAssertion": "testBug010_NoRoboticPMBuzzwordsInGeneralDialogue"
+    },
+    {
+      "id": "BUG-011",
+      "title": "Silent Failures & Missing Self-Healing Recovery Loop",
+      "severity": "HIGH",
+      "category": "RESILIENCE_AND_ERROR_RECOVERY",
+      "symptom": "When cloud model timed out or a service experienced an error, assistant failed silently without informing the user or explaining recovery.",
+      "rootCause": "Lack of a centralized resilience service providing natural spoken transparent error recovery and graceful multi-tier degradation.",
+      "fix": "Built resilienceService (Self-Healing Feedback & Error Recovery Loop) providing transparent spoken recovery notices across EN, FR, DE, and ES, and automatic local fallback.",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug011_SelfHealingErrorRecoveryLoop"
     }
   ]
 }

@@ -271,4 +271,26 @@ test('Automated Bug Regression Database Suite (Verified Against data/regression_
     }
   });
 
+  // --- BUG-011: Self-Healing Error Recovery Loop (SHF-ERL) ---
+  await t.test('BUG-011: Self-Healing Error Recovery Loop (SHF-ERL)', async () => {
+    const { resilienceService } = await import('../src/services/resilienceService');
+
+    // 1. LLM Cloud Timeout Recovery
+    const enRec = resilienceService.handleAssistantError('LLM_CLOUD_TIMEOUT', new Error('API Timeout'), 'What is deep work', 'en');
+    assert.equal(enRec.severity, 'recoverable');
+    assert.ok(enRec.spokenExplanation.includes('connection delay') || enRec.spokenExplanation.includes('local engine'), 'Delivered transparent English recovery explanation');
+
+    const frRec = resilienceService.handleAssistantError('LLM_CLOUD_TIMEOUT', new Error('504 Gateway Timeout'), 'Explique-moi', 'fr');
+    assert.ok(frRec.spokenExplanation.includes('latence') || frRec.spokenExplanation.includes('moteur local'), 'Delivered transparent French recovery explanation');
+
+    // 2. Hardware / Network Offline Recovery
+    const netRec = resilienceService.handleAssistantError('NETWORK_OFFLINE', new Error('No internet'), 'Search online', 'en');
+    assert.equal(netRec.severity, 'degraded');
+    assert.ok(netRec.spokenExplanation.includes('offline'), 'Delivered offline recovery explanation');
+
+    // 3. Resilience history tracking
+    const recent = resilienceService.getRecentRecoveries();
+    assert.ok(recent.length >= 3, 'Recent recoveries tracked in telemetry');
+  });
+
 });

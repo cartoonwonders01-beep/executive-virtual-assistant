@@ -6,6 +6,7 @@ import { calendarService } from './calendarService';
 import { autonomousPractice } from './autonomousPracticeWorker';
 import { processSpeechWithGemini } from './geminiService';
 import { intelligentAdvisor } from './intelligentAdvisor';
+import { resilienceService } from './resilienceService';
 import { logger } from './loggerService';
 
 export interface CortexExecutionResult {
@@ -355,7 +356,22 @@ export class CortexDialogueEngine {
           };
         }
       } catch (err) {
-        logger.log('warn', 'gemini_llm', `Gemini cloud inference error, falling back to local cognitive solver: ${err}`);
+        logger.log('warn', 'gemini_llm', `Gemini cloud inference error, activating self-healing recovery: ${err}`);
+        const recovery = resilienceService.handleAssistantError('LLM_CLOUD_TIMEOUT', err, textTrimmed);
+        const solution = intelligentAdvisor.solve(cleanedText || textTrimmed);
+        const combinedSpoken = `${recovery.spokenExplanation} ${solution.spokenResponse}`;
+        return {
+          actionCard: {
+            id: cardId,
+            intent: 'knowledge_qa',
+            title: `${solution.title} (Auto-Recovered)`,
+            description: `${recovery.userMessage}\n\n${solution.summary || solution.spokenResponse}`,
+            spokenResponse: combinedSpoken,
+            status: 'executed',
+            createdAt: nowStr
+          },
+          spokenResponse: combinedSpoken
+        };
       }
     }
 
