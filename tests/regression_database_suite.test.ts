@@ -240,4 +240,35 @@ test('Automated Bug Regression Database Suite (Verified Against data/regression_
     }
   });
 
+  // --- BUG-010: No Robotic PM Buzzwords in General Conversational Dialogue ---
+  await t.test('BUG-010: No Robotic PM Buzzwords in General Conversational Dialogue', async () => {
+    const conversationalQueries = [
+      "Can we chat for a minute",
+      "I'm feeling like we have a lot on our plate today",
+      "What do you think about AI in 2026",
+      "Je me demande comment optimiser ma journée",
+      "Ich brauche deine Unterstützung heute"
+    ];
+
+    const BANNED_PM_BUZZWORDS = [
+      'primary point of leverage',
+      'execution loop lean',
+      'frictions opérationnelles',
+      'point de levier majeur',
+      'wirkungsvollsten Hebel',
+      'Monday.com Work Hub'
+    ];
+
+    for (const q of conversationalQueries) {
+      const res = await cortexEngine.reasonAndAct(q);
+      for (const buzzword of BANNED_PM_BUZZWORDS) {
+        assert.ok(
+          !res.spokenResponse.includes(buzzword),
+          `Conversational response for "${q}" must NOT contain robotic PM buzzword "${buzzword}" (got: "${res.spokenResponse}")`
+        );
+      }
+      assert.ok(res.spokenResponse.length > 10, 'Delivered meaningful dialogue response');
+    }
+  });
+
 });

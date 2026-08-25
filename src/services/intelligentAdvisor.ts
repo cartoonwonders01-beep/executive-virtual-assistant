@@ -174,12 +174,12 @@ export class IntelligentAdvisor {
       }
 
       return {
-        title: 'Eve — Deine Exekutive KI-Assistentin',
-        category: 'Business & Strategy',
-        spokenResponse: `Bezüglich ${text}: Der beste Hebel liegt darin, den Fokus auf die Kernpriorität zu richten und schnell in die Umsetzung zu gehen.`,
-        summary: `Exekutive Perspektive für: "${text}".`,
-        keyInsights: ['Fokus auf den wirkungsvollsten Hebel.', 'Schnelle Validierung.'],
-        actionSteps: ['Prüfe die nächsten Schritte im Work Hub.'],
+        title: 'Eve — Deine Exekutive Assistentin',
+        category: 'General',
+        spokenResponse: 'Ich bin ganz bei Ihnen, Andrew. Sagen Sie mir einfach, was ich für Sie recherchieren, entwerfen oder organisieren soll.',
+        summary: `Bereit für Ihre nächsten Anweisungen zu: "${text}".`,
+        keyInsights: ['Mehrsprachige Sprachverarbeitung aktiv.', 'Bereit für E-Mails, Kalender und Analysen.'],
+        actionSteps: ['Sprechen oder schreiben Sie einfach Ihre nächste Anfrage.'],
         language: 'de'
       };
     }
@@ -283,12 +283,12 @@ export class IntelligentAdvisor {
       }
 
       return {
-        title: 'Dialogue Exécutif & Réflexion',
-        category: 'Business & Strategy',
-        spokenResponse: `Sur ce point : l'essentiel est de cibler le point de levier majeur et d'éliminer les frictions opérationnelles. Voici l'analyse à l'écran.`,
-        summary: `Synthèse et réflexion conversationnelle pour : "${text}".`,
-        keyInsights: ['Alignement sur la priorité fondamentale.', 'Mesure continue de l\'impact.'],
-        actionSteps: ['Passez en revue les points clés sur votre écran.'],
+        title: 'Eve — Votre Assistante',
+        category: 'General',
+        spokenResponse: 'Je vous écoute, Andrew. Dites-moi ce que vous souhaitez que je recherche, rédige ou planifie pour vous.',
+        summary: `À votre disposition pour : "${text}".`,
+        keyInsights: ['Traitement du langage naturel actif.', 'Gestion d\'emails, météo, calendrier et analyses.'],
+        actionSteps: ['Dictez votre prochaine demande naturellement.'],
         language: 'fr'
       };
     }
@@ -890,25 +890,29 @@ export class IntelligentAdvisor {
       };
     }
 
-    // Dynamic Multi-Domain Semantic Thought Engine
+    // Natural Conversational Intelligence Fallback
     const cleanTopic = text
       .replace(/^(what\s+is|what\s+are|how\s+do\s+i|how\s+can\s+we|why\s+is|why\s+are|explain|tell\s+me\s+about|give\s+me\s+advice\s+on|can\s+you\s+explain|what\s+do\s+you\s+think\s+about|thoughts\s+on)\s+/i, '')
       .replace(/[?.]+$/, '')
       .trim();
-    const capitalizedTopic = cleanTopic ? cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1) : 'Strategic Question';
+    const capitalizedTopic = cleanTopic ? cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1) : 'Conversation';
+
+    let naturalSpoken = `I'm with you, Andrew. Tell me what you'd like me to look into, draft, or organize for you next.`;
+    if (cleanTopic.length > 2) {
+      naturalSpoken = `I understand your point regarding ${cleanTopic}. How would you like us to proceed?`;
+    }
 
     return {
-      title: `Strategic Perspective: ${capitalizedTopic}`,
-      category: 'Business & Strategy',
-      spokenResponse: `Regarding ${cleanTopic || 'this'}: The clearest path is to focus on your primary point of leverage and keep the execution loop lean. Let me know what step you'd like to take.`,
-      summary: `Executive perspective on ${cleanTopic || 'your inquiry'}.`,
+      title: capitalizedTopic,
+      category: 'General',
+      spokenResponse: naturalSpoken,
+      summary: `Conversational thought on "${text}".`,
       keyInsights: [
-        `Leverage Point: Focus on the single highest-impact variable for ${cleanTopic || 'this initiative'}.`,
-        `Feedback Loop: Test assumptions quickly before committing broad resources.`
+        `Active conversation turn recorded.`,
+        `Ready to execute follow-up actions (email, calendar, search, or workflow).`
       ],
       actionSteps: [
-        `1. Clarify the immediate outcome for ${cleanTopic || 'this project'}.`,
-        `2. Execute a focused iteration.`
+        `Speak your next command or ask a follow-up question.`
       ],
       language: (lang as SupportedLanguage) || 'en'
     };

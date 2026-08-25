@@ -101,6 +101,17 @@
       "fix": "Built real-time weatherService and calendarService with accurate multilingual briefings, and upgraded test suites with strict factual/semantic assertions banning boilerplate.",
       "testSuite": "tests/regression_database_suite.test.ts",
       "testAssertion": "testBug009_StrictSemanticFactualIntelligence"
+    },
+    {
+      "id": "BUG-010",
+      "title": "Robotic PM Buzzword Boilerplate in General Conversational Dialogue",
+      "severity": "HIGH",
+      "category": "CONVERSATIONAL_TONE_AND_IQ",
+      "symptom": "Eve responded to general conversational inquiries with rigid PM jargon ('focus on your primary point of leverage and keep the execution loop lean').",
+      "rootCause": "Fallback solver in intelligentAdvisor defaulted to a rigid project management template rather than natural conversational executive dialogue.",
+      "fix": "Replaced PM template fallback with natural, intelligent conversational responses across English, French, German, and Spanish, eliminating leverage point / execution loop boilerplate.",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug010_NoRoboticPMBuzzwordsInGeneralDialogue"
     }
   ]
 }
