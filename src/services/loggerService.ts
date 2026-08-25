@@ -343,8 +343,10 @@ class LoggerService {
 
     // Start brand new session
     this.sessionId = 'session-' + Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 6);
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('assistant_session_id', this.sessionId);
+    if (typeof window !== 'undefined' && typeof sessionStorage !== 'undefined') {
+      try {
+        sessionStorage.setItem('assistant_session_id', this.sessionId);
+      } catch {}
     }
     this.entries = [];
     saveStoredLogs([]);

@@ -22,6 +22,7 @@
     "test:depth": "tsx tests/voice_action_depth_suite.test.ts",
     "test:fidelity": "tsx tests/user_experience_fidelity_suite.test.ts",
     "test:governance": "tsx tests/runtime_hardware_and_multilingual_governance.test.ts",
+    "test:flow-audit": "tsx tests/inter_tier_telemetry_flow_audit.test.ts",
     "test:browser": "tsx tests/headless_browser_render.test.ts",
     "preview": "vite preview --host 0.0.0.0 --port 5173"
   },
