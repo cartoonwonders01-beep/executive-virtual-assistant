@@ -1,0 +1,95 @@
+{
+  "version": "1.0.0",
+  "description": "Permanent Database of Known Bugs, Root Causes, and Automated Regression Test Invariants for Eve Virtual Assistant",
+  "lastUpdated": "2026-08-25T08:30:00Z",
+  "bugs": [
+    {
+      "id": "BUG-001",
+      "title": "Chrome Tab Red Blinking Recording Indicator & Background Mic Leak",
+      "severity": "CRITICAL",
+      "category": "HARDWARE_STREAM_LIFECYCLE",
+      "symptom": "Browser tab constantly displays flashing red microphone recording indicator even when the user is not speaking or has stopped push-to-talk.",
+      "rootCause": "isWakeWordActive defaulted to true on cold-start, continuously running SpeechRecognition in passive mode and holding the OS microphone hardware stream open.",
+      "fix": "Default isWakeWordActive to false (Push-to-Talk default). Only activate microphone hardware during active push-to-talk interaction or when user explicitly toggles Wake-Word mode.",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug001_ColdStartZeroMicrophoneHardwareLeak"
+    },
+    {
+      "id": "BUG-002",
+      "title": "Ambient Noise Phantom Dialogue Turn Submissions (\"See the\")",
+      "severity": "HIGH",
+      "category": "STT_INTENT_FILTERING",
+      "symptom": "Assistant automatically submits turns and answers itself when ambient background whispers or room noise occurs without saying 'Hey Eve'.",
+      "rootCause": "wakeWordService contained a fallback regex that classified any 2-3 word ambient phrase as a 'Direct Voice Command', bypassing keyword verification.",
+      "fix": "Removed ambient noise fallback. Passive wake-word mode strictly requires an authentic wake-word trigger ('hey eve', 'bonjour eve', 'hallo eve', 'hola eve').",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug002_AmbientNoiseFuzzingRejection"
+    },
+    {
+      "id": "BUG-003",
+      "title": "STT Speech-to-Text Language Lock to en-US",
+      "severity": "HIGH",
+      "category": "MULTILINGUAL_LOCALIZATION",
+      "symptom": "When user speaks French, German, or Spanish, speech recognition outputs broken English syllables and fails to understand the user.",
+      "rootCause": "audioRecorder.ts and wakeWordService.ts hardcoded SpeechRecognition.lang = 'en-US' regardless of user preferred language or browser locale.",
+      "fix": "Dynamic locale binding: resolves from localStorage('assistant_preferred_language') or navigator.language (fr-FR, de-DE, es-ES, etc.).",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug003_DynamicSTTLocaleBinding"
+    },
+    {
+      "id": "BUG-004",
+      "title": "Idle 60fps Canvas Animation CPU Churn",
+      "severity": "MEDIUM",
+      "category": "PERFORMANCE_ZERO_CPU",
+      "symptom": "Virtual assistant UI causes high CPU usage (~20-30%) and battery drain while sitting completely idle in background browser tab.",
+      "rootCause": "MobileVoiceHUD.tsx ran an unthrottled requestAnimationFrame loop continuously calculating sine-waves even when audio level was 0 and assistant was idle.",
+      "fix": "Throttled RAF: requestAnimationFrame only schedules loops when isListening || isProcessingSpeech. Renders once statically when idle.",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug004_ZeroIdleRAFExecution"
+    },
+    {
+      "id": "BUG-005",
+      "title": "English Fallback Boilerplate Leakage in Non-English Turns",
+      "severity": "MEDIUM",
+      "category": "MULTILINGUAL_DIALOGUE",
+      "symptom": "When speaking in French or German, unhandled or open-ended queries returned generic English advice ('Regarding this: The clearest path...').",
+      "rootCause": "intelligentAdvisor.ts fallback thought generator had hardcoded English template strings.",
+      "fix": "Multilingual thought generation with localized responses in French, German, and Spanish with strict zero English leakage.",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug005_MultilingualStrictNonLeakage"
+    },
+    {
+      "id": "BUG-006",
+      "title": "Emergency Hard STOP Incomplete Hardware Track Release",
+      "severity": "CRITICAL",
+      "category": "HARDWARE_SAFETY",
+      "symptom": "Clicking STOP halted UI visuals but microphone hardware tracks remained alive or audio playback continued in background.",
+      "rootCause": "emergencyHaltAssistant did not call MediaStreamTrack.stop() synchronously across all active hardware tracks and did not hard-halt wakeWordService.",
+      "fix": "Universal synchronous hardware termination: halts all MediaStreamTracks, stops SpeechSynthesis, calls wakeWordService.hardHalt(), and sets isWakeWordActive=false.",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug006_EmergencyStopSynchronousRelease"
+    },
+    {
+      "id": "BUG-007",
+      "title": "Markdown Formatting & Emojis Spoken Aloud by TTS",
+      "severity": "LOW",
+      "category": "SPEECH_SYNTHESIS_PHONETICS",
+      "symptom": "Assistant voice synthesized punctuation like 'asterisk asterisk' or spelled out URLs and raw emojis.",
+      "rootCause": "speechSynthesis.ts did not strip markdown bolding, links, URLs, and unicode emojis before feeding text to SpeechSynthesisUtterance.",
+      "fix": "cleanTextForSpeech regex pipeline converts markdown links to plain text, strips asterisks/hashtags/emojis, and normalizes pauses.",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug007_PhoneticMarkdownCleaning"
+    },
+    {
+      "id": "BUG-008",
+      "title": "Family Nickname & Phonetic Alias Resolution Failure",
+      "severity": "HIGH",
+      "category": "MEMORY_GRAPH_RAG",
+      "symptom": "Saying 'Send Eleanor an email' or 'Tell Ellie I am coming' failed to find the contact or created an empty draft.",
+      "rootCause": "Memory graph lookup only checked exact string match 'Eleonore Baxter' and did not have phonetic aliases ('Eleanor', 'Ellie', 'Elly').",
+      "fix": "Added aliases array to memory graph entities and phonetic normalization in cortexDialogueEngine.",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug008_FamilyPhoneticAliasResolution"
+    }
+  ]
+}

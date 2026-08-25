@@ -401,6 +401,16 @@ export function isCurrentlySpeaking(): boolean {
   return isSpeakingState;
 }
 
+export function cleanTextForSpeech(text: string): string {
+  return text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Convert [link text](url) to link text
+    .replace(/https?:\/\/\S+/g, '') // Strip raw URLs
+    .replace(/[*#_`~>•]/g, '') // Strip markdown formatting
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '') // Emojis
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function speakResponse(text: string, onEnd?: () => void, persona?: VoicePersona, targetLang?: SupportedLanguage): void {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
     if (onEnd) onEnd();
@@ -419,11 +429,7 @@ export function speakResponse(text: string, onEnd?: () => void, persona?: VoiceP
   } catch {}
 
   // Strip markdown styling and emojis for clean phonetics
-  const cleanText = text
-    .replace(/[*#_`~>]/g, '')
-    .replace(/[\u{1F300}-\u{1F9FF}]/gu, '') // Emojis
-    .replace(/\s+/g, ' ')
-    .trim();
+  const cleanText = cleanTextForSpeech(text);
 
   if (!cleanText) {
     isSpeakingState = false;

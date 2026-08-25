@@ -153,7 +153,7 @@ export class CortexDialogueEngine {
     }
 
     // D. Tool: Email Dispatch with Family Knowledge Graph & Phonetic Resolution
-    if (/(?:email|write\s+(?:an?\s+)?email|send\s+(?:an?\s+)?email|mail|draft\s+(?:an?\s+)?(?:note|email)|send\s+[\w\s]+\s+(?:a\s+)?(?:quick\s+)?(?:email|note)|let\s+\w+\s+know|message\s+\w+\s+saying|tell\s+\w+\s+(?:that|saying)|(?:send|write|draft|email)\s+(?:a\s+)?(?:note\s+to|email\s+to)?\s*(?:eleanor|eleonore|ellie|celine|elizabeth|eliza|alexander|alex|angelina|lina|sarah)|modify\s+(?:the\s+)?email|in\s+the\s+title|text\s+to\s+the\s+email)/i.test(textLower) || /(?:email|send\s+(?:a\s+)?note|draft\s+(?:a\s+)?note)/i.test(cleanLower)) {
+    if (/(?:email|write\s+(?:an?\s+)?(?:email|message|note)|send\s+(?:an?\s+)?(?:email|message|note)|mail|draft\s+(?:an?\s+)?(?:note|email|message)|message\s+\w+|send\s+[\w\s]+\s+(?:a\s+)?(?:quick\s+)?(?:email|note|message)|let\s+\w+\s+know|tell\s+\w+\s+(?:that|saying)|(?:send|write|draft|email|message)\s+(?:a\s+)?(?:note\s+to|email\s+to|message\s+to)?\s*(?:eleanor|eleonore|ellie|celine|elizabeth|eliza|alexander|alex|angelina|lina|sarah)|modify\s+(?:the\s+)?email|in\s+the\s+title|text\s+to\s+the\s+email)/i.test(textLower) || /(?:email|send\s+(?:a\s+)?(?:note|message)|draft\s+(?:a\s+)?(?:note|message))/i.test(cleanLower)) {
       let recipientName = 'Celine Loeuille';
       let recipientEmail = 'celine.loeuille@gmail.com';
 
