@@ -36,6 +36,10 @@ export class WakeWordService {
     'hey ava',
     'hay eve',
     'a eve',
+    'bonjour eve',
+    'salut eve',
+    'hallo eve',
+    'hola eve',
     'hey andy',
     'hello andy',
     'hey assistant',
@@ -45,7 +49,7 @@ export class WakeWordService {
 
   // Regex patterns for phonetic fuzzy match
   private phoneticPatterns = [
-    /\b(?:hey|hay|hi|hello|ok|okay|a|pay)\s+(?:eve|eva|eave|eevee|eeve|ava|iva|if|heave|leave|dave)\b/i,
+    /\b(?:hey|hay|hi|hello|ok|okay|a|pay|bonjour|salut|hallo|hola)\s+(?:eve|eva|eave|eevee|eeve|ava|iva|if|heave|leave|dave)\b/i,
     /\b(?:eve|eva|eevee)\b/i,
     /\b(?:hey\s+assistant|hello\s+assistant|ok\s+assistant)\b/i
   ];
@@ -204,8 +208,8 @@ export class WakeWordService {
           }
         }
 
-        // 2. Phonetic Regex Matching if in High Sensitivity Mode
-        if (!matchedTrigger && this.sensitivity === 'high') {
+        // 2. Phonetic Regex Matching
+        if (!matchedTrigger) {
           for (const pattern of this.phoneticPatterns) {
             const match = lower.match(pattern);
             if (match) {
@@ -215,16 +219,6 @@ export class WakeWordService {
               logger.debug('wake_word', `Matched phonetic pattern: "${pattern.source}"`, { matched: matchedTrigger, trailingCommand: command });
               break;
             }
-          }
-        }
-
-        // 3. Conversational Speech & Direct Commands (e.g. questions, greetings, jokes, queries)
-        if (!matchedTrigger && lower.split(' ').length >= 2) {
-          const directIntentRegex = /\b(?:tell|what|how|why|who|when|where|can\s+you|could\s+you|please|hi|hey|hello|good\s+morning|good\s+evening|remember|draft|send|book|schedule|task|joke|help|it'?s|this\s+is|explain|suggest|was|wie|warum|wer|hallo|dime|raconte)\b/i;
-          if (directIntentRegex.test(lower) || lower.split(' ').length >= 3) {
-            matchedTrigger = 'Direct Voice Command';
-            command = lower;
-            logger.debug('wake_word', `Matched direct conversational intent: "${lower}"`);
           }
         }
 

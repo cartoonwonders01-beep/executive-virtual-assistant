@@ -62,7 +62,9 @@ export const LiveChatView: React.FC = () => {
     setIsPromptStudioOpen,
     activeLLMProfile,
     allLLMProfiles,
-    switchActiveProfile
+    switchActiveProfile,
+    isWakeWordActive,
+    toggleWakeWordListener
   } = useAssistant();
 
   const [inputMessage, setInputMessage] = useState('');
@@ -251,6 +253,30 @@ export const LiveChatView: React.FC = () => {
           >
             {quietMode ? <VolumeX className="w-3.5 h-3.5 text-amber-400" /> : <Volume2 className="w-3.5 h-3.5 text-teal-400" />}
             <span className="hidden sm:inline">{quietMode ? 'Quiet Mode' : 'Spoken'}</span>
+          </button>
+
+          {/* Wake-Word ("Hey Eve") Listener Toggle */}
+          <button
+            type="button"
+            onClick={toggleWakeWordListener}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center space-x-1.5 cursor-pointer ${
+              isWakeWordActive
+                ? 'bg-rose-500/15 border-rose-500/40 text-rose-300 shadow-sm shadow-rose-500/20'
+                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+            }`}
+            title={isWakeWordActive ? 'Wake-Word Active ("Hey Eve"). Click to switch to Push-to-Talk only.' : 'Wake-Word Disabled (Push-to-Talk only). Click to enable background "Hey Eve" listener.'}
+          >
+            {isWakeWordActive ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
+                <span className="hidden sm:inline">"Hey Eve" ON</span>
+              </>
+            ) : (
+              <>
+                <MicOff className="w-3.5 h-3.5 text-slate-400" />
+                <span className="hidden sm:inline">Push-to-Talk</span>
+              </>
+            )}
           </button>
 
           {/* Multi-User & Family Profile Switcher Pill */}

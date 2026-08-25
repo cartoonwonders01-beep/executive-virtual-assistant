@@ -260,7 +260,9 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     logger.log('info', 'ai_reasoning', `👤 Switched user profile to "${target.name}".`);
   };
 
-  const [isWakeWordActive, setIsWakeWordActive] = useState<boolean>(true);
+  const [isWakeWordActive, setIsWakeWordActive] = useState<boolean>(() => {
+    try { return localStorage.getItem('assistant_wake_word_enabled') === 'true'; } catch { return false; }
+  });
   const [continuousConversation, setContinuousConversation] = useState<boolean>(true);
   const [kpi, setKpi] = useState<KPISummary | null>(null);
   const [activeView, setActiveView] = useState<AppView>('transcript');
@@ -642,6 +644,9 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const toggleWakeWordListener = () => {
     setIsWakeWordActive(prev => {
       const next = !prev;
+      try {
+        localStorage.setItem('assistant_wake_word_enabled', next ? 'true' : 'false');
+      } catch {}
       logger.log('info', 'wake_word', `Passive wake-word listener toggled ${next ? 'ON' : 'OFF'}.`);
       return next;
     });
