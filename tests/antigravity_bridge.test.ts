@@ -146,7 +146,7 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     
     assert.equal(config.DEFAULT_CHUNK_INTERVAL_MS, 2000);
     assert.equal(config.DEFAULT_AUDIO_BITRATE_KBPS, 64);
-    assert.equal(config.DEFAULT_SILENCE_DURATION_MS, 600);
+    assert.equal(config.DEFAULT_SILENCE_DURATION_MS, 350);
     assert.ok(config.AUDIO_BITRATE_OPTIONS.length >= 3, 'Provides bitrate options');
     assert.equal(config.APP_VERSION, '4.1.0');
     assert.ok(config.LANGUAGE_OPTIONS.length >= 8, 'Provides European language options');

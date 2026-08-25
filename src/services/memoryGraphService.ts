@@ -238,6 +238,10 @@ export class MemoryGraphService {
     return Array.from(this.entities.values());
   }
 
+  public getExecutiveRelationships(): RelationalEntity[] {
+    return this.getAllEntities().filter(e => e.relationType === 'wife' || e.relationType === 'child' || e.relationType === 'spouse');
+  }
+
   public deleteEntity(id: string): boolean {
     const res = this.entities.delete(id);
     this.saveToStorage();

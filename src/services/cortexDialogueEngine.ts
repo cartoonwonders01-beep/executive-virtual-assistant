@@ -49,72 +49,32 @@ export class CortexDialogueEngine {
       activeProfile: activeProfile?.name || 'Default'
     });
 
-    // 1. If live Gemini API key is available, leverage Live Gemini LLM with Family Context & Tool Schemas
-    if (apiKey) {
-      try {
-        logger.debug('gemini_llm', `Dispatching to Gemini Cloud API (gemini-1.5-flash)...`, {
-          apiKeyPresent: true,
-          profile: activeProfile?.name
-        });
-        const startTime = Date.now();
-        const geminiResult = await processSpeechWithGemini(
-          textTrimmed,
-          apiKey,
-          'gemini-1.5-flash',
-          activeProfile,
-          history.slice(-6).map(h => ({ speaker: h.speaker, text: h.text }))
-        );
-        const duration = Date.now() - startTime;
-        logger.debug('gemini_llm', `Gemini Cloud API returned in ${duration}ms`, { geminiResult });
-
-        if (geminiResult && geminiResult.actionCard) {
-          const gCard = geminiResult.actionCard;
-          return {
-            actionCard: {
-              id: cardId,
-              intent: gCard.intent as any,
-              title: gCard.title,
-              description: gCard.description,
-              spokenResponse: gCard.spokenResponse || geminiResult.spokenSummary,
-              status: 'executed',
-              createdAt: nowStr,
-              emailData: gCard.emailData ? {
-                id: 'em-' + Date.now().toString(36),
-                toName: gCard.emailData.toName,
-                toEmail: gCard.emailData.toEmail,
-                subject: gCard.emailData.subject,
-                body: gCard.emailData.body,
-                tone: (gCard.emailData.tone as any) || 'friendly',
-                status: 'draft'
-              } : undefined,
-              calendarData: gCard.calendarData ? {
-                id: 'apt-' + Date.now().toString(36),
-                title: gCard.calendarData.title,
-                startDateTime: gCard.calendarData.startDateTime,
-                endDateTime: gCard.calendarData.endDateTime,
-                location: gCard.calendarData.location || 'Google Meet',
-                attendees: gCard.calendarData.attendees || [],
-                status: 'confirmed'
-              } : undefined
-            },
-            spokenResponse: gCard.spokenResponse || geminiResult.spokenSummary
-          };
-        }
-      } catch (err) {
-        logger.log('warn', 'ai_reasoning', `Gemini remote call failed, falling back to local Cortex ReAct reasoning: ${err}`);
-        logger.debug('gemini_llm', `Gemini API error details:`, { error: String(err) });
-      }
-    }
-
-    // =========================================================================
-    // 2. High-IQ Local ReAct Semantic Cortex Reasoning & Tool Calling
-    // =========================================================================
-
     // Pre-clean speech transcript to remove leading STT hallucinations/fillers
     const cleanedText = textTrimmed
       .replace(/^(?:hey\s+eve|hi\s+eve|eve|eeve|if\s+i\s+want\s+you\s+to|if\s+you\s+can|if|ok\s+eve|okay\s+eve|please\s+eve|please)[,\s:]+/i, '')
       .trim();
     const cleanLower = cleanedText.toLowerCase();
+
+    logger.debug('ai_reasoning', `Cleaned ReAct transcript payload: "${cleanedText}"`, { cleanLower });
+
+    // Family Roster Inquiry
+    if (/(?:who\s+(?:is|are)\s+in\s+my\s+family|family\s+members?|list\s+my\s+family|family\s+roster|my\s+children|my\s+kids|my\s+wife)/i.test(textLower)) {
+      const allMembers = memoryGraph.getExecutiveRelationships();
+      const rosterList = allMembers.map(m => `• **${m.entityName}** (${m.relationType}) — \`${m.email}\``).join('\n');
+      const spoken = `Your family roster includes your wife Celine Loeuille, and your children Elizabeth, Alexander, Eleonore, and Angelina Baxter.`;
+      return {
+        actionCard: {
+          id: cardId,
+          intent: 'knowledge_qa',
+          title: 'Baxter Family Roster & Knowledge Graph',
+          description: `**Confirmed Family Contacts:**\n\n${rosterList}`,
+          spokenResponse: spoken,
+          status: 'executed',
+          createdAt: nowStr
+        },
+        spokenResponse: spoken
+      };
+    }
 
     logger.debug('ai_reasoning', `Cleaned ReAct transcript payload: "${cleanedText}"`, { cleanLower });
 
@@ -344,7 +304,56 @@ export class CortexDialogueEngine {
       };
     }
 
-    // F. General Executive Inquiry Fallback
+    // F. Gemini Cloud LLM Fallback for Complex Open-Ended Queries
+    if (apiKey) {
+      try {
+        logger.debug('gemini_llm', `Dispatching open-ended query to Gemini Cloud API (gemini-1.5-flash)...`);
+        const geminiResult = await processSpeechWithGemini(
+          textTrimmed,
+          apiKey,
+          'gemini-1.5-flash',
+          activeProfile,
+          history.slice(-6).map(h => ({ speaker: h.speaker, text: h.text }))
+        );
+        if (geminiResult && geminiResult.actionCard) {
+          const gCard = geminiResult.actionCard;
+          return {
+            actionCard: {
+              id: cardId,
+              intent: gCard.intent as any,
+              title: gCard.title,
+              description: gCard.description,
+              spokenResponse: gCard.spokenResponse || geminiResult.spokenSummary,
+              status: 'executed',
+              createdAt: nowStr,
+              emailData: gCard.emailData ? {
+                id: 'em-' + Date.now().toString(36),
+                toName: gCard.emailData.toName,
+                toEmail: gCard.emailData.toEmail,
+                subject: gCard.emailData.subject,
+                body: gCard.emailData.body,
+                tone: (gCard.emailData.tone as any) || 'friendly',
+                status: 'draft'
+              } : undefined,
+              calendarData: gCard.calendarData ? {
+                id: 'apt-' + Date.now().toString(36),
+                title: gCard.calendarData.title,
+                startDateTime: gCard.calendarData.startDateTime,
+                endDateTime: gCard.calendarData.endDateTime,
+                location: gCard.calendarData.location || 'Google Meet',
+                attendees: gCard.calendarData.attendees || [],
+                status: 'confirmed'
+              } : undefined
+            },
+            spokenResponse: gCard.spokenResponse || geminiResult.spokenSummary
+          };
+        }
+      } catch (err) {
+        logger.log('warn', 'ai_reasoning', `Gemini remote call notice: ${err}`);
+      }
+    }
+
+    // G. General Executive Inquiry Fallback
     const solution = intelligentAdvisor.solve(textTrimmed);
     return {
       actionCard: {

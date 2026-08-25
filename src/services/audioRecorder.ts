@@ -153,14 +153,14 @@ export class AudioRecorderService {
                 config.onLiveTranscript(current);
               }
 
-              // Auto-stop after user finishes speaking their sentence (Adaptive Low-Latency VAD: 450ms)
+              // Auto-stop after user finishes speaking their sentence (Google Home Standard Low-Latency VAD: 350ms)
               if (this.vadOptions.autoStopOnSilence) {
                 if (this.speechFinishTimer) clearTimeout(this.speechFinishTimer);
                 this.speechFinishTimer = setTimeout(() => {
                   if (this.isRecordingActive) {
                     this.stop();
                   }
-                }, Math.max(450, this.vadOptions.silenceDurationMs));
+                }, this.vadOptions.silenceDurationMs || 350);
               }
             }
           };

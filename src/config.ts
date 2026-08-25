@@ -13,7 +13,7 @@ export const MAX_CHUNK_INTERVAL_MS = 15000;
 export const DEFAULT_AUDIO_BITRATE_KBPS = 64;
 export const DEFAULT_MIME_TYPE = 'auto';
 
-export const DEFAULT_SILENCE_DURATION_MS = 600;
+export const DEFAULT_SILENCE_DURATION_MS = 350;
 export const DEFAULT_SILENCE_THRESHOLD = 0.02;
 export const DEFAULT_SPEECH_TRIGGER_THRESHOLD = 0.03;
 
@@ -46,10 +46,10 @@ export const MIME_TYPE_OPTIONS = [
 ];
 
 export const SILENCE_DURATION_OPTIONS = [
-  { value: 1000, label: '⚡ 1.0s (Snappy — Rapid Turnaround)' },
-  { value: 1600, label: '⏱️ 1.6s (Default — Recommended)' },
-  { value: 2200, label: '⏱️ 2.2s (Patient — Thoughtful Pauses)' },
-  { value: 3000, label: '⏱️ 3.0s (Relaxed — Long Sentences)' },
+  { value: 350, label: '⚡ 350ms (Ultra-Fast — Google Home Standard)' },
+  { value: 500, label: '⏱️ 500ms (Snappy — Recommended)' },
+  { value: 800, label: '⏱️ 800ms (Balanced Pauses)' },
+  { value: 1500, label: '⏱️ 1.5s (Relaxed — Long Sentences)' },
 ];
 
 export const CONTINUOUS_TIMEOUT_OPTIONS = [
