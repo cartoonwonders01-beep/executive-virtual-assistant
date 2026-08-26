@@ -8,13 +8,11 @@ interface Env {
 
 const SEED_DATA = {
   contacts: [
-    { id: 'c1', name: 'Sarah Chen', role: 'Head of Growth', email: 'sarah.chen@innovate.co', phone: '+1 (555) 234-5678', company: 'Innovate Group', isVIP: true },
-    { id: 'c2', name: 'David Miller', role: 'VP Engineering', email: 'david.m@cloudscale.io', phone: '+1 (555) 876-5432', company: 'CloudScale Systems', isVIP: true },
-    { id: 'c3', name: 'Celine Loeuille', role: 'Wife / Partner', email: 'celine.loeuille@gmail.com', phone: '+32 470 12 34 56', company: 'Family', isVIP: true },
-    { id: 'c4', name: 'Eleonore Baxter', role: 'Daughter', email: 'eleonore.a.baxter@gmail.com', phone: '+32 470 11 22 33', company: 'Family', isVIP: true },
-    { id: 'c5', name: 'Elizabeth Baxter', role: 'Daughter', email: 'elizabth.js.baxter@gmail.com', phone: '+32 470 44 55 66', company: 'Family', isVIP: true },
-    { id: 'c6', name: 'Alexander Baxter', role: 'Son', email: 'alexander.j.baxter@gmail.com', phone: '+32 470 77 88 99', company: 'Family', isVIP: true },
-    { id: 'c7', name: 'Angelina Baxter', role: 'Daughter', email: 'angelina.c.baxter@gmail.com', phone: '+32 470 99 00 11', company: 'Family', isVIP: true }
+    { id: 'c1', name: 'Celine Loeuille', role: 'Wife / Partner', email: 'celine.loeuille@gmail.com', phone: '+32 470 12 34 56', company: 'Family', isVIP: true },
+    { id: 'c2', name: 'Eleonore Baxter', role: 'Daughter', email: 'eleonore.a.baxter@gmail.com', phone: '+32 470 11 22 33', company: 'Family', isVIP: true },
+    { id: 'c3', name: 'Elizabeth Baxter', role: 'Daughter', email: 'elizabth.js.baxter@gmail.com', phone: '+32 470 44 55 66', company: 'Family', isVIP: true },
+    { id: 'c4', name: 'Alexander Baxter', role: 'Son', email: 'alexander.j.baxter@gmail.com', phone: '+32 470 77 88 99', company: 'Family', isVIP: true },
+    { id: 'c5', name: 'Angelina Baxter', role: 'Daughter', email: 'angelina.c.baxter@gmail.com', phone: '+32 470 99 00 11', company: 'Family', isVIP: true }
   ],
   tasks: [
     {

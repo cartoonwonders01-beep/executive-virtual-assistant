@@ -598,15 +598,27 @@ export class IntelligentAdvisor {
       };
     }
 
-    // Contact Inquiries & Directory
+    // Family & Contact Directory Inquiries
+    if (/who\s+is\s+celine|tell\s+me\s+about\s+celine/i.test(lower)) {
+      return {
+        title: 'Executive Family Contact: Celine Loeuille',
+        category: 'Communication',
+        spokenResponse: "Celine Loeuille is your wife and partner (celine.loeuille@gmail.com).",
+        summary: "Celine Loeuille — Wife and Partner (celine.loeuille@gmail.com).",
+        keyInsights: ['Key family contact and partner.'],
+        actionSteps: ['Say "Send Celine an email" or "Check calendar with Celine".'],
+        language: 'en'
+      };
+    }
+
     if (/who\s+is\s+sarah|tell\s+me\s+about\s+sarah/i.test(lower)) {
       return {
         title: 'Executive Contact: Sarah Chen',
         category: 'Communication',
-        spokenResponse: "Sarah Chen is your Head of Growth at Innovate Group (sarah.chen@innovate.co). She leads growth marketing and enterprise partnerships.",
+        spokenResponse: "Sarah Chen is your Head of Growth at Innovate Group (sarah.chen@innovate.co).",
         summary: "Sarah Chen — Head of Growth at Innovate Group (sarah.chen@innovate.co).",
-        keyInsights: ['Key contact for growth metrics and client partnership initiatives.'],
-        actionSteps: ['Say "Send Sarah an email" or "Call Sarah" to initiate contact.'],
+        keyInsights: ['Contact directory inquiry.'],
+        actionSteps: [],
         language: 'en'
       };
     }

@@ -1,28 +1,6 @@
 {
   "contacts": [
     {
-      "id": "c1",
-      "name": "Sarah Chen",
-      "role": "Head of Growth",
-      "email": "sarah.chen@innovate.co",
-      "phone": "+1 (555) 234-5678",
-      "company": "Innovate Group",
-      "isVIP": true,
-      "avatarUrl": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
-      "notes": "Key partner for Q3 growth sprint and marketing outbound."
-    },
-    {
-      "id": "c2",
-      "name": "David Miller",
-      "role": "VP Engineering",
-      "email": "david.m@cloudscale.io",
-      "phone": "+1 (555) 876-5432",
-      "company": "CloudScale Systems",
-      "isVIP": true,
-      "avatarUrl": "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80",
-      "notes": "Lead technical architect for serverless Cloudflare Workers and Vector DB."
-    },
-    {
       "id": "c3",
       "name": "Celine Loeuille",
       "role": "Partner & Operations Lead (Wife)",

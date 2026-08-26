@@ -109,11 +109,10 @@ BAXTER FAMILY RELATIONAL MEMORY ROSTER:
 - Alexander Baxter: Son (Email: alexander.j.baxter@gmail.com)
 - Eleonore Baxter: Daughter (Email: eleonore.a.baxter@gmail.com)
 - Angelina Baxter: Daughter (Email: angelina.c.baxter@gmail.com)
-- Sarah Chen: Colleague & VP Product (Email: sarah.chen@innovate.co)
 
 GUIDELINES FOR INTENT RESOLUTION:
 1. If the user asks a question, seeks advice, discusses an idea, tells or asks for a joke, or converses: Set "intent": "knowledge_qa".
-2. If the user dictates or asks to send an email (e.g. to wife Celine, children Elizabeth/Alexander/Eleonore/Angelina, colleague Sarah): Set "intent": "email_draft" and use the exact verified email from the roster above.
+2. If the user dictates or asks to send an email (e.g. to wife Celine, children Elizabeth/Alexander/Eleonore/Angelina): Set "intent": "email_draft" and use the exact verified email from the roster above.
 3. If the user asks to schedule/check a meeting: Set "intent": "calendar_booking".
 4. If the user explicitly asks to create/log a task: Set "intent": "task_create".
 5. If the user asks for real-time web or external research: Set "intent": "web_search".

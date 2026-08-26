@@ -132,28 +132,11 @@ export class MemoryGraphService {
         usageCount: 5
       };
 
-      const defaultColleague: RelationalEntity = {
-        id: 'rel-colleague-sarah',
-        userId: 'andrew',
-        relationType: 'colleague',
-        entityName: 'Sarah Chen',
-        aliases: ['sarah', 'sarah chen', 'vp of product', 'product lead'],
-        email: 'sarah.chen@innovate.co',
-        phone: '+1 (555) 382-9901',
-        company: 'Innovate AI Labs',
-        notes: ['VP of Product', 'Prefers Slack for quick updates, Email for specs'],
-        confidence: 1.0,
-        firstLearnedAt: nowStr,
-        lastConfirmedAt: nowStr,
-        usageCount: 4
-      };
-
       this.entities.set(defaultWife.id, defaultWife);
       this.entities.set(defaultElizabeth.id, defaultElizabeth);
       this.entities.set(defaultAlexander.id, defaultAlexander);
       this.entities.set(defaultEleonore.id, defaultEleonore);
       this.entities.set(defaultAngelina.id, defaultAngelina);
-      this.entities.set(defaultColleague.id, defaultColleague);
       this.saveToStorage();
     }
   }
