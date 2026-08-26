@@ -3,6 +3,7 @@ import { memoryGraph } from './memoryGraphService';
 import { webSearchService } from './webSearchService';
 import { weatherService } from './weatherService';
 import { calendarService } from './calendarService';
+import { marketService } from './marketIntelligenceService';
 import { autonomousPractice } from './autonomousPracticeWorker';
 import { processSpeechWithGemini } from './geminiService';
 import { intelligentAdvisor } from './intelligentAdvisor';
@@ -103,7 +104,29 @@ export class CortexDialogueEngine {
       };
     }
 
-    // A2. Tool: Web Search Grounding & Current Events
+    // A2. Tool: Real-Time Financial & Cryptocurrency Market Intelligence (Bitcoin, Ethereum, S&P 500, FX, Gold)
+    if (marketService.isFinancialMarketQuery(cleanedText || textTrimmed)) {
+      const quote = await marketService.getMarketQuote(cleanedText || textTrimmed);
+      return {
+        actionCard: {
+          id: cardId,
+          intent: 'knowledge_qa',
+          title: `📊 ${quote.name} (${quote.symbol}): $${quote.priceUsd.toLocaleString()} USD (${quote.change24hPercent >= 0 ? '+' : ''}${quote.change24hPercent}%)`,
+          description: quote.summary,
+          spokenResponse: quote.spokenSummary,
+          status: 'executed',
+          createdAt: nowStr
+        },
+        spokenResponse: quote.spokenSummary,
+        toolCallExecuted: {
+          toolName: 'get_market_quote',
+          params: { symbol: quote.symbol },
+          result: quote
+        }
+      };
+    }
+
+    // A3. Tool: Web Search Grounding & Current Events
     if (webSearchService.isWebSearchQuery(cleanedText || textTrimmed)) {
       const searchRes = await webSearchService.searchWeb(cleanedText || textTrimmed);
       return {

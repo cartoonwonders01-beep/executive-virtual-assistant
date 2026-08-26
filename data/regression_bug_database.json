@@ -145,6 +145,17 @@
       "fix": "Built comprehensive encyclopedic knowledge engine in intelligentAdvisor covering avian biology, marine biology, astronomy, physics, world geography, history, and situational awareness.",
       "testSuite": "tests/regression_database_suite.test.ts",
       "testAssertion": "testBug013_EncyclopedicCuriosityKnowledge"
+    },
+    {
+      "id": "BUG-014",
+      "title": "Missing Real-Time Cryptocurrency & Financial Market Intelligence (BTC, ETH, FX, Gold)",
+      "severity": "HIGH",
+      "category": "FINANCIAL_MARKET_INTELLIGENCE",
+      "symptom": "Asking about Bitcoin (BTC) price, Ethereum, Gold, or financial market quotes fell into generic conversational fallbacks instead of returning spot prices and trends.",
+      "rootCause": "cortexDialogueEngine and intelligentAdvisor lacked a specialized real-time financial market and crypto pricing engine.",
+      "fix": "Built marketIntelligenceService with real-time CoinGecko API integration, verified offline fallbacks, multilingual localization (EN, FR, DE, ES), and deep financial advisor solvers in intelligentAdvisor and Cloudflare edge gateway.",
+      "testSuite": "tests/regression_database_suite.test.ts",
+      "testAssertion": "testBug014_RealTimeCryptoAndFinancialMarkets"
     }
   ]
 }

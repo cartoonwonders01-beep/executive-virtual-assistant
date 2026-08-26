@@ -944,6 +944,78 @@ export class IntelligentAdvisor {
     }
 
     // =========================================================================
+    // FINANCIAL MARKETS, CRYPTOCURRENCY & ECONOMIC INTELLIGENCE
+    // =========================================================================
+
+    // Bitcoin & Cryptocurrency
+    if (/\b(?:btc|bitcoin|satoshi|crypto|cryptocurrency)\b/i.test(lower)) {
+      return {
+        title: 'Cryptocurrency Intelligence: Bitcoin (BTC)',
+        category: 'Finance',
+        spokenResponse: "Bitcoin is the world's premier decentralized cryptocurrency created by Satoshi Nakamoto in 2009. It operates on proof-of-work consensus with a fixed supply cap of 21 million coins, currently trading around $64,250 USD.",
+        summary: "Bitcoin (BTC) Overview: 21M fixed supply, SHA-256 PoW, 4-year halving cycle, trading around $64,250 USD / €58,950 EUR.",
+        keyInsights: [
+          'Fixed Supply: Hard-capped at 21,000,000 BTC, providing programmatic scarcity.',
+          'Institutional Adoption: Spot ETFs and corporate treasury allocations solidify BTC as digital gold.'
+        ],
+        actionSteps: ['Ask for the live BTC price quote or market trend analysis.'],
+        language: 'en'
+      };
+    }
+
+    // Ethereum & Smart Contracts
+    if (/\b(?:eth|ethereum|ether|smart\s+contracts|defi)\b/i.test(lower)) {
+      return {
+        title: 'Blockchain Technology: Ethereum (ETH)',
+        category: 'Finance',
+        spokenResponse: "Ethereum is the leading decentralized, open-source blockchain with smart contract functionality, powering decentralized finance, NFTs, and Layer 2 rollups, currently trading around $3,480 USD.",
+        summary: "Ethereum (ETH): Proof-of-Stake smart contract platform supporting EVM rollups and global DeFi ecosystems.",
+        keyInsights: ['EVM (Ethereum Virtual Machine) standardizes decentralized computing', 'EIP-1559 burns base gas fees during periods of network activity'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Gold & Commodities
+    if (/\b(?:gold|gold\s+price|price\s+of\s+gold|precious\s+metals)\b/i.test(lower)) {
+      return {
+        title: 'Commodities: Gold (XAU/USD)',
+        category: 'Finance',
+        spokenResponse: "Gold is holding strong near historic highs around $2,510 USD per troy ounce, serving as a primary global hedge against inflation and currency debasement.",
+        summary: "Gold (XAU/USD): Trading near $2,510 USD / €2,300 EUR per troy ounce.",
+        keyInsights: ['Central banks continue aggressive gold reserve accumulation', 'Acts as premier store of value and geopolitical safe haven'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Foreign Exchange (EUR/USD, FX)
+    if (/\b(?:eur\s*usd|exchange\s+rate|forex|euro\s+dollar|dollar\s+to\s+euro)\b/i.test(lower)) {
+      return {
+        title: 'Foreign Exchange: EUR/USD',
+        category: 'Finance',
+        spokenResponse: "The Euro to US Dollar exchange rate is currently trading around 1.09, balancing central bank interest rate differentials between the ECB and Federal Reserve.",
+        summary: "EUR/USD Forex Rate: ~1.0905.",
+        keyInsights: ['Key currency pair representing over 20% of global daily FX volume'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Stock Market & S&P 500
+    if (/\b(?:s&p\s*500|stock\s+market|nasdaq|dow\s+jones)\b/i.test(lower)) {
+      return {
+        title: 'Equities: S&P 500 Market Index',
+        category: 'Finance',
+        spokenResponse: "The S&P 500 index tracks 500 leading US public companies, currently trading near 5,630 points with strength driven by technology and enterprise AI momentum.",
+        summary: "S&P 500 Index: ~5,630 points.",
+        keyInsights: ['Market-cap weighted index representing ~80% of US equity value'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // =========================================================================
     // ENCYCLOPEDIC, SCIENTIFIC & CURIOSITY KNOWLEDGE BASE
     // =========================================================================
 

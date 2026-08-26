@@ -351,4 +351,29 @@ test('Automated Bug Regression Database Suite (Verified Against data/regression_
     assert.ok(ausRes.spokenResponse.includes('Canberra'), 'Answered Canberra as capital of Australia');
   });
 
+  // --- BUG-014: Real-Time Cryptocurrency & Financial Market Intelligence (BTC, ETH, FX, Gold) ---
+  await t.test('BUG-014: Real-Time Cryptocurrency & Financial Market Intelligence (BTC, ETH, FX, Gold)', async () => {
+    // 1. Bitcoin price & market query
+    const btcRes = await cortexEngine.reasonAndAct("What is the price of Bitcoin");
+    assert.ok(btcRes.spokenResponse.includes('Bitcoin') && (btcRes.spokenResponse.includes('USD') || btcRes.spokenResponse.includes('EUR') || btcRes.spokenResponse.includes('$')), 'Reported Bitcoin market quote');
+    assert.equal(btcRes.toolCallExecuted?.toolName, 'get_market_quote');
+
+    // 2. Short ticker query ("how is BTC doing")
+    const btcShortRes = await cortexEngine.reasonAndAct("How is BTC doing");
+    assert.ok(btcShortRes.spokenResponse.includes('Bitcoin') || btcShortRes.spokenResponse.includes('BTC'), 'Answered BTC ticker inquiry');
+
+    // 3. Ethereum quote
+    const ethRes = await cortexEngine.reasonAndAct("What is Ethereum trading at");
+    assert.ok(ethRes.spokenResponse.includes('Ethereum') && (ethRes.spokenResponse.includes('USD') || ethRes.spokenResponse.includes('$')), 'Reported Ethereum price');
+
+    // 4. Gold commodity price
+    const goldRes = await cortexEngine.reasonAndAct("What is the price of gold");
+    assert.ok(goldRes.spokenResponse.includes('Gold') || goldRes.spokenResponse.includes('ounce'), 'Reported Gold spot price');
+
+    // 5. Intelligent Advisor direct solver
+    const { intelligentAdvisor } = await import('../src/services/intelligentAdvisor');
+    const advisorBtc = intelligentAdvisor.solve('Tell me about bitcoin and crypto');
+    assert.ok(advisorBtc.spokenResponse.includes('Satoshi Nakamoto') || advisorBtc.spokenResponse.includes('Bitcoin'), 'Intelligent advisor answered Bitcoin background');
+  });
+
 });
