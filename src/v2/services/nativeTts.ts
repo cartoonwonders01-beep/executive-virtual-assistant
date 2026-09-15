@@ -40,7 +40,7 @@ class NativeTtsService {
   private selectedVoice: SpeechSynthesisVoice | null = null;
   private activeAudio: HTMLAudioElement | null = null;
   private speechRate: number = 1.02;
-  private speechPitch: number = 1.0;
+  private speechPitch: number = 1.05;
   private preferredVoiceName: string = '';
   private isSpeakingState: boolean = false;
   private recentSpokenUtterances: { text: string; ts: number }[] = [];
@@ -49,11 +49,9 @@ class NativeTtsService {
   constructor() {
     if (typeof window !== 'undefined') {
       this.preferredVoiceName = localStorage.getItem('eve_v2_voice_name') || '';
-      const savedRate = localStorage.getItem('eve_v2_voice_rate');
-      if (savedRate) this.speechRate = parseFloat(savedRate);
-      const savedPitch = localStorage.getItem('eve_v2_voice_pitch');
-      if (savedPitch) this.speechPitch = parseFloat(savedPitch);
-
+      const sRate = localStorage.getItem('eve_v2_voice_rate'), sPitch = localStorage.getItem('eve_v2_voice_pitch');
+      if (sRate) this.speechRate = parseFloat(sRate);
+      if (sPitch) this.speechPitch = parseFloat(sPitch);
       this.initVoice();
       if (this.synth && this.synth.onvoiceschanged !== undefined) {
         this.synth.onvoiceschanged = () => this.initVoice();
@@ -113,16 +111,21 @@ class NativeTtsService {
   }
 
   private rankVoices(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice[] {
+    const FEMALE = ['female', 'samantha', 'ava', 'aria', 'jenny', 'karen', 'victoria', 'moira', 'tessa', 'fiona', 'allison', 'susan', 'kate', 'zira', 'serena', 'zoe', 'flo'];
+    const MALE = ['male', 'daniel', 'oliver', 'alex', 'fred', 'george', 'david', 'guy', 'tom', 'christopher', 'arthur', 'aaron', 'evan', 'nathan', 'albert', 'eddy', 'grandpa', 'jester', 'wobble'];
     const scoreVoice = (v: SpeechSynthesisVoice) => {
       const n = v.name.toLowerCase();
-      let s = v.lang.startsWith('en') ? 15 : 0;
-      if (n.includes('premium')) s += 100;
-      if (n.includes('enhanced')) s += 80;
-      if (n.includes('natural') || n.includes('online')) s += 75;
-      if (n.includes('google')) s += 60;
-      if (n.includes('siri')) s += 50;
-      if (n.includes('compact')) s -= 60;
-      if (n === 'alex' || (n === 'samantha' && !n.includes('enhanced'))) s -= 40;
+      let s = v.lang.startsWith('en') ? 50 : 0;
+      if (MALE.some(m => n.includes(m))) s -= 1000;
+      if (FEMALE.some(f => n.includes(f))) s += 300;
+      if (n.includes('natural')) s += 150;
+      if (n.includes('premium')) s += 120;
+      if (n.includes('enhanced')) s += 100;
+      if (n.includes('google us english') || (n.includes('google') && !n.includes('male'))) s += 140;
+      if (n.includes('online')) s += 80;
+      if (n.includes('siri') && !n.includes('male')) s += 90;
+      if (v.lang.startsWith('en-US') || v.lang.startsWith('en_US')) s += 40;
+      if (n.includes('compact')) s -= 80;
       return s;
     };
     return [...voices].sort((a, b) => scoreVoice(b) - scoreVoice(a));
@@ -147,9 +150,11 @@ class NativeTtsService {
 
   private resolveVoiceForLanguage(lang: 'fr' | 'nl' | 'de' | 'en'): SpeechSynthesisVoice | null {
     if (!this.synth || lang === 'en') return this.selectedVoice;
-    const voices = this.synth.getVoices();
-    const match = voices.find(v => v.lang.startsWith(lang) && (v.name.includes('Natural') || v.name.includes('Premium') || v.name.includes('Enhanced')));
-    return match || voices.find(v => v.lang.startsWith(lang)) || this.selectedVoice;
+    const voices = this.synth.getVoices().filter(v => v.lang.startsWith(lang));
+    const FEMALE = ['female', 'amelie', 'denise', 'katja', 'marlene', 'fenna', 'colette'];
+    const femaleMatch = voices.find(v => FEMALE.some(f => v.name.toLowerCase().includes(f)));
+    const qualityMatch = voices.find(v => v.name.includes('Natural') || v.name.includes('Premium') || v.name.includes('Enhanced'));
+    return femaleMatch || qualityMatch || voices[0] || this.selectedVoice;
   }
 
   public setVoice(voiceName: string) {
@@ -157,12 +162,10 @@ class NativeTtsService {
     try { localStorage.setItem('eve_v2_voice_name', voiceName); } catch {}
     this.initVoice();
   }
-
   public setRate(rate: number) {
     this.speechRate = rate;
     try { localStorage.setItem('eve_v2_voice_rate', rate.toString()); } catch {}
   }
-
   public setPitch(pitch: number) {
     this.speechPitch = pitch;
     try { localStorage.setItem('eve_v2_voice_pitch', pitch.toString()); } catch {}
@@ -282,14 +285,8 @@ class NativeTtsService {
   stop() {
     this.isSpeakingState = false;
     this.lastSpokenEndedTs = Date.now();
-    if (this.activeAudio) {
-      this.activeAudio.pause();
-      this.activeAudio.currentTime = 0;
-      this.activeAudio = null;
-    }
-    if (this.synth) {
-      this.synth.cancel();
-    }
+    if (this.activeAudio) { this.activeAudio.pause(); this.activeAudio.currentTime = 0; this.activeAudio = null; }
+    if (this.synth) { this.synth.cancel(); }
   }
 }
 

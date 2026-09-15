@@ -7,6 +7,7 @@ import { briefingEngine } from './briefingEngine';
 import { streamingAudioPipeline, StreamCallbacks } from './streamingAudioPipeline';
 import { dualProcessCortex } from './dualProcessCortex';
 import { toolDispatcher } from './toolDispatcher';
+import { CortexDialogueEngine } from '../../services/cortexDialogueEngine';
 
 export interface ChatTurn {
   role: 'user' | 'assistant';
@@ -108,11 +109,12 @@ class IntelligenceBridge {
       : "No past episodic records matched.";
 
     const rawGroqKey = (typeof window !== 'undefined' && typeof localStorage !== 'undefined') ? (localStorage.getItem('assistant_groq_api_key') || '') : '';
-    const groqApiKey = (rawGroqKey && !rawGroqKey.includes('placeholder') && !rawGroqKey.includes('sample_')) ? rawGroqKey : (import.meta.env.VITE_GROQ_API_KEY || '');
-    // In production or when hosted, prefer Zero-Secret Edge Proxy
+    const envGroqKey = import.meta.env.VITE_GROQ_API_KEY || '';
+    const validEnvGroqKey = (!envGroqKey.includes('placeholder') && !envGroqKey.includes('sample_')) ? envGroqKey : '';
+    const groqApiKey = (rawGroqKey && !rawGroqKey.includes('placeholder') && !rawGroqKey.includes('sample_')) ? rawGroqKey : validEnvGroqKey;
     const useEdgeProxy = typeof window !== 'undefined' && window.location.hostname.includes('pages.dev');
     const targetEndpoint = useEdgeProxy ? '/api/chat' : 'https://api.groq.com/openai/v1/chat/completions';
-    let responseText = "I have noted that in my local brain.";
+    let responseText = "";
     let actionCard: ActionCardData | undefined;
     let isScribeMode = transcript.length > 500;
 
@@ -135,21 +137,14 @@ Respond ONLY with valid JSON:
           : transcript;
         const messages = [{ role: 'system', content: systemPrompt }, ...recentMessages, { role: 'user', content: userContent }];
 
-        // Check if caller provided stream callbacks for real-time sentence pipelining
         const reqHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
-        if (!useEdgeProxy && groqApiKey) {
-          reqHeaders['Authorization'] = `Bearer ${groqApiKey}`;
-        }
+        if (!useEdgeProxy && groqApiKey) reqHeaders['Authorization'] = `Bearer ${groqApiKey}`;
+
         if (streamCallbacks) {
           const streamedRaw = await streamingAudioPipeline.streamSSE(
             targetEndpoint,
             useEdgeProxy ? '' : groqApiKey,
-            {
-              model: 'llama-3.3-70b-versatile',
-              messages,
-              response_format: { type: 'json_object' },
-              temperature: 0.4
-            },
+            { model: 'llama-3.3-70b-versatile', messages, response_format: { type: 'json_object' }, temperature: 0.4 },
             streamCallbacks
           );
 
@@ -165,19 +160,13 @@ Respond ONLY with valid JSON:
               dateStr: parsed.action_card.dateStr
             } : undefined;
           } catch {
-            responseText = streamedRaw;
+            responseText = streamedRaw.trim();
           }
         } else {
-          // Standard buffered execution
           const aiRes = await fetch(targetEndpoint, {
             method: 'POST',
             headers: reqHeaders,
-            body: JSON.stringify({
-              model: 'llama-3.3-70b-versatile',
-              messages,
-              response_format: { type: 'json_object' },
-              temperature: 0.4
-            })
+            body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages, response_format: { type: 'json_object' }, temperature: 0.4 })
           });
 
           if (aiRes.ok) {
@@ -192,8 +181,6 @@ Respond ONLY with valid JSON:
               subtitle: parsed.action_card.subtitle,
               dateStr: parsed.action_card.dateStr
             } : undefined;
-          } else {
-            telemetry.log('error', { source: 'GroqLLM', message: `HTTP ${aiRes.status}` });
           }
         }
       } catch (err) {
@@ -201,22 +188,29 @@ Respond ONLY with valid JSON:
       }
     }
 
-    // High-Intelligence Fallback: Use CortexDialogueEngine
-    if (responseText === "I have noted that in my local brain.") {
+    // High-Intelligence Cognitive Engine (Statically Integrated)
+    if (!responseText.trim()) {
       try {
-        const { CortexDialogueEngine } = await import('../../services/cortexDialogueEngine');
         const historyDialogue = this.history.slice(-10).map((h, idx) => ({ id: `hist-${idx}-${h.timestamp}`, speaker: (h.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant', text: h.content, timestamp: new Date(h.timestamp).toISOString() }));
         const cortexRes = await CortexDialogueEngine.getInstance().reasonAndAct(transcript, historyDialogue);
         if (cortexRes?.spokenResponse && !cortexRes.spokenResponse.includes("noted that in my local brain")) {
           responseText = cortexRes.spokenResponse;
+        }
+        if (cortexRes?.actionCard && !actionCard) {
+          actionCard = {
+            id: cortexRes.actionCard.id,
+            type: (cortexRes.actionCard.intent === 'calendar_booking' ? 'calendar' : 'task'),
+            title: cortexRes.actionCard.title,
+            subtitle: cortexRes.actionCard.description || cortexRes.actionCard.spokenResponse
+          };
         }
       } catch (cErr) {
         telemetry.log('error', { source: 'CortexFallback', message: String(cErr) });
       }
     }
 
-    // Local deterministic fallback
-    if (responseText === "I have noted that in my local brain.") {
+    // Deterministic Conversational Grounding
+    if (!responseText.trim()) {
       if (lower.includes("weather") || lower.includes("temperature") || lower.includes("rain") || lower.includes("forecast") || lower.includes("meteo") || lower.includes("temps")) {
         try {
           const { weatherService } = await import('../../services/weatherService');
@@ -228,8 +222,10 @@ Respond ONLY with valid JSON:
         const title = transcript.replace(/^(schedule|add meeting with|set appointment with|rendez-vous avec)/i, '').trim() || "Meeting";
         actionCard = { id: 'act-' + Date.now(), type: 'calendar', title, subtitle: "Calendar staging request", dateStr: "Upcoming" };
         responseText = `I have staged "${title}" on your calendar. You can sync it now.`;
-      } else if (lower.includes("what are you doing") || lower.includes("who are you")) {
+      } else if (lower.includes("what are you doing") || lower.includes("who are you") || lower.includes("qui es-tu")) {
         responseText = "I am Eve, your executive assistant. I am listening and keeping your context organized.";
+      } else {
+        responseText = `I understand, Andrew. I have noted that and updated your context. How would you like to proceed?`;
       }
     }
 
