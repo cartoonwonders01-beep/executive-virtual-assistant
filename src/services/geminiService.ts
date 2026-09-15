@@ -1,5 +1,11 @@
-import { TaskCategory, FeasibilityType, UserPriority, AIPriority, AutomationBlueprint, CustomLLMProfile } from '../types';
+import { TaskCategory, FeasibilityType, UserPriority, AIPriority, AutomationBlueprint, CustomLLMProfile, ImageAttachment } from '../types';
 import { buildUnifiedSystemPrompt, getActiveLLMProfile } from '../config';
+import { logger } from './loggerService';
+
+export interface GeminiImageInput {
+  mimeType: string;
+  data: string; // base64 string
+}
 
 export interface GeminiAnalysisResult {
   actionCard: {
@@ -57,14 +63,16 @@ export interface GeminiAnalysisResult {
 export async function processSpeechWithGemini(
   transcript: string,
   apiKey: string,
-  model: 'gemini-1.5-pro' | 'gemini-1.5-flash' = 'gemini-1.5-flash',
+  model: 'gemini-2.5-pro' | 'gemini-2.5-flash' | 'gemini-1.5-pro' | 'gemini-1.5-flash' | 'gemini-flash-latest' | string = 'gemini-2.5-flash',
   customProfile?: CustomLLMProfile,
-  conversationHistory?: Array<{ speaker: string; text: string }>
+  conversationHistory?: Array<{ speaker: string; text: string }>,
+  images?: Array<ImageAttachment | GeminiImageInput | { dataUrl: string; mimeType: string; name?: string }>,
+  episodicContext?: string
 ): Promise<GeminiAnalysisResult | null> {
-  if (!apiKey || !transcript.trim()) return null;
+  if (!apiKey || (!transcript.trim() && (!images || images.length === 0))) return null;
 
   const activeProfile = customProfile || getActiveLLMProfile();
-  const selectedModel = (activeProfile.model.includes('gemini-1.5-pro') ? 'gemini-1.5-pro' : model);
+  const selectedModel = activeProfile.model.includes('pro') ? 'gemini-2.5-pro' : (activeProfile.model.includes('gemini') ? activeProfile.model : 'gemini-2.5-flash');
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
 
   const todayStr = new Date().toISOString().split('T')[0];
@@ -74,12 +82,31 @@ export async function processSpeechWithGemini(
 
   let historyContext = '';
   if (conversationHistory && conversationHistory.length > 0) {
-    const recent = conversationHistory.slice(-4);
-    historyContext = `\nRECENT CONVERSATION HISTORY:\n` + recent.map(t => `${t.speaker === 'user' ? (activeProfile.userContext.userName || 'User') : 'Eve'}: "${t.text}"`).join('\n') + '\n';
+    historyContext = `\nRECENT CONVERSATION HISTORY (Chronological, Oldest to Newest):\n` + 
+      conversationHistory.map(t => `${t.speaker === 'user' ? (activeProfile.userContext.userName || 'User') : 'Eve'}: "${t.text}"`).join('\n') + '\n';
   }
 
-  const systemPrompt = `${unifiedPrompt}
+  const hasImages = images && images.length > 0;
+  const visionPrompt = hasImages
+    ? `\nMULTIMODAL VISION REASONING INSTRUCTIONS:
+- You have received ${images.length} visual attachment(s) (screenshots, UI designs, documents, diagrams, photos, receipts, or data visualizations).
+- Inspect the visual content thoroughly. Extract text, analyze structures, understand architecture diagrams, diagnose visual UI errors, or extract action items.
+- Incorporate visual insights directly into your response and action card.\n`
+    : '';
 
+  const coreferencePrompt = `
+COREFERENCE & PRONOUN ANAPHORA RESOLUTION:
+- When ${activeProfile.userContext.userName} uses pronouns like "it", "them", "that", "he", "she", "him", "her", or phrases like "the meeting", "the email", "our previous discussion", look at RECENT CONVERSATION HISTORY and identify the exact antecedent object, person, meeting, or topic discussed in the previous turns.
+- Maintain seamless context continuity across sequential instructions (e.g. if the previous turn discusses a meeting with David Miller, and the current message asks "Can you push it to 4 PM?", recognize that "it" = the David Miller meeting and update the start/end time accordingly).
+- If ${activeProfile.userContext.userName} says "Send him an email" or "Tell her", resolve the recipient name and email from the recent discussion or Baxter family directory.
+`;
+
+  const memorySection = episodicContext ? `\n${episodicContext}\n` : '';
+
+  const systemPrompt = `${unifiedPrompt}
+${visionPrompt}
+${coreferencePrompt}
+${memorySection}
 MULTILINGUAL EUROPEAN LANGUAGE SUPPORT:
 - Detect the language of ${activeProfile.userContext.userName}'s speech or message (English, German/Deutsch, French/Français, Spanish/Español, Italian/Italiano, Dutch/Nederlands, Polish/Polski, Portuguese/Português, Russian, etc.).
 - Always formulate both your "spokenResponse" and "description" in that exact language with natural native phrasing and high IQ.
@@ -102,29 +129,33 @@ NATURAL HUMAN CONVERSATIONAL BEHAVIOR:
 
 CURRENT DATE & TIME: ${nowISO} (Today: ${todayStr})
 ${historyContext}
-BAXTER FAMILY RELATIONAL MEMORY ROSTER:
+BAXTER FAMILY & RESIDENCE CONTEXT:
 - Andrew Baxter: User / Founder & Lead (Email: andy.j.baxter@gmail.com)
 - Celine Loeuille: Wife & Operations Lead / Partner (Email: celine.loeuille@gmail.com)
 - Elizabeth Baxter: Daughter (Email: elizabth.js.baxter@gmail.com)
 - Alexander Baxter: Son (Email: alexander.j.baxter@gmail.com)
 - Eleonore Baxter: Daughter (Email: eleonore.a.baxter@gmail.com)
 - Angelina Baxter: Daughter (Email: angelina.c.baxter@gmail.com)
-- Sarah Chen: Colleague & VP Product (Email: sarah.chen@innovate.co)
+- Primary Residence: Hoeilaart, Belgium (Postcode 1560), near Sonian Forest.
+- Commute Route to Brussels / Work: S8 or S81 commuter train from Hoeilaart or Groenendaal station to Brussels-Luxembourg (18 min) or Brussels-Central (22 min). By car: E411.
 
 GUIDELINES FOR INTENT RESOLUTION:
 1. If the user asks a question, seeks advice, discusses an idea, tells or asks for a joke, or converses: Set "intent": "knowledge_qa".
-2. If the user dictates or asks to send an email (e.g. to wife Celine, children Elizabeth/Alexander/Eleonore/Angelina, colleague Sarah): Set "intent": "email_draft" and use the exact verified email from the roster above.
+2. If the user dictates or asks to send an email (e.g. to wife Celine, children Elizabeth/Alexander/Eleonore/Angelina): Set "intent": "email_draft" and use the exact verified email from the roster above.
 3. If the user asks to schedule/check a meeting: Set "intent": "calendar_booking".
-4. If the user explicitly asks to create/log a task: Set "intent": "task_create".
-5. If the user asks for real-time web or external research: Set "intent": "web_search".
+4. If the user asks for transit, commute, or directions from home to work/Brussels: provide the Hoeilaart/Groenendaal S8 train route.
+5. If the user asks to track a colleague's arrival without providing their name or flight/carrier: Ask a clarifying question for their name/flight and set "executionTier": "needs_slots".
+6. If the user explicitly asks to create/log a task: Set "intent": "task_create".
+7. If the user asks for real-time web or external research: Set "intent": "web_search".
 
 Analyze the user's transcript and return a STRICT JSON object matching this schema:
 {
   "actionCard": {
-    "intent": "knowledge_qa" | "calendar_booking" | "email_draft" | "task_create" | "call_contact" | "web_search",
+    "intent": "knowledge_qa" | "calendar_booking" | "email_draft" | "task_create" | "call_contact" | "web_search" | "calendar_reschedule",
     "title": "Short title",
     "description": "Natural, articulate human conversational response (1-2 paragraphs max)",
     "spokenResponse": "Warm, natural spoken response (1-2 sentences)",
+    "executionTier": "instant" | "needs_slots" | "requires_approval",
     "calendarData": {
       "title": "Meeting Title",
       "startDateTime": "YYYY-MM-DDTHH:mm:ss.sssZ",
@@ -172,16 +203,55 @@ Analyze the user's transcript and return a STRICT JSON object matching this sche
 }`;
 
   try {
+    const userParts: any[] = [
+      { text: systemPrompt + '\n\nGROQ WHISPER TRANSCRIPT TO REASON ABOUT:\n"' + (transcript || (hasImages ? 'Please inspect and analyze the attached visual input.' : '')) + '"' }
+    ];
+
+    if (images && images.length > 0) {
+      for (const img of images) {
+        const mimeType = (img as any).mimeType || 'image/png';
+        let rawBase64 = '';
+        if ('data' in img && typeof img.data === 'string') {
+          rawBase64 = img.data.replace(/^data:[^;]+;base64,/, '');
+        } else if ('url' in img && typeof img.url === 'string') {
+          rawBase64 = img.url.replace(/^data:[^;]+;base64,/, '');
+        } else if ('dataUrl' in img && typeof (img as any).dataUrl === 'string') {
+          rawBase64 = (img as any).dataUrl.replace(/^data:[^;]+;base64,/, '');
+        }
+        if (rawBase64) {
+          userParts.push({
+            inline_data: {
+              mime_type: mimeType,
+              data: rawBase64
+            }
+          });
+        }
+      }
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 4500);
+
+    const startTime = Date.now();
+    logger.debug('gemini_llm', `🚀 [Gemini 2.5 Dispatch] Calling Gemini API (${selectedModel})`, {
+      model: selectedModel,
+      timeoutMs: 4500,
+      hasImages: images && images.length > 0,
+      temperature: activeProfile.temperature ?? 0.7,
+      historyTurnsIncluded: conversationHistory?.length || 0
+    });
+
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
         contents: [
           {
             role: 'user',
-            parts: [
-              { text: systemPrompt + '\n\nUSER TRANSCRIPT TO REASON ABOUT:\n"' + transcript + '"' }
-            ]
+            parts: userParts
           }
         ],
         generationConfig: {
@@ -190,18 +260,62 @@ Analyze the user's transcript and return a STRICT JSON object matching this sche
         }
       })
     });
+    clearTimeout(timeoutId);
+    const latencyMs = Date.now() - startTime;
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.warn(`Gemini API error (${response.status}):`, errText);
-      return null;
+    let rawText = '';
+
+    if (response.ok) {
+      const data = await response.json();
+      rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      logger.debug('gemini_llm', `📥 [Gemini 2.5 Response] Received payload in ${latencyMs}ms`, {
+        latencyMs,
+        status: response.status,
+        textBytes: rawText.length
+      });
+    } else {
+      const errText = await response.text().catch(() => '');
+      logger.debug('gemini_llm', `⚠️ [Gemini 2.5 Non-OK Status] ${response.status}: ${errText.slice(0, 150)}`);
+      
+      // Edge Relay Fallback
+      if (typeof window !== 'undefined' && typeof fetch !== 'undefined') {
+        const edgeRes = await fetch('/api/gemini', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ role: 'user', parts: userParts }],
+            model: selectedModel,
+            apiKey
+          })
+        }).catch(() => null);
+
+        if (edgeRes && edgeRes.ok) {
+          const edgeData = await edgeRes.json().catch(() => null);
+          rawText = edgeData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        }
+      }
     }
 
-    const data = await response.json();
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!rawText) return null;
 
-    const parsed = JSON.parse(rawText) as GeminiAnalysisResult;
+    let parsed: GeminiAnalysisResult;
+    try {
+      // Clean JSON fences if model outputted markdown code block
+      const cleanJson = rawText.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
+      parsed = JSON.parse(cleanJson) as GeminiAnalysisResult;
+    } catch {
+      // Natural text fallback
+      parsed = {
+        actionCard: {
+          intent: 'knowledge_qa',
+          title: transcript.length > 35 ? transcript.substring(0, 32) + '...' : transcript,
+          description: rawText,
+          spokenResponse: rawText.split('\n')[0].replace(/[*#]/g, '')
+        },
+        tasks: [],
+        spokenSummary: rawText.split('\n')[0].replace(/[*#]/g, '')
+      };
+    }
 
     // Post-process IDs and date formats
     if (parsed.tasks && Array.isArray(parsed.tasks)) {
@@ -222,5 +336,49 @@ Analyze the user's transcript and return a STRICT JSON object matching this sche
   } catch (err) {
     console.error('Failed to parse with Gemini API:', err);
     return null;
+  }
+}
+
+export async function testGeminiConnection(apiKey: string): Promise<{ success: boolean; message: string; model?: string }> {
+  if (!apiKey || !apiKey.trim()) {
+    return { success: false, message: 'Please enter a valid Google Gemini API key.' };
+  }
+  try {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey.trim()}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: 'Hello, respond with the single word: Connected' }] }]
+      })
+    });
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as any;
+      return { success: false, message: `Google API Error (${res.status}): ${err?.error?.message || res.statusText}` };
+    }
+    const data = (await res.json()) as any;
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    return { success: true, message: `Connected to Google Gemini 2.5 Flash: "${text.trim()}"`, model: 'gemini-2.5-flash' };
+  } catch (err: any) {
+    return { success: false, message: `Network Error connecting to Google Gemini: ${err.message}` };
+  }
+}
+
+export async function testGroqConnection(apiKey: string): Promise<{ success: boolean; message: string }> {
+  if (!apiKey || !apiKey.trim()) {
+    return { success: false, message: 'Please enter a valid Groq API key.' };
+  }
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/models', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${apiKey.trim()}` }
+    });
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as any;
+      return { success: false, message: `Groq API Error (${res.status}): ${err?.error?.message || res.statusText}` };
+    }
+    return { success: true, message: `Connected to Groq Cloud (Whisper Large v3 Turbo ready)` };
+  } catch (err: any) {
+    return { success: false, message: `Network Error connecting to Groq: ${err.message}` };
   }
 }

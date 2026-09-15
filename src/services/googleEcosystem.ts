@@ -133,7 +133,7 @@ export class GoogleEcosystemService {
       gmailConnected: true,
       calendarConnected: true,
       sheetsWarehouseActive: true,
-      geminiUltraModel: 'gemini-1.5-pro-latest'
+      geminiUltraModel: 'gemini-2.5-pro-latest'
     };
   }
 }

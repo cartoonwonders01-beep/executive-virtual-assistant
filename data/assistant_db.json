@@ -1,6 +1,46 @@
 {
   "contacts": [
     {
+      "id": "c-test-1787729290625",
+      "name": "Marcus Vance",
+      "role": "Managing Partner",
+      "email": "marcus@vancecapital.com",
+      "phone": "+1 (555) 777-8888",
+      "company": "Vance Capital"
+    },
+    {
+      "id": "c-test-1787723716480",
+      "name": "Marcus Vance",
+      "role": "Managing Partner",
+      "email": "marcus@vancecapital.com",
+      "phone": "+1 (555) 777-8888",
+      "company": "Vance Capital"
+    },
+    {
+      "id": "c-test-1787722448949",
+      "name": "Marcus Vance",
+      "role": "Managing Partner",
+      "email": "marcus@vancecapital.com",
+      "phone": "+1 (555) 777-8888",
+      "company": "Vance Capital"
+    },
+    {
+      "id": "c-test-1787688887301",
+      "name": "Marcus Vance",
+      "role": "Managing Partner",
+      "email": "marcus@vancecapital.com",
+      "phone": "+1 (555) 777-8888",
+      "company": "Vance Capital"
+    },
+    {
+      "id": "c-test-1787660781068",
+      "name": "Marcus Vance",
+      "role": "Managing Partner",
+      "email": "marcus@vancecapital.com",
+      "phone": "+1 (555) 777-8888",
+      "company": "Vance Capital"
+    },
+    {
       "id": "c1",
       "name": "Sarah Chen",
       "role": "Head of Growth",
@@ -91,6 +131,76 @@
   ],
   "inboxEmails": [
     {
+      "id": "inbox-test-1787729290621",
+      "fromName": "Andrew Baxter",
+      "fromEmail": "andy.j.baxter@gmail.com",
+      "toName": "Sarah Chen",
+      "toEmail": "sarah.chen@innovate.co",
+      "subject": "Test Executive Dispatch",
+      "snippet": "Testing instant send capability...",
+      "body": "Testing instant email send.",
+      "receivedAt": "2026-08-26T07:28:10.621Z",
+      "isUnread": false,
+      "isStarred": false,
+      "category": "vip"
+    },
+    {
+      "id": "inbox-test-1787723716466",
+      "fromName": "Andrew Baxter",
+      "fromEmail": "andy.j.baxter@gmail.com",
+      "toName": "Sarah Chen",
+      "toEmail": "sarah.chen@innovate.co",
+      "subject": "Test Executive Dispatch",
+      "snippet": "Testing instant send capability...",
+      "body": "Testing instant email send.",
+      "receivedAt": "2026-08-26T05:55:16.466Z",
+      "isUnread": false,
+      "isStarred": true,
+      "category": "vip"
+    },
+    {
+      "id": "inbox-test-1787722448926",
+      "fromName": "Andrew Baxter",
+      "fromEmail": "andy.j.baxter@gmail.com",
+      "toName": "Sarah Chen",
+      "toEmail": "sarah.chen@innovate.co",
+      "subject": "Test Executive Dispatch",
+      "snippet": "Testing instant send capability...",
+      "body": "Testing instant email send.",
+      "receivedAt": "2026-08-26T05:34:08.926Z",
+      "isUnread": false,
+      "isStarred": true,
+      "category": "vip"
+    },
+    {
+      "id": "inbox-test-1787688887287",
+      "fromName": "Andrew Baxter",
+      "fromEmail": "andy.j.baxter@gmail.com",
+      "toName": "Sarah Chen",
+      "toEmail": "sarah.chen@innovate.co",
+      "subject": "Test Executive Dispatch",
+      "snippet": "Testing instant send capability...",
+      "body": "Testing instant email send.",
+      "receivedAt": "2026-08-25T20:14:47.287Z",
+      "isUnread": false,
+      "isStarred": true,
+      "category": "vip"
+    },
+    {
+      "id": "inbox-test-1787660781063",
+      "fromName": "Andrew Baxter",
+      "fromEmail": "andy.j.baxter@gmail.com",
+      "toName": "Sarah Chen",
+      "toEmail": "sarah.chen@innovate.co",
+      "subject": "Test Executive Dispatch",
+      "snippet": "Testing instant send capability...",
+      "body": "Testing instant email send.",
+      "receivedAt": "2026-08-25T12:26:21.063Z",
+      "isUnread": false,
+      "isStarred": true,
+      "category": "vip"
+    },
+    {
       "id": "inbox-1",
       "fromName": "Sarah Chen",
       "fromEmail": "sarah.chen@innovate.co",
@@ -101,7 +211,7 @@
       "body": "Hi Andrew,\n\nI reviewed the preliminary numbers for our inbound qualification funnel. We are currently tracking 24% ahead of target, but need to finalize the additional $4,500 serverless tool budget before Tuesday.\n\nCould we jump on a brief 15-minute sync or sign off directly so the dev team can begin onboarding?\n\nBest regards,\nSarah Chen",
       "receivedAt": "2026-08-22T08:30:00Z",
       "isUnread": true,
-      "isStarred": true,
+      "isStarred": false,
       "category": "vip",
       "hasAttachments": true,
       "suggestedReply": "Hi Sarah, the $4,500 budget is approved! Let us confirm details on our Tuesday sync."
@@ -171,6 +281,41 @@
       "sender": "David Miller",
       "text": "The Playwright scraper for competitor pricing is running cleanly inside the sandbox VM.",
       "sentAt": "2026-08-22T11:00:00Z"
+    },
+    {
+      "id": "msg-test-1787660781065",
+      "contactId": "c1",
+      "sender": "Andrew",
+      "text": "Sync on Q3 goals.",
+      "sentAt": "2026-08-25T12:26:21.065Z"
+    },
+    {
+      "id": "msg-test-1787688887296",
+      "contactId": "c-test-1787660781068",
+      "sender": "Andrew",
+      "text": "Sync on Q3 goals.",
+      "sentAt": "2026-08-25T20:14:47.296Z"
+    },
+    {
+      "id": "msg-test-1787722448941",
+      "contactId": "c-test-1787688887301",
+      "sender": "Andrew",
+      "text": "Sync on Q3 goals.",
+      "sentAt": "2026-08-26T05:34:08.941Z"
+    },
+    {
+      "id": "msg-test-1787723716477",
+      "contactId": "c-test-1787722448949",
+      "sender": "Andrew",
+      "text": "Sync on Q3 goals.",
+      "sentAt": "2026-08-26T05:55:16.477Z"
+    },
+    {
+      "id": "msg-test-1787729290623",
+      "contactId": "c-test-1787723716480",
+      "sender": "Andrew",
+      "text": "Sync on Q3 goals.",
+      "sentAt": "2026-08-26T07:28:10.623Z"
     }
   ],
   "callLogs": [
@@ -199,14 +344,154 @@
   ],
   "autonomousJobs": [
     {
+      "id": "job-mt9rv0y5",
+      "taskId": "task-mt9ruyyh",
+      "taskTitle": "ajoute une tâche: réviser le contrat fournisseur",
+      "category": "Tech/Dev",
+      "currentStepIndex": 1,
+      "totalSteps": 4,
+      "currentStepText": "1. Define automated trigger conditions and schema validation rules.",
+      "progressPercent": 45,
+      "status": "running",
+      "logs": [
+        {
+          "timestamp": "2026-08-26T07:28:10.637Z",
+          "type": "info",
+          "message": "Picked task \"ajoute une tâche: réviser le contrat fournisseur\" from prioritized backlog."
+        },
+        {
+          "timestamp": "2026-08-26T07:28:10.637Z",
+          "type": "info",
+          "message": "Step 1/4: 1. Define automated trigger conditions and schema validation rules."
+        }
+      ],
+      "startedAt": "2026-08-26T07:28:10.637Z"
+    },
+    {
+      "id": "job-mt9ojjxh",
+      "taskId": "task-mt9ojdoi",
+      "taskTitle": "ajoute une tâche: réviser le contrat fournisseur",
+      "category": "Tech/Dev",
+      "currentStepIndex": 2,
+      "totalSteps": 4,
+      "currentStepText": "2. Implement AI-assisted prompt template with structured JSON output parser.",
+      "progressPercent": 70,
+      "status": "running",
+      "logs": [
+        {
+          "timestamp": "2026-08-26T05:55:16.517Z",
+          "type": "info",
+          "message": "Picked task \"ajoute une tâche: réviser le contrat fournisseur\" from prioritized backlog."
+        },
+        {
+          "timestamp": "2026-08-26T05:55:16.517Z",
+          "type": "info",
+          "message": "Step 1/4: 1. Define automated trigger conditions and schema validation rules."
+        },
+        {
+          "timestamp": "2026-08-26T07:28:10.629Z",
+          "type": "info",
+          "message": "Step 2/4: 2. Implement AI-assisted prompt template with structured JSON output parser."
+        }
+      ],
+      "startedAt": "2026-08-26T05:55:16.517Z"
+    },
+    {
+      "id": "job-mt9nsdx4",
+      "taskId": "task-mt9ns5ep",
+      "taskTitle": "ajoute une tâche: réviser le contrat fournisseur",
+      "category": "Tech/Dev",
+      "currentStepIndex": 2,
+      "totalSteps": 4,
+      "currentStepText": "2. Implement AI-assisted prompt template with structured JSON output parser.",
+      "progressPercent": 70,
+      "status": "running",
+      "logs": [
+        {
+          "timestamp": "2026-08-26T05:34:09.016Z",
+          "type": "info",
+          "message": "Picked task \"ajoute une tâche: réviser le contrat fournisseur\" from prioritized backlog."
+        },
+        {
+          "timestamp": "2026-08-26T05:34:09.016Z",
+          "type": "info",
+          "message": "Step 1/4: 1. Define automated trigger conditions and schema validation rules."
+        },
+        {
+          "timestamp": "2026-08-26T05:55:16.489Z",
+          "type": "info",
+          "message": "Step 2/4: 2. Implement AI-assisted prompt template with structured JSON output parser."
+        }
+      ],
+      "startedAt": "2026-08-26T05:34:09.016Z"
+    },
+    {
+      "id": "job-mt93t1l5",
+      "taskId": "task-mt93sr5x",
+      "taskTitle": "ajoute une tâche: réviser le contrat fournisseur",
+      "category": "Tech/Dev",
+      "currentStepIndex": 2,
+      "totalSteps": 4,
+      "currentStepText": "2. Implement AI-assisted prompt template with structured JSON output parser.",
+      "progressPercent": 70,
+      "status": "running",
+      "logs": [
+        {
+          "timestamp": "2026-08-25T20:14:47.369Z",
+          "type": "info",
+          "message": "Picked task \"ajoute une tâche: réviser le contrat fournisseur\" from prioritized backlog."
+        },
+        {
+          "timestamp": "2026-08-25T20:14:47.369Z",
+          "type": "info",
+          "message": "Step 1/4: 1. Define automated trigger conditions and schema validation rules."
+        },
+        {
+          "timestamp": "2026-08-26T05:34:08.972Z",
+          "type": "info",
+          "message": "Step 2/4: 2. Implement AI-assisted prompt template with structured JSON output parser."
+        }
+      ],
+      "startedAt": "2026-08-25T20:14:47.369Z"
+    },
+    {
+      "id": "job-mt8n2mn1",
+      "taskId": "task-mt8n2jis",
+      "taskTitle": "ajoute une tâche: réviser le contrat fournisseur",
+      "category": "Tech/Dev",
+      "currentStepIndex": 2,
+      "totalSteps": 4,
+      "currentStepText": "2. Implement AI-assisted prompt template with structured JSON output parser.",
+      "progressPercent": 70,
+      "status": "running",
+      "logs": [
+        {
+          "timestamp": "2026-08-25T12:26:21.085Z",
+          "type": "info",
+          "message": "Picked task \"ajoute une tâche: réviser le contrat fournisseur\" from prioritized backlog."
+        },
+        {
+          "timestamp": "2026-08-25T12:26:21.085Z",
+          "type": "info",
+          "message": "Step 1/4: 1. Define automated trigger conditions and schema validation rules."
+        },
+        {
+          "timestamp": "2026-08-25T20:14:47.322Z",
+          "type": "info",
+          "message": "Step 2/4: 2. Implement AI-assisted prompt template with structured JSON output parser."
+        }
+      ],
+      "startedAt": "2026-08-25T12:26:21.085Z"
+    },
+    {
       "id": "job-1",
       "taskId": "task-101",
       "taskTitle": "Automate PDF Invoice & Receipt Extraction to Accounting Sheet",
       "category": "Finance",
-      "currentStepIndex": 3,
+      "currentStepIndex": 4,
       "totalSteps": 5,
-      "currentStepText": "Validating mathematical totals & Zod schema validation...",
-      "progressPercent": 65,
+      "currentStepText": "4. Upsert row into Google Sheets Accounting ledger via Service Account REST API.",
+      "progressPercent": 85,
       "status": "running",
       "logs": [
         {
@@ -228,6 +513,11 @@
           "timestamp": "2026-08-22T12:00:06Z",
           "type": "info",
           "message": "Upserting to Google Sheets & BigQuery warehouse."
+        },
+        {
+          "timestamp": "2026-08-25T12:26:21.083Z",
+          "type": "info",
+          "message": "Step 4/5: 4. Upsert row into Google Sheets Accounting ledger via Service Account REST API."
         }
       ],
       "startedAt": "2026-08-22T12:00:00Z"
@@ -237,11 +527,11 @@
       "taskId": "task-102",
       "taskTitle": "Deploy Real-Time Competitor Pricing & Feature Scraper",
       "category": "Business & Strategy",
-      "currentStepIndex": 2,
+      "currentStepIndex": 4,
       "totalSteps": 4,
-      "currentStepText": "Running Playwright crawler on competitor pricing tables...",
-      "progressPercent": 40,
-      "status": "running",
+      "currentStepText": "4. Post markdown bullet briefing directly to Work Hub and Email.",
+      "progressPercent": 100,
+      "status": "completed",
       "logs": [
         {
           "timestamp": "2026-08-22T11:30:00Z",
@@ -257,12 +547,183 @@
           "timestamp": "2026-08-22T11:30:07Z",
           "type": "info",
           "message": "Comparing HTML hash against SQLite cache..."
+        },
+        {
+          "timestamp": "2026-08-25T12:26:21.073Z",
+          "type": "info",
+          "message": "Step 3/4: 3. If diff detected, feed text changes to Gemini/Claude for strategic summary."
+        },
+        {
+          "timestamp": "2026-08-25T12:26:21.081Z",
+          "type": "success",
+          "message": "Completed all 4 blueprint steps! Verified in Sandbox VM (10.211.55.6). Won back +24h."
         }
       ],
-      "startedAt": "2026-08-22T11:30:00Z"
+      "startedAt": "2026-08-22T11:30:00Z",
+      "completedAt": "2026-08-25T12:26:21.081Z"
     }
   ],
   "appointments": [
+    {
+      "id": "apt-mt9rv0wl",
+      "title": "Meeting with Sarah Chen",
+      "startDateTime": "2026-08-27T14:00:00.000Z",
+      "endDateTime": "2026-08-27T14:45:00.000Z",
+      "location": "Google Meet / Virtual Bridge",
+      "attendees": [
+        {
+          "name": "Sarah Chen",
+          "email": "sarah.chen@innovate.co"
+        }
+      ],
+      "description": "Discussion topic: Book an alignment sync with Sarah on Thursday ",
+      "status": "confirmed",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Meeting%20with%20Sarah%20Chen&dates=20260827T140000Z/20260827T144500Z&details=Coordinated%20automatically%20by%20Executive%20AI%20Assistant&location=Google%20Meet%20%2F%20Virtual%20Bridge"
+    },
+    {
+      "id": "apt-mt9rv0vp",
+      "title": "Meeting with David Miller",
+      "startDateTime": "2026-08-25T15:00:00.000Z",
+      "endDateTime": "2026-08-25T15:45:00.000Z",
+      "location": "Google Meet / Virtual Bridge",
+      "attendees": [
+        {
+          "name": "David Miller",
+          "email": "david.m@cloudscale.io"
+        }
+      ],
+      "description": "Discussion topic: Schedule a Q3 strategy sync with David Miller next Tuesday at 2 PM",
+      "status": "confirmed",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Meeting%20with%20David%20Miller&dates=20260825T150000Z/20260825T154500Z&details=Coordinated%20automatically%20by%20Executive%20AI%20Assistant&location=Google%20Meet%20%2F%20Virtual%20Bridge"
+    },
+    {
+      "id": "apt-mt9ojjts",
+      "title": "Meeting with Sarah Chen",
+      "startDateTime": "2026-08-27T14:00:00.000Z",
+      "endDateTime": "2026-08-27T14:45:00.000Z",
+      "location": "Google Meet / Virtual Bridge",
+      "attendees": [
+        {
+          "name": "Sarah Chen",
+          "email": "sarah.chen@innovate.co"
+        }
+      ],
+      "description": "Discussion topic: Book an alignment sync with Sarah on Thursday ",
+      "status": "confirmed",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Meeting%20with%20Sarah%20Chen&dates=20260827T140000Z/20260827T144500Z&details=Coordinated%20automatically%20by%20Executive%20AI%20Assistant&location=Google%20Meet%20%2F%20Virtual%20Bridge"
+    },
+    {
+      "id": "apt-mt9ojjsa",
+      "title": "Meeting with David Miller",
+      "startDateTime": "2026-08-25T15:00:00.000Z",
+      "endDateTime": "2026-08-25T15:45:00.000Z",
+      "location": "Google Meet / Virtual Bridge",
+      "attendees": [
+        {
+          "name": "David Miller",
+          "email": "david.m@cloudscale.io"
+        }
+      ],
+      "description": "Discussion topic: Schedule a Q3 strategy sync with David Miller next Tuesday at 2 PM",
+      "status": "confirmed",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Meeting%20with%20David%20Miller&dates=20260825T150000Z/20260825T154500Z&details=Coordinated%20automatically%20by%20Executive%20AI%20Assistant&location=Google%20Meet%20%2F%20Virtual%20Bridge"
+    },
+    {
+      "id": "apt-mt9nsdp2",
+      "title": "Meeting with Sarah Chen",
+      "startDateTime": "2026-08-27T14:00:00.000Z",
+      "endDateTime": "2026-08-27T14:45:00.000Z",
+      "location": "Google Meet / Virtual Bridge",
+      "attendees": [
+        {
+          "name": "Sarah Chen",
+          "email": "sarah.chen@innovate.co"
+        }
+      ],
+      "description": "Discussion topic: Book an alignment sync with Sarah on Thursday ",
+      "status": "confirmed",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Meeting%20with%20Sarah%20Chen&dates=20260827T140000Z/20260827T144500Z&details=Coordinated%20automatically%20by%20Executive%20AI%20Assistant&location=Google%20Meet%20%2F%20Virtual%20Bridge"
+    },
+    {
+      "id": "apt-mt9nsdmp",
+      "title": "Meeting with David Miller",
+      "startDateTime": "2026-08-25T15:00:00.000Z",
+      "endDateTime": "2026-08-25T15:45:00.000Z",
+      "location": "Google Meet / Virtual Bridge",
+      "attendees": [
+        {
+          "name": "David Miller",
+          "email": "david.m@cloudscale.io"
+        }
+      ],
+      "description": "Discussion topic: Schedule a Q3 strategy sync with David Miller next Tuesday at 2 PM",
+      "status": "confirmed",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Meeting%20with%20David%20Miller&dates=20260825T150000Z/20260825T154500Z&details=Coordinated%20automatically%20by%20Executive%20AI%20Assistant&location=Google%20Meet%20%2F%20Virtual%20Bridge"
+    },
+    {
+      "id": "apt-mt93t1du",
+      "title": "Meeting with Sarah Chen",
+      "startDateTime": "2026-08-27T14:00:00.000Z",
+      "endDateTime": "2026-08-27T14:45:00.000Z",
+      "location": "Google Meet / Virtual Bridge",
+      "attendees": [
+        {
+          "name": "Sarah Chen",
+          "email": "sarah.chen@innovate.co"
+        }
+      ],
+      "description": "Discussion topic: Book an alignment sync with Sarah on Thursday ",
+      "status": "confirmed",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Meeting%20with%20Sarah%20Chen&dates=20260827T140000Z/20260827T144500Z&details=Coordinated%20automatically%20by%20Executive%20AI%20Assistant&location=Google%20Meet%20%2F%20Virtual%20Bridge"
+    },
+    {
+      "id": "apt-mt93t181",
+      "title": "Meeting with David Miller",
+      "startDateTime": "2026-08-25T15:00:00.000Z",
+      "endDateTime": "2026-08-25T15:45:00.000Z",
+      "location": "Google Meet / Virtual Bridge",
+      "attendees": [
+        {
+          "name": "David Miller",
+          "email": "david.m@cloudscale.io"
+        }
+      ],
+      "description": "Discussion topic: Schedule a Q3 strategy sync with David Miller next Tuesday at 2 PM",
+      "status": "confirmed",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Meeting%20with%20David%20Miller&dates=20260825T150000Z/20260825T154500Z&details=Coordinated%20automatically%20by%20Executive%20AI%20Assistant&location=Google%20Meet%20%2F%20Virtual%20Bridge"
+    },
+    {
+      "id": "apt-mt8n2mld",
+      "title": "Meeting with Sarah Chen",
+      "startDateTime": "2026-08-27T14:00:00.000Z",
+      "endDateTime": "2026-08-27T14:45:00.000Z",
+      "location": "Google Meet / Virtual Bridge",
+      "attendees": [
+        {
+          "name": "Sarah Chen",
+          "email": "sarah.chen@innovate.co"
+        }
+      ],
+      "description": "Discussion topic: Book an alignment sync with Sarah on Thursday ",
+      "status": "confirmed",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Meeting%20with%20Sarah%20Chen&dates=20260827T140000Z/20260827T144500Z&details=Coordinated%20automatically%20by%20Executive%20AI%20Assistant&location=Google%20Meet%20%2F%20Virtual%20Bridge"
+    },
+    {
+      "id": "apt-mt8n2mk5",
+      "title": "Meeting with David Miller",
+      "startDateTime": "2026-08-25T15:00:00.000Z",
+      "endDateTime": "2026-08-25T15:45:00.000Z",
+      "location": "Google Meet / Virtual Bridge",
+      "attendees": [
+        {
+          "name": "David Miller",
+          "email": "david.m@cloudscale.io"
+        }
+      ],
+      "description": "Discussion topic: Schedule a Q3 strategy sync with David Miller next Tuesday at 2 PM",
+      "status": "confirmed",
+      "googleCalendarUrl": "https://calendar.google.com/calendar/render?action=TEMPLATE&text=Meeting%20with%20David%20Miller&dates=20260825T150000Z/20260825T154500Z&details=Coordinated%20automatically%20by%20Executive%20AI%20Assistant&location=Google%20Meet%20%2F%20Virtual%20Bridge"
+    },
     {
       "id": "apt-1",
       "title": "Q3 Product Strategy & AI Roadmap",
@@ -329,6 +790,300 @@
   ],
   "tasks": [
     {
+      "id": "task-mt9ruyyh",
+      "title": "ajoute une tâche: réviser le contrat fournisseur",
+      "description": "ajoute une tâche: réviser le contrat fournisseur",
+      "category": "Tech/Dev",
+      "userPriority": "medium",
+      "aiPriority": "critical",
+      "priorityRationale": "High automation leverage (12h/mo saved with 3h build time).",
+      "feasibility": "ai_automated",
+      "feasibilityReasoning": "100% executable by AI agent via scripts, web APIs, or automation pipeline.",
+      "valueScore": 8,
+      "estimatedValue": "$1,200/mo Value",
+      "manualHoursEstimate": 8,
+      "automationHoursInvested": 3,
+      "timeWonBackHours": 12,
+      "status": "automating",
+      "startDate": "2026-08-26",
+      "dueDate": "2026-08-31",
+      "durationDays": 5,
+      "progressPercent": 45,
+      "dependencies": [],
+      "assignee": "AI Agent",
+      "automationBlueprint": {
+        "strategy": [
+          "1. Define automated trigger conditions and schema validation rules.",
+          "2. Implement AI-assisted prompt template with structured JSON output parser.",
+          "3. Execute pipeline on local Linux sandbox (`sandbox-vm`) or Cloudflare Worker edge.",
+          "4. Log completion metrics to Monday.com Work Hub and calculate hours won back."
+        ],
+        "toolsNeeded": [
+          "Cloudflare Workers / Node.js",
+          "Groq / Gemini AI API",
+          "D1 SQLite",
+          "Cron Trigger"
+        ],
+        "codeLanguage": "typescript",
+        "executableCodeSample": "export default {\n  async fetch(req: Request, env: Env): Promise<Response> {\n    const payload = await req.json();\n    console.log(\"Automating workflow for:\", payload);\n    return Response.json({ success: true, timestamp: new Date().toISOString() });\n  }\n};",
+        "bestPractices": [
+          "Always execute untrusted code in isolated sandbox VM.",
+          "Provide idempotent retry handles for transient network errors."
+        ],
+        "webInspiration": [
+          {
+            "title": "Event-Driven Architectures on Cloudflare Edge",
+            "url": "https://developers.cloudflare.com/workflows",
+            "keyTakeaway": "Use durable execution state machines for multi-step tasks."
+          }
+        ],
+        "executionReadiness": "ready",
+        "estimatedHoursToBuild": 3,
+        "recurringHoursSavedPerMonth": 12
+      },
+      "createdAt": "2026-08-26T07:28:08.055Z",
+      "updatedAt": "2026-08-26T07:28:10.644Z",
+      "executionLogs": [
+        "[7:28:10 AM] Step 1/4: 1. Define automated trigger conditions and schema validation rules."
+      ]
+    },
+    {
+      "id": "task-mt9ojdoi",
+      "title": "ajoute une tâche: réviser le contrat fournisseur",
+      "description": "ajoute une tâche: réviser le contrat fournisseur",
+      "category": "Tech/Dev",
+      "userPriority": "medium",
+      "aiPriority": "critical",
+      "priorityRationale": "High automation leverage (12h/mo saved with 3h build time).",
+      "feasibility": "ai_automated",
+      "feasibilityReasoning": "100% executable by AI agent via scripts, web APIs, or automation pipeline.",
+      "valueScore": 8,
+      "estimatedValue": "$1,200/mo Value",
+      "manualHoursEstimate": 8,
+      "automationHoursInvested": 3,
+      "timeWonBackHours": 12,
+      "status": "completed",
+      "startDate": "2026-08-26",
+      "dueDate": "2026-08-31",
+      "durationDays": 5,
+      "progressPercent": 100,
+      "dependencies": [],
+      "assignee": "AI Agent",
+      "automationBlueprint": {
+        "strategy": [
+          "1. Define automated trigger conditions and schema validation rules.",
+          "2. Implement AI-assisted prompt template with structured JSON output parser.",
+          "3. Execute pipeline on local Linux sandbox (`sandbox-vm`) or Cloudflare Worker edge.",
+          "4. Log completion metrics to Monday.com Work Hub and calculate hours won back."
+        ],
+        "toolsNeeded": [
+          "Cloudflare Workers / Node.js",
+          "Groq / Gemini AI API",
+          "D1 SQLite",
+          "Cron Trigger"
+        ],
+        "codeLanguage": "typescript",
+        "executableCodeSample": "export default {\n  async fetch(req: Request, env: Env): Promise<Response> {\n    const payload = await req.json();\n    console.log(\"Automating workflow for:\", payload);\n    return Response.json({ success: true, timestamp: new Date().toISOString() });\n  }\n};",
+        "bestPractices": [
+          "Always execute untrusted code in isolated sandbox VM.",
+          "Provide idempotent retry handles for transient network errors."
+        ],
+        "webInspiration": [
+          {
+            "title": "Event-Driven Architectures on Cloudflare Edge",
+            "url": "https://developers.cloudflare.com/workflows",
+            "keyTakeaway": "Use durable execution state machines for multi-step tasks."
+          }
+        ],
+        "executionReadiness": "ready",
+        "estimatedHoursToBuild": 3,
+        "recurringHoursSavedPerMonth": 12
+      },
+      "createdAt": "2026-08-26T05:55:08.411Z",
+      "updatedAt": "2026-08-26T07:28:10.645Z",
+      "executionLogs": [
+        "[5:55:16 AM] Step 1/4: 1. Define automated trigger conditions and schema validation rules.",
+        "[7:28:10 AM] Step 2/4: 2. Implement AI-assisted prompt template with structured JSON output parser."
+      ]
+    },
+    {
+      "id": "task-mt9ns5ep",
+      "title": "ajoute une tâche: réviser le contrat fournisseur",
+      "description": "ajoute une tâche: réviser le contrat fournisseur",
+      "category": "Tech/Dev",
+      "userPriority": "medium",
+      "aiPriority": "critical",
+      "priorityRationale": "High automation leverage (12h/mo saved with 3h build time).",
+      "feasibility": "ai_automated",
+      "feasibilityReasoning": "100% executable by AI agent via scripts, web APIs, or automation pipeline.",
+      "valueScore": 8,
+      "estimatedValue": "$1,200/mo Value",
+      "manualHoursEstimate": 8,
+      "automationHoursInvested": 3,
+      "timeWonBackHours": 12,
+      "status": "completed",
+      "startDate": "2026-08-26",
+      "dueDate": "2026-08-31",
+      "durationDays": 5,
+      "progressPercent": 100,
+      "dependencies": [],
+      "assignee": "AI Agent",
+      "automationBlueprint": {
+        "strategy": [
+          "1. Define automated trigger conditions and schema validation rules.",
+          "2. Implement AI-assisted prompt template with structured JSON output parser.",
+          "3. Execute pipeline on local Linux sandbox (`sandbox-vm`) or Cloudflare Worker edge.",
+          "4. Log completion metrics to Monday.com Work Hub and calculate hours won back."
+        ],
+        "toolsNeeded": [
+          "Cloudflare Workers / Node.js",
+          "Groq / Gemini AI API",
+          "D1 SQLite",
+          "Cron Trigger"
+        ],
+        "codeLanguage": "typescript",
+        "executableCodeSample": "export default {\n  async fetch(req: Request, env: Env): Promise<Response> {\n    const payload = await req.json();\n    console.log(\"Automating workflow for:\", payload);\n    return Response.json({ success: true, timestamp: new Date().toISOString() });\n  }\n};",
+        "bestPractices": [
+          "Always execute untrusted code in isolated sandbox VM.",
+          "Provide idempotent retry handles for transient network errors."
+        ],
+        "webInspiration": [
+          {
+            "title": "Event-Driven Architectures on Cloudflare Edge",
+            "url": "https://developers.cloudflare.com/workflows",
+            "keyTakeaway": "Use durable execution state machines for multi-step tasks."
+          }
+        ],
+        "executionReadiness": "ready",
+        "estimatedHoursToBuild": 3,
+        "recurringHoursSavedPerMonth": 12
+      },
+      "createdAt": "2026-08-26T05:33:57.981Z",
+      "updatedAt": "2026-08-26T05:55:16.535Z",
+      "executionLogs": [
+        "[5:34:09 AM] Step 1/4: 1. Define automated trigger conditions and schema validation rules.",
+        "[5:55:16 AM] Step 2/4: 2. Implement AI-assisted prompt template with structured JSON output parser."
+      ]
+    },
+    {
+      "id": "task-mt93sr5x",
+      "title": "ajoute une tâche: réviser le contrat fournisseur",
+      "description": "ajoute une tâche: réviser le contrat fournisseur",
+      "category": "Tech/Dev",
+      "userPriority": "medium",
+      "aiPriority": "critical",
+      "priorityRationale": "High automation leverage (12h/mo saved with 3h build time).",
+      "feasibility": "ai_automated",
+      "feasibilityReasoning": "100% executable by AI agent via scripts, web APIs, or automation pipeline.",
+      "valueScore": 8,
+      "estimatedValue": "$1,200/mo Value",
+      "manualHoursEstimate": 8,
+      "automationHoursInvested": 3,
+      "timeWonBackHours": 12,
+      "status": "completed",
+      "startDate": "2026-08-25",
+      "dueDate": "2026-08-30",
+      "durationDays": 5,
+      "progressPercent": 100,
+      "dependencies": [],
+      "assignee": "AI Agent",
+      "automationBlueprint": {
+        "strategy": [
+          "1. Define automated trigger conditions and schema validation rules.",
+          "2. Implement AI-assisted prompt template with structured JSON output parser.",
+          "3. Execute pipeline on local Linux sandbox (`sandbox-vm`) or Cloudflare Worker edge.",
+          "4. Log completion metrics to Monday.com Work Hub and calculate hours won back."
+        ],
+        "toolsNeeded": [
+          "Cloudflare Workers / Node.js",
+          "Groq / Gemini AI API",
+          "D1 SQLite",
+          "Cron Trigger"
+        ],
+        "codeLanguage": "typescript",
+        "executableCodeSample": "export default {\n  async fetch(req: Request, env: Env): Promise<Response> {\n    const payload = await req.json();\n    console.log(\"Automating workflow for:\", payload);\n    return Response.json({ success: true, timestamp: new Date().toISOString() });\n  }\n};",
+        "bestPractices": [
+          "Always execute untrusted code in isolated sandbox VM.",
+          "Provide idempotent retry handles for transient network errors."
+        ],
+        "webInspiration": [
+          {
+            "title": "Event-Driven Architectures on Cloudflare Edge",
+            "url": "https://developers.cloudflare.com/workflows",
+            "keyTakeaway": "Use durable execution state machines for multi-step tasks."
+          }
+        ],
+        "executionReadiness": "ready",
+        "estimatedHoursToBuild": 3,
+        "recurringHoursSavedPerMonth": 12
+      },
+      "createdAt": "2026-08-25T20:14:33.856Z",
+      "updatedAt": "2026-08-26T05:34:09.048Z",
+      "executionLogs": [
+        "[8:14:47 PM] Step 1/4: 1. Define automated trigger conditions and schema validation rules.",
+        "[5:34:08 AM] Step 2/4: 2. Implement AI-assisted prompt template with structured JSON output parser."
+      ]
+    },
+    {
+      "id": "task-mt8n2jis",
+      "title": "ajoute une tâche: réviser le contrat fournisseur",
+      "description": "ajoute une tâche: réviser le contrat fournisseur",
+      "category": "Tech/Dev",
+      "userPriority": "medium",
+      "aiPriority": "critical",
+      "priorityRationale": "High automation leverage (12h/mo saved with 3h build time).",
+      "feasibility": "ai_automated",
+      "feasibilityReasoning": "100% executable by AI agent via scripts, web APIs, or automation pipeline.",
+      "valueScore": 8,
+      "estimatedValue": "$1,200/mo Value",
+      "manualHoursEstimate": 8,
+      "automationHoursInvested": 3,
+      "timeWonBackHours": 12,
+      "status": "completed",
+      "startDate": "2026-08-25",
+      "dueDate": "2026-08-30",
+      "durationDays": 5,
+      "progressPercent": 100,
+      "dependencies": [],
+      "assignee": "AI Agent",
+      "automationBlueprint": {
+        "strategy": [
+          "1. Define automated trigger conditions and schema validation rules.",
+          "2. Implement AI-assisted prompt template with structured JSON output parser.",
+          "3. Execute pipeline on local Linux sandbox (`sandbox-vm`) or Cloudflare Worker edge.",
+          "4. Log completion metrics to Monday.com Work Hub and calculate hours won back."
+        ],
+        "toolsNeeded": [
+          "Cloudflare Workers / Node.js",
+          "Groq / Gemini AI API",
+          "D1 SQLite",
+          "Cron Trigger"
+        ],
+        "codeLanguage": "typescript",
+        "executableCodeSample": "export default {\n  async fetch(req: Request, env: Env): Promise<Response> {\n    const payload = await req.json();\n    console.log(\"Automating workflow for:\", payload);\n    return Response.json({ success: true, timestamp: new Date().toISOString() });\n  }\n};",
+        "bestPractices": [
+          "Always execute untrusted code in isolated sandbox VM.",
+          "Provide idempotent retry handles for transient network errors."
+        ],
+        "webInspiration": [
+          {
+            "title": "Event-Driven Architectures on Cloudflare Edge",
+            "url": "https://developers.cloudflare.com/workflows",
+            "keyTakeaway": "Use durable execution state machines for multi-step tasks."
+          }
+        ],
+        "executionReadiness": "ready",
+        "estimatedHoursToBuild": 3,
+        "recurringHoursSavedPerMonth": 12
+      },
+      "createdAt": "2026-08-25T12:26:17.040Z",
+      "updatedAt": "2026-08-25T20:14:47.387Z",
+      "executionLogs": [
+        "[12:26:21 PM] Step 1/4: 1. Define automated trigger conditions and schema validation rules.",
+        "[8:14:47 PM] Step 2/4: 2. Implement AI-assisted prompt template with structured JSON output parser."
+      ]
+    },
+    {
       "id": "task-101",
       "memoId": "memo-1",
       "title": "Automate PDF Invoice & Receipt Extraction to Accounting Sheet",
@@ -344,15 +1099,15 @@
       "manualHoursEstimate": 14,
       "automationHoursInvested": 4,
       "timeWonBackHours": 36,
-      "status": "in_progress",
+      "status": "completed",
       "startDate": "2026-08-22",
       "dueDate": "2026-08-27",
       "durationDays": 5,
-      "progressPercent": 65,
+      "progressPercent": 100,
       "dependencies": [],
       "assignee": "AI Agent",
       "createdAt": "2026-08-20T10:00:00Z",
-      "updatedAt": "2026-08-21T18:00:00Z",
+      "updatedAt": "2026-08-25T12:26:21.091Z",
       "automationBlueprint": {
         "strategy": [
           "1. Bind Cloudflare Email Worker to inbound billing inbox.",
@@ -389,7 +1144,10 @@
         "executionReadiness": "ready",
         "estimatedHoursToBuild": 4,
         "recurringHoursSavedPerMonth": 12
-      }
+      },
+      "executionLogs": [
+        "[12:26:21 PM] Step 4/5: 4. Upsert row into Google Sheets Accounting ledger via Service Account REST API."
+      ]
     },
     {
       "id": "task-102",
@@ -407,17 +1165,17 @@
       "manualHoursEstimate": 8,
       "automationHoursInvested": 3,
       "timeWonBackHours": 24,
-      "status": "automating",
+      "status": "completed",
       "startDate": "2026-08-25",
       "dueDate": "2026-08-30",
       "durationDays": 5,
-      "progressPercent": 40,
+      "progressPercent": 100,
       "dependencies": [
         "task-101"
       ],
       "assignee": "AI Agent",
       "createdAt": "2026-08-21T09:00:00Z",
-      "updatedAt": "2026-08-21T16:00:00Z",
+      "updatedAt": "2026-08-25T12:26:21.081Z",
       "automationBlueprint": {
         "strategy": [
           "1. Headless browser crawls 5 target competitor pricing URLs.",
@@ -447,7 +1205,11 @@
         "executionReadiness": "ready",
         "estimatedHoursToBuild": 3,
         "recurringHoursSavedPerMonth": 8
-      }
+      },
+      "executionLogs": [
+        "[12:26:21 PM] Step 3/4: 3. If diff detected, feed text changes to Gemini/Claude for strategic summary.",
+        "[12:26:21 PM] Completed all 4 blueprint steps! Verified in Sandbox VM (10.211.55.6). Won back +24h."
+      ]
     },
     {
       "id": "task-103",
@@ -814,6 +1576,76 @@
   ],
   "wikiArticles": [
     {
+      "id": "wiki-note-mt9rv0b2",
+      "slug": "note-mt9rv0b2",
+      "title": "Executive Note: Verify Cloudflare Pages Edge Functi...",
+      "category": "Executive Actions",
+      "summary": "Verify Cloudflare Pages Edge Functions latency",
+      "content": "## Quick Note\n\nVerify Cloudflare Pages Edge Functions latency\n\n*Captured via Voice AI on 8/26/2026, 7:28:09 AM*",
+      "tags": [
+        "Voice Note",
+        "Quick Capture"
+      ],
+      "lastUpdated": "2026-08-26T07:28:09.806Z",
+      "author": "Andrew"
+    },
+    {
+      "id": "wiki-note-mt9oji0s",
+      "slug": "note-mt9oji0s",
+      "title": "Executive Note: Verify Cloudflare Pages Edge Functi...",
+      "category": "Executive Actions",
+      "summary": "Verify Cloudflare Pages Edge Functions latency",
+      "content": "## Quick Note\n\nVerify Cloudflare Pages Edge Functions latency\n\n*Captured via Voice AI on 8/26/2026, 5:55:14 AM*",
+      "tags": [
+        "Voice Note",
+        "Quick Capture"
+      ],
+      "lastUpdated": "2026-08-26T05:55:14.043Z",
+      "author": "Andrew"
+    },
+    {
+      "id": "wiki-note-mt9nsbuf",
+      "slug": "note-mt9nsbuf",
+      "title": "Executive Note: Verify Cloudflare Pages Edge Functi...",
+      "category": "Executive Actions",
+      "summary": "Verify Cloudflare Pages Edge Functions latency",
+      "content": "## Quick Note\n\nVerify Cloudflare Pages Edge Functions latency\n\n*Captured via Voice AI on 8/26/2026, 5:34:06 AM*",
+      "tags": [
+        "Voice Note",
+        "Quick Capture"
+      ],
+      "lastUpdated": "2026-08-26T05:34:06.326Z",
+      "author": "Andrew"
+    },
+    {
+      "id": "wiki-note-mt93symg",
+      "slug": "note-mt93symg",
+      "title": "Executive Note: Verify Cloudflare Pages Edge Functi...",
+      "category": "Executive Actions",
+      "summary": "Verify Cloudflare Pages Edge Functions latency",
+      "content": "## Quick Note\n\nVerify Cloudflare Pages Edge Functions latency\n\n*Captured via Voice AI on 8/25/2026, 8:14:43 PM*",
+      "tags": [
+        "Voice Note",
+        "Quick Capture"
+      ],
+      "lastUpdated": "2026-08-25T20:14:43.526Z",
+      "author": "Andrew"
+    },
+    {
+      "id": "wiki-note-mt8n2lvf",
+      "slug": "note-mt8n2lvf",
+      "title": "Executive Note: Verify Cloudflare Pages Edge Functi...",
+      "category": "Executive Actions",
+      "summary": "Verify Cloudflare Pages Edge Functions latency",
+      "content": "## Quick Note\n\nVerify Cloudflare Pages Edge Functions latency\n\n*Captured via Voice AI on 8/25/2026, 12:26:20 PM*",
+      "tags": [
+        "Voice Note",
+        "Quick Capture"
+      ],
+      "lastUpdated": "2026-08-25T12:26:20.091Z",
+      "author": "Andrew"
+    },
+    {
       "id": "wiki-1",
       "slug": "voice-ai-hud-mobile-pwa",
       "title": "📱 Voice AI HUD & \"Hello Google\" Mobile PWA Experience",
@@ -920,6 +1752,89 @@
       "lastUpdated": "2026-08-22T00:00:00Z",
       "author": "AI Assistant",
       "icon": "ShieldCheck"
+    }
+  ],
+  "memories": [
+    {
+      "id": "mem-mt9rv0a1",
+      "key": "Emily loves peonies and dark chocolate",
+      "value": "Emily loves peonies and dark chocolate",
+      "learnedAt": "2026-08-26T07:28:09.769Z",
+      "category": "personal"
+    }
+  ],
+  "timers": [
+    {
+      "id": "tm-mt9rv0a4",
+      "label": "15 minutes",
+      "durationSeconds": 900,
+      "remainingSeconds": 900,
+      "status": "running",
+      "createdAt": "2026-08-26T07:28:09.772Z"
+    },
+    {
+      "id": "tm-mt9ojhy6",
+      "label": "15 minutes",
+      "durationSeconds": 900,
+      "remainingSeconds": 900,
+      "status": "running",
+      "createdAt": "2026-08-26T05:55:13.950Z"
+    },
+    {
+      "id": "tm-mt9nsbs4",
+      "label": "15 minutes",
+      "durationSeconds": 900,
+      "remainingSeconds": 900,
+      "status": "running",
+      "createdAt": "2026-08-26T05:34:06.244Z"
+    },
+    {
+      "id": "tm-mt93syj7",
+      "label": "15 minutes",
+      "durationSeconds": 900,
+      "remainingSeconds": 900,
+      "status": "running",
+      "createdAt": "2026-08-25T20:14:43.411Z"
+    },
+    {
+      "id": "tm-mt8n2ltu",
+      "label": "15 minutes",
+      "durationSeconds": 900,
+      "remainingSeconds": 900,
+      "status": "running",
+      "createdAt": "2026-08-25T12:26:20.034Z"
+    }
+  ],
+  "reminders": [
+    {
+      "id": "rem-mt9rv0a6",
+      "text": "review the quarterly financial ledger at 5 PM",
+      "dueDateTime": "2026-08-26T08:28:09.774Z",
+      "status": "pending"
+    },
+    {
+      "id": "rem-mt9ojhyc",
+      "text": "review the quarterly financial ledger at 5 PM",
+      "dueDateTime": "2026-08-26T06:55:13.956Z",
+      "status": "pending"
+    },
+    {
+      "id": "rem-mt9nsbse",
+      "text": "review the quarterly financial ledger at 5 PM",
+      "dueDateTime": "2026-08-26T06:34:06.253Z",
+      "status": "pending"
+    },
+    {
+      "id": "rem-mt93syjd",
+      "text": "review the quarterly financial ledger at 5 PM",
+      "dueDateTime": "2026-08-25T21:14:43.417Z",
+      "status": "pending"
+    },
+    {
+      "id": "rem-mt8n2ltx",
+      "text": "review the quarterly financial ledger at 5 PM",
+      "dueDateTime": "2026-08-25T13:26:20.037Z",
+      "status": "pending"
     }
   ]
 }

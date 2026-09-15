@@ -1483,7 +1483,6 @@ export const AssistantProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const started = await audioRecorder.start({
       onAudioLevel: (level) => {
-        setAudioLevel(level);
         if (level > 0.08) {
           resetSessionInactivityTimer();
         }

@@ -14,370 +14,227 @@ import {
 
 const API_BASE = '/api';
 
+async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(url, init);
+  if (!res.ok) {
+    let errorMessage = `HTTP ${res.status}: ${res.statusText}`;
+    try {
+      const errorBody = await res.json();
+      if (errorBody && (errorBody.error || errorBody.message)) {
+        errorMessage = errorBody.error || errorBody.message;
+      }
+    } catch {
+      // Body wasn't JSON, fallback to status text
+    }
+    throw new Error(errorMessage);
+  }
+  return res.json() as Promise<T>;
+}
+
 export const api = {
-  async getHealth() {
-    const res = await fetch(`${API_BASE}/health`);
-    return res.json();
-  },
-
-  async getKPI(): Promise<KPISummary> {
-    const res = await fetch(`${API_BASE}/kpi`);
-    return res.json();
-  },
-
-  async getTasks(): Promise<TaskItem[]> {
-    const res = await fetch(`${API_BASE}/tasks`);
-    return res.json();
-  },
-
-  async createTask(task: Partial<TaskItem>): Promise<TaskItem> {
-    const res = await fetch(`${API_BASE}/tasks`, {
+  getHealth: () => requestJson<{ status: string; timestamp: string }>(`${API_BASE}/health`),
+  getKPI: (): Promise<KPISummary> => requestJson<KPISummary>(`${API_BASE}/kpi`),
+  getTasks: (): Promise<TaskItem[]> => requestJson<TaskItem[]>(`${API_BASE}/tasks`),
+  createTask: (task: Partial<TaskItem>): Promise<TaskItem> =>
+    requestJson<TaskItem>(`${API_BASE}/tasks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(task),
-    });
-    return res.json();
-  },
-
-  async updateTask(id: string, updates: Partial<TaskItem>): Promise<TaskItem> {
-    const res = await fetch(`${API_BASE}/tasks/${id}`, {
+    }),
+  updateTask: (id: string, updates: Partial<TaskItem>): Promise<TaskItem> =>
+    requestJson<TaskItem>(`${API_BASE}/tasks/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
-    });
-    return res.json();
-  },
-
-  async deleteTask(id: string): Promise<{ success: boolean }> {
-    const res = await fetch(`${API_BASE}/tasks/${id}`, {
-      method: 'DELETE',
-    });
-    return res.json();
-  },
-
-  async getMemos(): Promise<VoiceMemo[]> {
-    const res = await fetch(`${API_BASE}/memos`);
-    return res.json();
-  },
-
-  async processVoiceText(text: string, source = 'browser_mic'): Promise<{
+    }),
+  deleteTask: (id: string): Promise<{ success: boolean }> =>
+    requestJson<{ success: boolean }>(`${API_BASE}/tasks/${id}`, { method: 'DELETE' }),
+  getMemos: (): Promise<VoiceMemo[]> => requestJson<VoiceMemo[]>(`${API_BASE}/memos`),
+  
+  processVoiceText: (text: string, source = 'browser_mic'): Promise<{
     actionCard: ActionCard;
     memo: VoiceMemo;
     createdTasks: TaskItem[];
     kpi: KPISummary;
-  }> {
-    const res = await fetch(`${API_BASE}/voice/process-text`, {
+  }> =>
+    requestJson(`${API_BASE}/voice/process-text`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text, source }),
-    });
-    return res.json();
-  },
+    }),
 
-  async transcribeRecordedAudio(blob: Blob, mimeType: string, groqKey?: string): Promise<{
+  transcribeRecordedAudio: (blob: Blob, mimeType: string, groqKey?: string): Promise<{
     transcript: string;
     actionCard: ActionCard;
     memo: VoiceMemo;
     createdTasks: TaskItem[];
     kpi: KPISummary;
-  }> {
+  }> => {
     const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
     const formData = new FormData();
     formData.append('audio', blob, `voice_recording.${ext}`);
-
     const headers: Record<string, string> = {};
-    if (groqKey) {
-      headers['x-groq-api-key'] = groqKey;
-    }
+    if (groqKey) headers['x-groq-api-key'] = groqKey;
 
-    const res = await fetch(`${API_BASE}/voice/transcribe-audio`, {
+    return requestJson(`${API_BASE}/voice/transcribe-audio`, {
       method: 'POST',
       headers,
       body: formData,
     });
-    return res.json();
   },
 
-  async uploadAudioFile(file: File, groqKey?: string): Promise<{
+  uploadAudioFile: (file: File, groqKey?: string): Promise<{
     transcript: string;
     memo: VoiceMemo;
     createdTasks: TaskItem[];
     kpi: KPISummary;
-  }> {
+  }> => {
     const formData = new FormData();
     formData.append('audio', file);
     const headers: Record<string, string> = {};
-    if (groqKey) {
-      headers['x-groq-api-key'] = groqKey;
-    }
-    const res = await fetch(`${API_BASE}/voice/upload`, {
+    if (groqKey) headers['x-groq-api-key'] = groqKey;
+
+    return requestJson(`${API_BASE}/voice/upload`, {
       method: 'POST',
       headers,
       body: formData,
     });
-    return res.json();
   },
 
-  async getActionCards(): Promise<ActionCard[]> {
-    const res = await fetch(`${API_BASE}/action-cards`);
-    return res.json();
-  },
-
-  async executeActionCard(id: string): Promise<{ success: boolean; card: ActionCard }> {
-    const res = await fetch(`${API_BASE}/action-cards/${id}/execute`, {
+  getActionCards: (): Promise<ActionCard[]> => requestJson<ActionCard[]>(`${API_BASE}/action-cards`),
+  executeActionCard: (id: string): Promise<{ success: boolean; card: ActionCard }> =>
+    requestJson<{ success: boolean; card: ActionCard }>(`${API_BASE}/action-cards/${id}/execute`, {
       method: 'POST',
-    });
-    return res.json();
-  },
+    }),
 
-  async getAppointments(): Promise<CalendarAppointment[]> {
-    const res = await fetch(`${API_BASE}/appointments`);
-    return res.json();
-  },
-
-  async createAppointment(apt: Partial<CalendarAppointment>): Promise<CalendarAppointment> {
-    const res = await fetch(`${API_BASE}/appointments`, {
+  getAppointments: (): Promise<CalendarAppointment[]> => requestJson<CalendarAppointment[]>(`${API_BASE}/appointments`),
+  createAppointment: (apt: Partial<CalendarAppointment>): Promise<CalendarAppointment> =>
+    requestJson<CalendarAppointment>(`${API_BASE}/appointments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(apt),
-    });
-    return res.json();
-  },
-
-  async updateAppointment(id: string, updates: Partial<CalendarAppointment>): Promise<CalendarAppointment> {
-    const res = await fetch(`${API_BASE}/appointments/${id}`, {
+    }),
+  updateAppointment: (id: string, updates: Partial<CalendarAppointment>): Promise<CalendarAppointment> =>
+    requestJson<CalendarAppointment>(`${API_BASE}/appointments/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
-    });
-    return res.json();
-  },
+    }),
 
-  async getEmails(): Promise<EmailDraft[]> {
-    const res = await fetch(`${API_BASE}/emails`);
-    return res.json();
-  },
-
-  async sendEmail(id: string): Promise<{ success: boolean; email: EmailDraft; message: string }> {
-    const res = await fetch(`${API_BASE}/emails/${id}/send`, {
+  getEmails: (): Promise<EmailDraft[]> => requestJson<EmailDraft[]>(`${API_BASE}/emails`),
+  sendEmail: (id: string): Promise<{ success: boolean; email: EmailDraft; message: string }> =>
+    requestJson<{ success: boolean; email: EmailDraft; message: string }>(`${API_BASE}/emails/${id}/send`, {
       method: 'POST',
-    });
-    return res.json();
-  },
+    }),
 
-  // =========================================================================
   // GMAIL INBOX SUITE API
-  // =========================================================================
-  async getInboxEmails(): Promise<InboxEmail[]> {
-    const res = await fetch(`${API_BASE}/gmail/inbox`);
-    return res.json();
-  },
-
-  async getInboxEmailById(id: string): Promise<InboxEmail> {
-    const res = await fetch(`${API_BASE}/gmail/inbox/${id}`);
-    return res.json();
-  },
-
-  async sendDirectEmail(payload: { toName?: string; toEmail: string; subject: string; body: string; tone?: string }): Promise<{ success: boolean; email: EmailDraft; message: string }> {
-    const res = await fetch(`${API_BASE}/gmail/send`, {
+  getInboxEmails: (): Promise<InboxEmail[]> => requestJson<InboxEmail[]>(`${API_BASE}/gmail/inbox`),
+  getInboxEmailById: (id: string): Promise<InboxEmail> => requestJson<InboxEmail>(`${API_BASE}/gmail/inbox/${id}`),
+  sendDirectEmail: (payload: { toName?: string; toEmail: string; subject: string; body: string; tone?: string }): Promise<{ success: boolean; email: EmailDraft; message: string }> =>
+    requestJson<{ success: boolean; email: EmailDraft; message: string }>(`${API_BASE}/gmail/send`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
-    });
-    return res.json();
-  },
-
-  async triageInbox(): Promise<{ unreadCount: number; triageSummary: string; emails: InboxEmail[] }> {
-    const res = await fetch(`${API_BASE}/gmail/triage`, {
-      method: 'POST'
-    });
-    return res.json();
-  },
-
-  async markEmailRead(id: string, isUnread = false): Promise<InboxEmail> {
-    const res = await fetch(`${API_BASE}/gmail/inbox/${id}/read`, {
+    }),
+  triageInbox: (): Promise<{ unreadCount: number; triageSummary: string; emails: InboxEmail[] }> =>
+    requestJson<{ unreadCount: number; triageSummary: string; emails: InboxEmail[] }>(`${API_BASE}/gmail/triage`, {
+      method: 'POST',
+    }),
+  markEmailRead: (id: string, isUnread = false): Promise<InboxEmail> =>
+    requestJson<InboxEmail>(`${API_BASE}/gmail/inbox/${id}/read`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isUnread })
-    });
-    return res.json();
-  },
+      body: JSON.stringify({ isUnread }),
+    }),
+  toggleEmailStar: (id: string): Promise<InboxEmail> =>
+    requestJson<InboxEmail>(`${API_BASE}/gmail/inbox/${id}/star`, { method: 'PATCH' }),
+  deleteInboxEmail: (id: string): Promise<{ success: boolean }> =>
+    requestJson<{ success: boolean }>(`${API_BASE}/gmail/inbox/${id}`, { method: 'DELETE' }),
 
-  async toggleEmailStar(id: string): Promise<InboxEmail> {
-    const res = await fetch(`${API_BASE}/gmail/inbox/${id}/star`, {
-      method: 'PATCH'
-    });
-    return res.json();
-  },
-
-  async deleteInboxEmail(id: string): Promise<{ success: boolean }> {
-    const res = await fetch(`${API_BASE}/gmail/inbox/${id}`, {
-      method: 'DELETE'
-    });
-    return res.json();
-  },
-
-  // =========================================================================
   // COMMUNICATIONS: CONTACTS, CHAT & CALLS
-  // =========================================================================
-  async getContacts(): Promise<ContactPerson[]> {
-    const res = await fetch(`${API_BASE}/comms/contacts`);
-    return res.json();
-  },
-
-  async createContact(contact: Partial<ContactPerson>): Promise<ContactPerson> {
-    const res = await fetch(`${API_BASE}/comms/contacts`, {
+  getContacts: (): Promise<ContactPerson[]> => requestJson<ContactPerson[]>(`${API_BASE}/comms/contacts`),
+  createContact: (contact: Partial<ContactPerson>): Promise<ContactPerson> =>
+    requestJson<ContactPerson>(`${API_BASE}/comms/contacts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(contact),
-    });
-    return res.json();
-  },
-
-  async getChatMessages(contactId?: string): Promise<ChatMessage[]> {
+    }),
+  getChatMessages: (contactId?: string): Promise<ChatMessage[]> => {
     const url = contactId ? `${API_BASE}/comms/messages?contactId=${encodeURIComponent(contactId)}` : `${API_BASE}/comms/messages`;
-    const res = await fetch(url);
-    return res.json();
+    return requestJson<ChatMessage[]>(url);
   },
-
-  async sendChatMessage(contactId: string, text: string): Promise<{ userMessage: ChatMessage; replyMessage: ChatMessage }> {
-    const res = await fetch(`${API_BASE}/comms/messages`, {
+  sendChatMessage: (contactId: string, text: string): Promise<{ userMessage: ChatMessage; replyMessage: ChatMessage }> =>
+    requestJson<{ userMessage: ChatMessage; replyMessage: ChatMessage }>(`${API_BASE}/comms/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contactId, text })
-    });
-    return res.json();
-  },
-
-  async getCallLogs(): Promise<CallLog[]> {
-    const res = await fetch(`${API_BASE}/comms/calls`);
-    return res.json();
-  },
-
-  async logCall(payload: Partial<CallLog>): Promise<CallLog> {
-    const res = await fetch(`${API_BASE}/comms/calls`, {
+      body: JSON.stringify({ contactId, text }),
+    }),
+  getCallLogs: (): Promise<CallLog[]> => requestJson<CallLog[]>(`${API_BASE}/comms/calls`),
+  logCall: (payload: Partial<CallLog>): Promise<CallLog> =>
+    requestJson<CallLog>(`${API_BASE}/comms/calls`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    return res.json();
-  },
+      body: JSON.stringify(payload),
+    }),
 
-  // =========================================================================
   // AUTONOMOUS BACKLOG WORKER
-  // =========================================================================
-  async getAutonomousStatus(): Promise<{
+  getAutonomousStatus: (): Promise<{
     queueLength: number;
     activeJobsCount: number;
     completedCount: number;
     totalHoursWonBack: number;
     jobs: AutonomousJob[];
     queue: any[];
-  }> {
-    const res = await fetch(`${API_BASE}/autonomous/status`);
-    return res.json();
-  },
-
-  async executeAutonomousStep(taskId?: string): Promise<any> {
-    const res = await fetch(`${API_BASE}/autonomous/step`, {
+  }> => requestJson(`${API_BASE}/autonomous/status`),
+  executeAutonomousStep: (taskId?: string): Promise<any> =>
+    requestJson<any>(`${API_BASE}/autonomous/step`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ taskId })
-    });
-    return res.json();
-  },
+      body: JSON.stringify({ taskId }),
+    }),
+  runAllAutonomousTasks: (): Promise<{ executedCount: number; results: any[] }> =>
+    requestJson<{ executedCount: number; results: any[] }>(`${API_BASE}/autonomous/run-all`, { method: 'POST' }),
 
-  async runAllAutonomousTasks(): Promise<{ executedCount: number; results: any[] }> {
-    const res = await fetch(`${API_BASE}/autonomous/run-all`, {
-      method: 'POST'
-    });
-    return res.json();
-  },
-
-  // =========================================================================
   // WIKI KNOWLEDGE BASE
-  // =========================================================================
-  async getWikiArticles(): Promise<any[]> {
-    const res = await fetch(`${API_BASE}/wiki`);
-    return res.json();
-  },
-
-  async getWikiArticleById(id: string): Promise<any> {
-    const res = await fetch(`${API_BASE}/wiki/${id}`);
-    return res.json();
-  },
-
-  async createWikiArticle(article: any): Promise<any> {
-    const res = await fetch(`${API_BASE}/wiki`, {
+  getWikiArticles: (): Promise<any[]> => requestJson<any[]>(`${API_BASE}/wiki`),
+  getWikiArticleById: (id: string): Promise<any> => requestJson<any>(`${API_BASE}/wiki/${id}`),
+  createWikiArticle: (article: any): Promise<any> =>
+    requestJson<any>(`${API_BASE}/wiki`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(article),
-    });
-    return res.json();
-  },
-
-  async updateWikiArticle(id: string, updates: any): Promise<any> {
-    const res = await fetch(`${API_BASE}/wiki/${id}`, {
+    }),
+  updateWikiArticle: (id: string, updates: any): Promise<any> =>
+    requestJson<any>(`${API_BASE}/wiki/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
-    });
-    return res.json();
-  },
+    }),
+  deleteWikiArticle: (id: string): Promise<{ success: boolean }> =>
+    requestJson<{ success: boolean }>(`${API_BASE}/wiki/${id}`, { method: 'DELETE' }),
 
-  async deleteWikiArticle(id: string): Promise<{ success: boolean }> {
-    const res = await fetch(`${API_BASE}/wiki/${id}`, {
-      method: 'DELETE',
-    });
-    return res.json();
-  },
-
-  // =========================================================================
   // DYNAMIC SKILLS & CONVERSATIONAL DIALOGUE
-  // =========================================================================
-  async getSkills(): Promise<any[]> {
-    const res = await fetch(`${API_BASE}/skills`);
-    return res.json();
-  },
-
-  async createSkill(skill: any): Promise<any> {
-    const res = await fetch(`${API_BASE}/skills`, {
+  getSkills: (): Promise<any[]> => requestJson<any[]>(`${API_BASE}/skills`),
+  createSkill: (skill: any): Promise<any> =>
+    requestJson<any>(`${API_BASE}/skills`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(skill),
-    });
-    return res.json();
-  },
-
-  async updateSkill(id: string, updates: any): Promise<any> {
-    const res = await fetch(`${API_BASE}/skills/${id}`, {
+    }),
+  updateSkill: (id: string, updates: any): Promise<any> =>
+    requestJson<any>(`${API_BASE}/skills/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
-    });
-    return res.json();
-  },
-
-  async deleteSkill(id: string): Promise<{ success: boolean }> {
-    const res = await fetch(`${API_BASE}/skills/${id}`, {
-      method: 'DELETE',
-    });
-    return res.json();
-  },
-
-  async executeSkill(id: string): Promise<any> {
-    const res = await fetch(`${API_BASE}/skills/${id}/execute`, {
-      method: 'POST'
-    });
-    return res.json();
-  },
-
-  async processDialogueTurn(speech: string): Promise<any> {
-    const res = await fetch(`${API_BASE}/dialogue/turn`, {
+    }),
+  deleteSkill: (id: string): Promise<{ success: boolean }> =>
+    requestJson<{ success: boolean }>(`${API_BASE}/skills/${id}`, { method: 'DELETE' }),
+  executeSkill: (id: string): Promise<any> =>
+    requestJson<any>(`${API_BASE}/skills/${id}/execute`, { method: 'POST' }),
+  processDialogueTurn: (speech: string): Promise<any> =>
+    requestJson<any>(`${API_BASE}/dialogue/turn`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ speech })
-    });
-    return res.json();
-  }
+      body: JSON.stringify({ speech }),
+    }),
 };

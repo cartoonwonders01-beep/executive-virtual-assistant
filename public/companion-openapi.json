@@ -1,0 +1,87 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Eve Executive Assistant Companion API",
+    "description": "Companion Action Bridge for external Gemini/ChatGPT/Mobile assistants to query Eve ground-truth memory and stage calendar actions using AGNT-GRANT ephemeral tokens.",
+    "version": "2.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://eve.internal",
+      "description": "Eve Edge Gateway"
+    }
+  ],
+  "paths": {
+    "/api/companion/action": {
+      "post": {
+        "operationId": "executeCompanionAction",
+        "summary": "Execute executive actions or memory queries via authenticated grant",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": ["query_memory", "stage_calendar", "morning_briefing"]
+                  },
+                  "query": {
+                    "type": "string",
+                    "description": "Search query or fact to recall"
+                  },
+                  "event": {
+                    "type": "object",
+                    "properties": {
+                      "title": { "type": "string" },
+                      "dateStr": { "type": "string" },
+                      "subtitle": { "type": "string" }
+                    }
+                  }
+                },
+                "required": ["action"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Action executed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "result": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid, expired, or revoked AGNT-GRANT token"
+          },
+          "403": {
+            "description": "Insufficient scope for requested action"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "AGNT-GRANT-XXXX"
+      }
+    }
+  }
+}

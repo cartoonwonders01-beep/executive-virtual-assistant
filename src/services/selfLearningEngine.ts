@@ -17,7 +17,7 @@ export class SelfLearningEngine {
     {
       id: 'ins-1',
       topic: 'VIP Communication Protocol',
-      insight: 'Emails to Emily (wife) require immediate high-priority dispatch with loving, warm tone.',
+      insight: 'Emails to Celine (wife, celine.loeuille@gmail.com) require immediate high-priority dispatch with loving, warm tone.',
       confidenceScore: 0.98,
       source: 'voice_interaction',
       learnedAt: new Date(Date.now() - 86400000).toISOString()
@@ -112,8 +112,8 @@ export class SelfLearningEngine {
     if (/task|priorit|backlog|work\s+hub|aufgabe|tâche|tarea/i.test(textLower)) {
       steps.push({ id: 'step-3', order: steps.length + 1, actionType: 'list_tasks', label: 'Extract High-Leverage Tasks' });
     }
-    if (/wife|emily|love|frau|épouse/i.test(textLower)) {
-      steps.push({ id: 'step-4', order: steps.length + 1, actionType: 'send_email', label: 'Send Love Note to Emily', target: 'emily.baxter@personal.com' });
+    if (/wife|celine|love|frau|épouse/i.test(textLower)) {
+      steps.push({ id: 'step-4', order: steps.length + 1, actionType: 'send_email', label: 'Send Love Note to Celine', target: 'celine.loeuille@gmail.com' });
     }
     if (/sync|warehouse|sheets|bigquery/i.test(textLower)) {
       steps.push({ id: 'step-5', order: steps.length + 1, actionType: 'sync_sheets', label: 'Sync Metrics to Google Sheets' });

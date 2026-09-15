@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useAssistant } from '../context/AssistantContext';
+import { audioRecorder } from '../services/audioRecorder';
 import { ActionCardRenderer } from './ActionCardRenderer';
 import { 
   Mic, 
@@ -97,9 +98,10 @@ export const MobileVoiceHUD: React.FC = () => {
       const width = canvas.width;
       const height = canvas.height;
       const centerY = height / 2;
+      const liveLevel = isListening ? audioRecorder.getCurrentAudioLevel() : 0;
 
       // Outer ambient glowing circles
-      const baseRadius = 55 + (audioLevel * 45);
+      const baseRadius = 55 + (liveLevel * 45);
       const gradient = ctx.createRadialGradient(
         width / 2, centerY, 10,
         width / 2, centerY, baseRadius * 1.6
@@ -132,7 +134,7 @@ export const MobileVoiceHUD: React.FC = () => {
         const alpha = isListening ? 0.7 - (w * 0.12) : 0.25;
         ctx.strokeStyle = w % 2 === 0 ? `rgba(45, 212, 191, ${alpha})` : `rgba(56, 189, 248, ${alpha})`;
 
-        const amplitude = isListening ? 18 + (audioLevel * 40) * (1 - w * 0.2) : 6;
+        const amplitude = isListening ? 18 + (liveLevel * 40) * (1 - w * 0.2) : 6;
         const frequency = 0.02 + (w * 0.008);
 
         for (let x = 0; x < width; x += 4) {
@@ -147,7 +149,7 @@ export const MobileVoiceHUD: React.FC = () => {
       }
 
       if (isListening || isProcessingSpeech) {
-        phase += isListening ? 0.08 + (audioLevel * 0.08) : 0.03;
+        phase += isListening ? 0.08 + (liveLevel * 0.08) : 0.03;
         animId = requestAnimationFrame(render);
       }
     };
@@ -157,7 +159,7 @@ export const MobileVoiceHUD: React.FC = () => {
     return () => {
       if (animId) cancelAnimationFrame(animId);
     };
-  }, [isListening, audioLevel, isProcessingSpeech]);
+  }, [isListening, isProcessingSpeech]);
 
   const quickPrompts = [
     "What are 3 strategies to improve my morning routine?",

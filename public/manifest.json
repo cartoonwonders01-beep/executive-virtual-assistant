@@ -1,6 +1,6 @@
 {
-  "short_name": "Eve Assistant",
-  "name": "Eve — Executive AI Assistant & Thought Studio",
+  "short_name": "Eve v2",
+  "name": "Eve — Executive AI Assistant v2",
   "icons": [
     {
       "src": "/favicon.ico",
@@ -9,27 +9,22 @@
     }
   ],
   "start_url": "/",
-  "background_color": "#020617",
-  "theme_color": "#0d9488",
+  "background_color": "#030712",
+  "theme_color": "#030712",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "description": "Executive Personal Assistant AI Engine, Thought Studio & Google/Antigravity Hub",
+  "description": "Eve v2: Zero-CPU Native Acoustic Loop, On-Device Brain, and Executive Thought Studio",
   "categories": ["productivity", "business", "utilities"],
   "shortcuts": [
     {
-      "name": "Thought Studio",
-      "url": "/?view=thought_hub",
-      "description": "Capture thoughts and brainstorm ideas"
+      "name": "Eve v2 Core",
+      "url": "/",
+      "description": "Voice Assistant & Push-to-Talk"
     },
     {
-      "name": "Hey Eve Voice HUD",
-      "url": "/?view=voice_hud",
-      "description": "Voice Assistant & Hands-Free Interaction"
-    },
-    {
-      "name": "Work Hub",
-      "url": "/?view=tasks",
-      "description": "Monday.com Tasks & Automations"
+      "name": "Legacy v1 Hub",
+      "url": "/?v1=true",
+      "description": "Legacy Multimodal Suite"
     }
   ]
 }

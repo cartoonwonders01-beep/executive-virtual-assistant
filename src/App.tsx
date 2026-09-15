@@ -130,6 +130,17 @@ const AppContent: React.FC = () => {
 };
 
 export function App() {
+  const isV1 = window.location.search.includes('v1');
+  
+  if (!isV1) {
+    const EveV2App = React.lazy(() => import('./v2/EveV2App'));
+    return (
+      <React.Suspense fallback={<div className="h-screen w-screen bg-gray-950 text-white flex items-center justify-center">Loading v2...</div>}>
+        <EveV2App />
+      </React.Suspense>
+    );
+  }
+
   return (
     <AssistantProvider>
       <AppContent />

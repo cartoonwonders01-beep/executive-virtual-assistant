@@ -1,6 +1,7 @@
 import { logger } from './loggerService';
 import { stopSpeaking, isCurrentlySpeaking, isAcousticEcho } from './speechSynthesis';
 import { isVerbalStopCommand } from './audioRecorder';
+import { getAudioContext } from './soundEffects';
 
 export interface WakeWordListenerConfig {
   onWakeWord?: (detectedTrigger: string, trailingSpeech?: string) => void;
@@ -332,9 +333,8 @@ export class WakeWordService {
   public playActivationChime(): void {
     if (typeof window === 'undefined') return;
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContextClass) return;
-      const ctx = new AudioContextClass();
+      const ctx = getAudioContext();
+      if (!ctx) return;
 
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();

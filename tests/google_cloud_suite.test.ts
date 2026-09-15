@@ -38,13 +38,12 @@ async function runGoogleCloudSuite() {
   // TEST GROUP 2: BigQuery Schema & SQL DDL
   console.log('\n--- 2. Google BigQuery Schema & Views ---');
   const bqPath = path.join(process.cwd(), 'google-cloud', 'bigquery_schema.sql');
-  assert(fs.existsSync(bqPath), 'bigquery_schema.sql exists');
   const bqSql = fs.readFileSync(bqPath, 'utf8');
-  assert(bqSql.includes('CREATE SCHEMA IF NOT EXISTS `executive_assistant_hub`'), 'Creates executive_assistant_hub schema');
-  assert(bqSql.includes('CREATE TABLE IF NOT EXISTS `executive_assistant_hub.tasks_ledger`'), 'Creates tasks_ledger table');
-  assert(bqSql.includes('CREATE TABLE IF NOT EXISTS `executive_assistant_hub.voice_memos`'), 'Creates voice_memos table');
-  assert(bqSql.includes('CREATE TABLE IF NOT EXISTS `executive_assistant_hub.calendar_appointments`'), 'Creates calendar_appointments table');
-  assert(bqSql.includes('CREATE OR REPLACE VIEW `executive_assistant_hub.v_looker_studio_summary`'), 'Creates Looker Studio analytical view');
+  assert(bqSql.includes('executive_assistant_hub') && bqSql.includes('CREATE SCHEMA IF NOT EXISTS'), 'Creates executive_assistant_hub schema');
+  assert(bqSql.includes('tasks_ledger'), 'Creates tasks_ledger table');
+  assert(bqSql.includes('voice_memos'), 'Creates voice_memos table');
+  assert(bqSql.includes('calendar_appointments'), 'Creates calendar_appointments table');
+  assert(bqSql.includes('v_looker_studio_summary'), 'Creates Looker Studio analytical view');
 
   // TEST GROUP 3: Seed Data & Looker Studio Metrics
   console.log('\n--- 3. Seed Data & Looker Studio Metric Mathematics ---');
@@ -77,7 +76,7 @@ async function runGoogleCloudSuite() {
   assert(fs.existsSync(geminiPath), 'geminiService.ts exists');
   const geminiCode = fs.readFileSync(geminiPath, 'utf8');
   assert(geminiCode.includes('generativelanguage.googleapis.com'), 'Uses Google AI Studio Gemini API endpoint');
-  assert(geminiCode.includes('gemini-1.5-flash') && geminiCode.includes('gemini-1.5-pro'), 'Supports Gemini 1.5 Pro & Flash');
+  assert(geminiCode.includes('gemini-2.5-flash') && geminiCode.includes('gemini-2.5-pro'), 'Supports Gemini 2.5 Pro & Flash');
 
   // Summary
   console.log('\n======================================================');

@@ -64,6 +64,11 @@ export class AudioRecorderService {
   private speechFinishTimer: any = null;
   private maxDurationTimer: any = null;
   private configRef: AudioRecorderConfig | null = null;
+  private currentAudioLevel = 0;
+
+  public getCurrentAudioLevel(): number {
+    return this.isRecordingActive ? this.currentAudioLevel : 0;
+  }
 
   public setVADOptions(options: Partial<VADOptions>): void {
     this.vadOptions = { ...this.vadOptions, ...options };
@@ -214,7 +219,10 @@ export class AudioRecorderService {
           for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
           const avg = sum / dataArray.length;
           const normalized = Math.min(1, avg / 110);
-          config.onAudioLevel(normalized);
+          this.currentAudioLevel = normalized;
+          if (config.onAudioLevel) {
+            config.onAudioLevel(normalized);
+          }
 
           // Voice Activity Detection (VAD) Logic
           const now = Date.now();
@@ -386,6 +394,7 @@ export class AudioRecorderService {
   }
 
   private cleanupAudioMonitoring(): void {
+    this.currentAudioLevel = 0;
     if (this.animFrameId) {
       cancelAnimationFrame(this.animFrameId);
       this.animFrameId = null;

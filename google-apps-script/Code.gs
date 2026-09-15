@@ -25,6 +25,19 @@ function doPost(e) {
     const action = payload.action || payload.intent || "PROCESS_VOICE_INTENT";
     let result = {};
 
+    // Secret Token Authorization Check (Security Invariant)
+    const expectedSecret = PropertiesService.getScriptProperties().getProperty("API_SECRET");
+    if (expectedSecret) {
+      const providedSecret = payload.secret || payload.token || (e && e.parameter && (e.parameter.secret || e.parameter.token));
+      if (providedSecret !== expectedSecret) {
+        return ContentService.createTextOutput(JSON.stringify({
+          status: "error",
+          error: "Unauthorized: Invalid or missing assistant secret token",
+          timestamp: new Date().toISOString()
+        })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+
     switch (action) {
       case "calendar_booking":
       case "CALENDAR_BOOKING":

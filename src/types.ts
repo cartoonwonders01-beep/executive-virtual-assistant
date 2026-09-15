@@ -194,6 +194,34 @@ export interface CallLog {
   transcriptSummary?: string;
 }
 
+export type ExecutionTier = 'instant' | 'needs_slots' | 'requires_alignment';
+
+export interface ClarificationSlot {
+  key: string;
+  label: string;
+  placeholder: string;
+  value?: string;
+  required: boolean;
+  type?: 'text' | 'select' | 'email' | 'time';
+  options?: string[];
+}
+
+export interface ExecutionPlan {
+  steps: string[];
+  estimatedImpact?: string;
+  targetDomain?: string;
+}
+
+export interface EngineMetadata {
+  sttProvider: 'groq_whisper' | 'web_speech' | 'mock';
+  llmProvider: 'google_gemini' | 'local_cortex' | 'edge_relay';
+  modelName?: string;
+  latencyMs?: number;
+  routedVia?: string;
+  episodicContextCount?: number;
+  anaphoraResolved?: string;
+}
+
 export interface ActionCard {
   id: string;
   intent: ActionIntentType;
@@ -202,6 +230,14 @@ export interface ActionCard {
   spokenResponse: string;
   status: 'pending' | 'confirmed' | 'executed' | 'dismissed';
   createdAt: string;
+  executionTier?: ExecutionTier;
+  slots?: ClarificationSlot[];
+  executionPlan?: ExecutionPlan;
+  engineMetadata?: EngineMetadata;
+  pendingTaskContext?: {
+    originalGoal: string;
+    collectedParams: Record<string, string>;
+  };
   emailData?: EmailDraft;
   whatsappData?: {
     toName: string;
@@ -218,6 +254,8 @@ export interface ActionCard {
     scriptPreview: string;
     executionLog?: string;
   };
+  imageAttachment?: ImageAttachment;
+  imageAttachments?: ImageAttachment[];
 }
 
 export interface AutonomousJob {
@@ -318,6 +356,14 @@ export interface WikiArticle {
 // INTERACTIVE CONVERSATIONAL DIALOGUE & SKILL LEARNING TYPES
 // =========================================================================
 
+export interface ImageAttachment {
+  id: string;
+  url: string; // base64 data URL
+  mimeType: string;
+  name?: string;
+  sizeBytes?: number;
+}
+
 export interface DialogueTurn {
   id: string;
   speaker: 'user' | 'assistant';
@@ -326,6 +372,10 @@ export interface DialogueTurn {
   spokenResponse?: string;
   timestamp: string;
   actionCardId?: string;
+  engineMetadata?: EngineMetadata;
+  imageUrl?: string;
+  imageAttachments?: ImageAttachment[];
+  isProactiveAlert?: boolean;
 }
 
 export interface DialogueContext {
@@ -439,4 +489,20 @@ export interface CustomLLMProfile {
   customInstructions: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// =========================================================================
+// GOOGLE WORKSPACE & OAUTH 2.0 CREDENTIALS CONFIGURATION
+// =========================================================================
+
+export interface GoogleOAuthConfig {
+  clientId: string;
+  clientSecret: string;
+  refreshToken: string;
+  serviceAccountJson?: string;
+  redirectUri?: string;
+  scopes?: string[];
+  connectedEmail?: string;
+  status?: 'connected' | 'not_configured' | 'error';
+  lastAuthenticated?: string;
 }

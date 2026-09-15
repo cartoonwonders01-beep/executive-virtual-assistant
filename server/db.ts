@@ -90,14 +90,54 @@ const SEED_DATA: AssistantDatabase = {
     },
     {
       id: 'c5',
-      name: 'Emily Baxter',
-      role: 'Wife / Personal',
-      email: 'emily.baxter@personal.com',
-      phone: '+1 (555) 987-6543',
-      company: 'Family',
+      name: 'Celine Loeuille',
+      role: 'Wife / Operations Lead',
+      email: 'celine.loeuille@gmail.com',
+      phone: '+33 6 12 34 56 78',
+      company: 'Family & Operations',
       isVIP: true,
       avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
-      notes: 'Family calendar coordination and personal reminders.'
+      notes: 'Wife of Andrew, Operations Lead and Family Co-Founder.'
+    },
+    {
+      id: 'c6',
+      name: 'Elizabeth Baxter',
+      role: 'Daughter / Academic',
+      email: 'elizabth.js.baxter@gmail.com',
+      phone: '+33 6 22 33 44 55',
+      company: 'Family',
+      isVIP: true,
+      notes: 'Daughter of Andrew and Celine.'
+    },
+    {
+      id: 'c7',
+      name: 'Alexander Baxter',
+      role: 'Son / Explorer',
+      email: 'alexander.j.baxter@gmail.com',
+      phone: '+33 6 33 44 55 66',
+      company: 'Family',
+      isVIP: true,
+      notes: 'Son of Andrew and Celine.'
+    },
+    {
+      id: 'c8',
+      name: 'Eleonore Baxter',
+      role: 'Daughter / Creative',
+      email: 'eleonore.a.baxter@gmail.com',
+      phone: '+33 6 44 55 66 77',
+      company: 'Family',
+      isVIP: true,
+      notes: 'Daughter of Andrew and Celine.'
+    },
+    {
+      id: 'c9',
+      name: 'Angelina Baxter',
+      role: 'Daughter / Storyteller',
+      email: 'angelina.c.baxter@gmail.com',
+      phone: '+33 6 55 66 77 88',
+      company: 'Family',
+      isVIP: true,
+      notes: 'Daughter of Andrew and Celine.'
     }
   ],
 
@@ -816,21 +856,48 @@ function loadFromDisk(): AssistantDatabase {
     console.error('Error loading DB file, initializing with seeds:', err);
   }
   // Initialize with seed data
-  saveToDisk(SEED_DATA);
+  saveToDisk(SEED_DATA, true);
   return SEED_DATA;
 }
 
-export function saveToDisk(data: AssistantDatabase = dbCache): void {
+let saveTimeout: NodeJS.Timeout | null = null;
+
+export async function saveToDiskAsync(data: AssistantDatabase = dbCache): Promise<void> {
+  const tmpFile = `${DB_FILE}.tmp.${Date.now()}`;
   try {
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    const serialized = JSON.stringify(data, null, 2);
+    await fs.promises.writeFile(tmpFile, serialized, 'utf-8');
+    await fs.promises.rename(tmpFile, DB_FILE);
   } catch (err) {
-    console.error('Error saving DB to disk:', err);
+    console.error('Error saving DB atomically to disk:', err);
+    try {
+      if (fs.existsSync(tmpFile)) await fs.promises.unlink(tmpFile);
+    } catch {}
   }
+}
+
+export function saveToDisk(data: AssistantDatabase = dbCache, immediate = false): void {
+  if (immediate) {
+    try {
+      const tmpFile = `${DB_FILE}.tmp.${Date.now()}`;
+      fs.writeFileSync(tmpFile, JSON.stringify(data, null, 2), 'utf-8');
+      fs.renameSync(tmpFile, DB_FILE);
+    } catch (err) {
+      console.error('Error synchronous atomic saving DB to disk:', err);
+    }
+    return;
+  }
+
+  if (saveTimeout) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    saveToDiskAsync(data).catch(() => {});
+  }, 100);
 }
 
 export const db = {
   get: () => dbCache,
-  saveToDisk: () => saveToDisk(),
+  saveToDisk: (immediate = false) => saveToDisk(dbCache, immediate),
+  saveToDiskAsync: () => saveToDiskAsync(dbCache),
   
   // Tasks
   getTasks: () => dbCache.tasks,

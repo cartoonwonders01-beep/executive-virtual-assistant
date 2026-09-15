@@ -16,7 +16,9 @@ export type LogCategory =
   | 'rag_vector'
   | 'gemini_llm'
   | 'vad_mic'
-  | 'state_machine';
+  | 'state_machine'
+  | 'multimodal_vision'
+  | 'autonomous_loop';
 
 export interface LogEntry {
   id: string;
@@ -117,11 +119,42 @@ function loadStoredLogs(currentSessionId: string): { currentEntries: LogEntry[];
   }
 }
 
+let saveTimer: any = null;
+
 function saveStoredLogs(entries: LogEntry[]): void {
   if (typeof window === 'undefined') return;
+  if (saveTimer) clearTimeout(saveTimer);
+
+  saveTimer = setTimeout(() => {
+    try {
+      const slice = entries.slice(0, MAX_LOGS);
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(() => {
+          try { localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(slice)); } catch {}
+        });
+      } else {
+        localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(slice));
+      }
+    } catch {}
+  }, 350);
+}
+
+function flushStoredLogsSync(entries: LogEntry[]): void {
+  if (typeof window === 'undefined') return;
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
   try {
     localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(entries.slice(0, MAX_LOGS)));
   } catch {}
+}
+
+export interface PipelineTrace {
+  name: string;
+  startTime: number;
+  durationMs?: number;
+  meta?: any;
 }
 
 class LoggerService {
@@ -130,6 +163,8 @@ class LoggerService {
   private listeners: Set<LogListener> = new Set();
   private sessionId: string;
   private userId: string = 'andrew';
+  private activeTraces: Map<string, number> = new Map();
+  private completedTraces: PipelineTrace[] = [];
 
   constructor() {
     this.sessionId = getOrCreateSessionId();
@@ -251,6 +286,50 @@ class LoggerService {
 
   public debug(category: LogCategory, msg: string, details?: any): void {
     this.log('debug', category, msg, details);
+  }
+
+  /**
+   * Starts a performance timing trace for telemetry
+   */
+  public startTrace(traceName: string, meta?: any): void {
+    this.activeTraces.set(traceName, Date.now());
+    this.debug('system', `⏱️ Trace started: "${traceName}"`, meta);
+  }
+
+  /**
+   * Concludes a performance trace and records latency
+   */
+  public endTrace(traceName: string, meta?: any): number {
+    const start = this.activeTraces.get(traceName);
+    const duration = start ? Date.now() - start : 0;
+    this.activeTraces.delete(traceName);
+
+    const trace: PipelineTrace = {
+      name: traceName,
+      startTime: start || Date.now(),
+      durationMs: duration,
+      meta
+    };
+
+    this.completedTraces.unshift(trace);
+    if (this.completedTraces.length > 50) {
+      this.completedTraces.pop();
+    }
+
+    this.log('info', 'system', `⚡ Trace completed: [${traceName}] in ${duration}ms`, {
+      durationMs: duration,
+      ...meta
+    });
+
+    return duration;
+  }
+
+  public getCompletedTraces(): PipelineTrace[] {
+    return [...this.completedTraces];
+  }
+
+  public flushSync(): void {
+    flushStoredLogsSync(this.entries);
   }
 
   /**

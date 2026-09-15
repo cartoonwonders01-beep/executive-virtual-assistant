@@ -19,6 +19,7 @@ export interface WeatherReport {
 
 export class WeatherService {
   private cityCoordinates: Record<string, { lat: number; lon: number; defaultCondition: string; defaultTemp: number }> = {
+    'hoeilaart': { lat: 50.7675, lon: 4.4714, defaultCondition: 'Mild & Partly Cloudy', defaultTemp: 20 },
     'paris': { lat: 48.8566, lon: 2.3522, defaultCondition: 'Partly Cloudy', defaultTemp: 21 },
     'london': { lat: 51.5074, lon: -0.1278, defaultCondition: 'Mostly Clear', defaultTemp: 19 },
     'brussels': { lat: 50.8503, lon: 4.3517, defaultCondition: 'Mild & Sunny', defaultTemp: 20 },
@@ -35,6 +36,13 @@ export class WeatherService {
    */
   public extractCity(text: string): string {
     const lower = text.toLowerCase();
+    if (new RegExp('\\bhoeilaart\\b', 'i').test(lower) || new RegExp('\\b1560\\b', 'i').test(lower)) {
+      return 'Hoeilaart';
+    }
+    const cleanWord = lower.replace(/[^\w\s]/g, '').trim();
+    if (cleanWord in this.cityCoordinates) {
+      return cleanWord.charAt(0).toUpperCase() + cleanWord.slice(1);
+    }
     for (const city of Object.keys(this.cityCoordinates)) {
       if (new RegExp(`\\b${city}\\b`, 'i').test(lower)) {
         return city.charAt(0).toUpperCase() + city.slice(1);

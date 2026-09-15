@@ -1,4 +1,6 @@
 import { CustomSkill, SkillStep, ActionCard } from '../src/types';
+import { db } from './db';
+import { executeSingleBacklogStep } from './autonomousWorker';
 
 export class SkillRegistryService {
   private skills: CustomSkill[] = [
@@ -21,9 +23,9 @@ export class SkillRegistryService {
       id: 'skill-wife-love',
       name: 'Wife Check-in & Love Dispatch',
       triggerPhrase: 'wife check-in',
-      description: 'Sends an affectionate check-in email to Emily Baxter.',
+      description: 'Sends an affectionate check-in email to Celine Loeuille.',
       actionSteps: [
-        { id: 's1', order: 1, actionType: 'send_email', label: 'Draft Love Note to Emily', target: 'emily.baxter@personal.com' }
+        { id: 's1', order: 1, actionType: 'send_email', label: 'Draft Love Note to Celine', target: 'celine.loeuille@gmail.com' }
       ],
       learnedAt: '2026-08-21T10:00:00Z',
       executionCount: 8,
@@ -95,6 +97,92 @@ export class SkillRegistryService {
   public incrementExecutionCount(id: string): void {
     const skill = this.skills.find(s => s.id === id);
     if (skill) skill.executionCount++;
+  }
+
+  public async executeSkill(id: string): Promise<{
+    success: boolean;
+    skillName: string;
+    executedSteps: Array<{ step: SkillStep; result: any }>;
+    summary: string;
+  }> {
+    const skill = this.getSkillById(id);
+    if (!skill) {
+      throw new Error(`Skill not found: ${id}`);
+    }
+
+    this.incrementExecutionCount(skill.id);
+    const stepResults: Array<{ step: SkillStep; result: any }> = [];
+    const summaryLines: string[] = [];
+
+    for (const step of skill.actionSteps) {
+      let res: any = { executed: true };
+
+      switch (step.actionType) {
+        case 'triage_inbox': {
+          const unread = db.getInboxEmails().filter(e => e.isUnread);
+          res = { unreadCount: unread.length, topSubjects: unread.slice(0, 3).map(e => e.subject) };
+          summaryLines.push(`Inbox: ${unread.length} unread item(s) triaged.`);
+          break;
+        }
+        case 'check_calendar': {
+          const now = new Date();
+          const todayISO = now.toISOString().split('T')[0];
+          const todayApts = db.getAppointments().filter(a => a.startDateTime.startsWith(todayISO) && a.status !== 'cancelled');
+          res = { totalEvents: todayApts.length, appointments: todayApts.map(a => a.title) };
+          summaryLines.push(`Schedule: ${todayApts.length} appointment(s) scheduled for today.`);
+          break;
+        }
+        case 'list_tasks': {
+          const backlog = db.getTasks().filter(t => t.status !== 'completed').slice(0, 3);
+          res = { count: backlog.length, tasks: backlog.map(t => t.title) };
+          summaryLines.push(`Tasks: ${backlog.length} priority task(s) on deck.`);
+          break;
+        }
+        case 'summarize_kpi': {
+          const kpi = db.getKPISummary();
+          res = kpi;
+          summaryLines.push(`KPI: ${kpi.totalHoursWonBack}h won back with ${kpi.roiMultiplier}x ROI.`);
+          break;
+        }
+        case 'run_autonomous': {
+          const workerRes = await executeSingleBacklogStep();
+          res = workerRes || { success: false, message: 'No backlog task available' };
+          summaryLines.push(`Autonomous Worker: Step processed on ${workerRes?.taskTitle || 'backlog'}.`);
+          break;
+        }
+        case 'send_email': {
+          const draft = {
+            id: 'em-' + Date.now().toString(36),
+            toName: 'Celine Loeuille',
+            toEmail: step.target || 'celine.loeuille@gmail.com',
+            subject: 'Thinking of you ❤️',
+            body: 'Hi Celine,\n\nJust wanted to send you a quick note to say I love you!\n\nLove,\nAndrew',
+            tone: 'friendly' as const,
+            status: 'sent' as const,
+            sentAt: new Date().toISOString()
+          };
+          db.get().emails.unshift(draft);
+          db.saveToDisk();
+          res = draft;
+          summaryLines.push(`Email: Sent message to ${draft.toName}.`);
+          break;
+        }
+        default: {
+          res = { status: 'executed', command: step.label };
+          summaryLines.push(`Action: ${step.label} executed.`);
+          break;
+        }
+      }
+
+      stepResults.push({ step, result: res });
+    }
+
+    return {
+      success: true,
+      skillName: skill.name,
+      executedSteps: stepResults,
+      summary: summaryLines.join(' ') || `Skill "${skill.name}" completed all ${skill.actionSteps.length} steps.`
+    };
   }
 
   /**

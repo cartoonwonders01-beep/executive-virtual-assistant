@@ -1,5 +1,5 @@
-// Service Worker for Executive Virtual Assistant PWA
-const CACHE_NAME = 'eva-pwa-cache-v1';
+// Service Worker for Eve v2 PWA
+const CACHE_NAME = 'eve-v2-pwa-cache-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -25,8 +25,8 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests and skip API requests
-  if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
+  // Only handle GET requests and skip API requests or external CDN
+  if (event.request.method !== 'GET' || event.request.url.includes('/api/') || event.request.url.includes('groq.com')) {
     return;
   }
 

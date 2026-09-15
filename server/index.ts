@@ -545,15 +545,16 @@ app.delete('/api/skills/:id', (req, res) => {
 });
 
 app.post('/api/skills/:id/execute', async (req, res) => {
-  const skill = skillRegistry.getSkillById(req.params.id);
-  if (!skill) return res.status(404).json({ error: 'Skill not found' });
-  skillRegistry.incrementExecutionCount(skill.id);
-  res.json({
-    success: true,
-    message: `Skill "${skill.name}" executed successfully.`,
-    executionCount: skill.executionCount + 1,
-    executedAt: new Date().toISOString()
-  });
+  try {
+    const execution = await skillRegistry.executeSkill(req.params.id);
+    res.json({
+      success: true,
+      message: execution.summary,
+      execution
+    });
+  } catch (err: any) {
+    res.status(err.message?.includes('not found') ? 404 : 500).json({ error: err.message || 'Execution failed' });
+  }
 });
 
 // =========================================================================

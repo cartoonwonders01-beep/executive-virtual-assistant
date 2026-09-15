@@ -181,6 +181,47 @@ export class SkillAcquisitionEngine {
   }
 
   /**
+   * Automatically detects procedural instructions during natural dialogue
+   */
+  public detectProceduralRule(text: string): { isProcedural: boolean; skillBlueprint?: PendingSkillBlueprint; proposalSpoken?: string; proposalMarkdown?: string } {
+    const lower = text.toLowerCase().trim();
+
+    // Pattern: "Whenever I say/ask X, do Y" or "When I say X, please Y" or "Every time I say X, do Y"
+    const ruleMatch = lower.match(/(?:whenever\s+i\s+(?:say|ask\s+for|request)|every\s+time\s+i\s+(?:say|ask\s+for)|when\s+i\s+say)\s+['"]?([^,'"]+?)['"]?(?:[,:]|\s+then|\s+always|\s+please)\s+(?:always\s+|please\s+)?(.+)$/i);
+
+    if (ruleMatch) {
+      const triggerPhrase = ruleMatch[1].trim();
+      const routineExplanation = ruleMatch[2].trim();
+      const skillName = `${triggerPhrase.charAt(0).toUpperCase() + triggerPhrase.slice(1)} Routine`;
+
+      this.pendingSkill = {
+        skillName,
+        triggerPhrase: triggerPhrase.toLowerCase(),
+        description: `Conversational routine for "${triggerPhrase}"`,
+        actionSteps: [],
+        rawExplanation: routineExplanation,
+        originalQuery: text
+      };
+
+      const { blueprint, spokenConfirmation, summaryMarkdown } = this.synthesizeSkillFromExplanation(routineExplanation);
+      const proposalSpoken = `I noticed a new routine for "${triggerPhrase}". Would you like me to store this as a permanent active skill?`;
+      const proposalMarkdown = `### 💡 Proposed New Skill: "${skillName}"\n\n` +
+        `• **Trigger Phrase**: \`"${triggerPhrase}"\`\n\n` +
+        `**Planned Actions**:\n${blueprint.actionSteps.map((s, idx) => `${idx + 1}. ${s.label}`).join('\n')}\n\n` +
+        `*Would you like me to commit this skill to my active capabilities? (Say "Yes" or tap Confirm below)*`;
+
+      return {
+        isProcedural: true,
+        skillBlueprint: blueprint,
+        proposalSpoken,
+        proposalMarkdown
+      };
+    }
+
+    return { isProcedural: false };
+  }
+
+  /**
    * Phase 3: Commit Skill to Permanent Memory
    */
   public commitPendingSkill(): CustomSkill | null {

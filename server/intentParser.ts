@@ -4,6 +4,7 @@ import { draftEmailFromSpeech } from './emailService';
 import { parseAppointmentFromSpeech } from './calendarService';
 import { generateAutomationBlueprint } from './automationEngine';
 import { intelligentAdvisor } from '../src/services/intelligentAdvisor';
+import { safeEvaluateMath } from './safeMathEvaluator';
 
 export function parseIntentFromSpeech(speechText: string): ActionCard {
   const text = speechText.trim();
@@ -174,10 +175,8 @@ export function parseIntentFromSpeech(speechText: string): ActionCard {
         answer = `${pct}% of ${val} is ${res.toLocaleString()}`;
       } else {
         const expr = textLower.replace(/^(what\s+is|calculate|how\s+much\s+is|compute)\s*/i, '').replace(/[$]/g, '').trim();
-        // Safe math evaluator
-        const sanitized = expr.replace(/[^0-9+\-*/().\s]/g, '');
-        if (sanitized) {
-          const evalRes = new Function(`return (${sanitized})`)();
+        const evalRes = safeEvaluateMath(expr);
+        if (evalRes !== null) {
           answer = `${expr} = ${evalRes}`;
         }
       }

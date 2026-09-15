@@ -4,7 +4,11 @@
 
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { GoogleAuth } from 'google-auth-library';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export type JourneyVoiceId =
   | 'en-US-Journey-F' // Warm, conversational, natural female podcast voice

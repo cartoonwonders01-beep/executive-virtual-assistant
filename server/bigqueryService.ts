@@ -5,6 +5,11 @@
 
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+// Fix for ESM __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export interface BigQueryVoiceMemoRecord {
   memo_id: string;
@@ -38,20 +43,43 @@ export class BigQueryService {
   }
 
   private initClient(): void {
+    const envCreds = process.env.GCP_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_APPLICATION_CREDENTIALS;
     const keyPath = path.resolve(__dirname, 'service_account.json');
-    if (fs.existsSync(keyPath)) {
-      try {
-        const { BigQuery } = require('@google-cloud/bigquery');
+
+    try {
+      const { BigQuery } = require('@google-cloud/bigquery');
+
+      if (envCreds) {
+        if (envCreds.trim().startsWith('{')) {
+          const credentials = JSON.parse(envCreds);
+          this.bqClient = new BigQuery({
+            projectId: credentials.project_id || this.projectId,
+            credentials
+          });
+          console.log(`[BIGQUERY] 🔐 Successfully authenticated with project [${this.projectId}] via RAM Environment Variable.`);
+          return;
+        } else if (fs.existsSync(envCreds)) {
+          this.bqClient = new BigQuery({
+            projectId: this.projectId,
+            keyFilename: envCreds
+          });
+          console.log(`[BIGQUERY] 🔐 Successfully authenticated with project [${this.projectId}] via ENV keyFilename.`);
+          return;
+        }
+      }
+
+      if (fs.existsSync(keyPath)) {
         this.bqClient = new BigQuery({
           projectId: this.projectId,
           keyFilename: keyPath
         });
         console.log(`[BIGQUERY] 🔐 Successfully authenticated with project [${this.projectId}] via Service Account.`);
-      } catch (err) {
-        console.warn(`[BIGQUERY] Notice initializing client:`, err);
+        return;
       }
-    } else {
-      console.log(`[BIGQUERY] ℹ️ service_account.json not detected; operating in simulated BigQuery mode.`);
+
+      console.log(`[BIGQUERY] ℹ️ service_account credentials not detected; operating in simulated BigQuery mode.`);
+    } catch (err) {
+      console.warn(`[BIGQUERY] Notice initializing client:`, err);
     }
   }
 

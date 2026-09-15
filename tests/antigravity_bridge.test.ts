@@ -145,8 +145,8 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
     const config = await import('../src/config');
     
     assert.equal(config.DEFAULT_CHUNK_INTERVAL_MS, 2000);
-    assert.equal(config.DEFAULT_AUDIO_BITRATE_KBPS, 64);
-    assert.equal(config.DEFAULT_SILENCE_DURATION_MS, 350);
+    assert.equal(config.DEFAULT_AUDIO_BITRATE_KBPS, 24);
+    assert.equal(config.DEFAULT_SILENCE_DURATION_MS, 1200);
     assert.ok(config.AUDIO_BITRATE_OPTIONS.length >= 3, 'Provides bitrate options');
     assert.equal(config.APP_VERSION, '4.1.0');
     assert.ok(config.LANGUAGE_OPTIONS.length >= 8, 'Provides European language options');
@@ -299,7 +299,7 @@ test('Antigravity Suite Bridge, Google Ecosystem & Self-Learning Engine Suite', 
         strategicGoals: ['Evaluate Series A pipeline', 'Support founders'],
         communicationRules: ['High-signal memo formatting']
       },
-      model: 'gemini-1.5-pro',
+      model: 'gemini-2.5-pro',
       temperature: 0.8,
       tone: 'thought_partner',
       responseVerbosity: 'balanced',

@@ -52,7 +52,7 @@ async function runTestSuite() {
   // 1.5 Personal Message Email Phrasing
   const personalCard = parseIntentFromSpeech("Send an email to my wife saying I love you");
   assert(personalCard.intent === 'email_draft', 'Classifies personal email intent');
-  assert(personalCard.emailData?.toName.includes('Emily') || personalCard.emailData?.toName.includes('Wife'), 'Identifies recipient as Emily Baxter (Wife)');
+  assert(personalCard.emailData?.toName.includes('Celine') || personalCard.emailData?.toName.includes('Wife') || false, 'Identifies recipient as Celine Loeuille (Wife)');
   assert(personalCard.emailData?.body.includes('love') || personalCard.emailData?.body.includes('loved'), 'Includes personal love message in body');
 
   // TEST GROUP 2: Calendar Engine & iCalendar (.ics)
@@ -139,7 +139,7 @@ async function runTestSuite() {
   assert(geminiCode.includes('processSpeechWithGemini'), 'Exports processSpeechWithGemini reasoning engine');
   assert(geminiCode.includes('GROQ WHISPER TRANSCRIPT TO REASON ABOUT'), 'Formats Groq transcript prompt for Gemini');
   assert(geminiCode.includes('automationBlueprint'), 'Gemini synthesizes automation blueprints with code samples');
-  assert(geminiCode.includes('gemini-1.5-flash') || geminiCode.includes('gemini-1.5-pro'), 'Supports Gemini 1.5 Pro/Flash models');
+  assert(geminiCode.includes('gemini-2.5-flash') || geminiCode.includes('gemini-2.5-pro'), 'Supports Gemini 2.5 Pro/Flash models');
 
   // TEST GROUP 9: Gmail Suite & Inbox Triager
   console.log('\n--- Test Group 9: Gmail Suite & Inbox Triager ---');

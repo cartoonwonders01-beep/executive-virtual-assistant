@@ -1,4 +1,5 @@
 import { logger } from './loggerService';
+import { getAudioContext } from './soundEffects';
 
 export type VoicePersona = 
   | 'google_journey_female' // en-US-Journey-F (Studio Conversational Human Female - Podcast Quality)
@@ -142,6 +143,42 @@ export function getAvailableVoices(): SpeechSynthesisVoice[] {
     cachedVoices = window.speechSynthesis.getVoices();
   }
   return cachedVoices;
+}
+
+/**
+ * Pre-warms the browser AudioContext and Web Speech synthesis on user gesture.
+ * Unlocks browser audio autoplay restrictions for subsequent asynchronous TTS playback.
+ */
+export function prewarmAudioContext(): void {
+  if (typeof window === 'undefined') return;
+
+  try {
+    // 1. Resume / Pre-warm Web AudioContext via singleton
+    const ctx = getAudioContext();
+    if (ctx) {
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+      // Play a 0.01ms silent oscillator
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      gain.gain.value = 0.001; // Silent
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.01);
+    }
+  } catch {}
+
+  try {
+    // 2. Unlock SpeechSynthesis on initial user tap
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.resume();
+      const emptyUtterance = new SpeechSynthesisUtterance('');
+      emptyUtterance.volume = 0;
+      window.speechSynthesis.speak(emptyUtterance);
+    }
+  } catch {}
 }
 
 /**

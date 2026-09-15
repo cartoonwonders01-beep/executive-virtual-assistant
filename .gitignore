@@ -36,3 +36,7 @@ Thumbs.db
 # Uploads cache
 uploads/*
 !uploads/.gitkeep
+
+# Cloudflare Wrangler Cache
+.wrangler/
+

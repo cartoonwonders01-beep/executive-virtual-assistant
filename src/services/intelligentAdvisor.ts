@@ -2,6 +2,7 @@
 // Powers Eve's conversational IQ with Multilingual European Language Support
 
 import { detectLanguage, SupportedLanguage } from './speechSynthesis';
+import { memoryGraph } from './memoryGraphService';
 
 export interface IntelligentAnswer {
   title: string;
@@ -34,10 +35,10 @@ export class IntelligentAdvisor {
     if (/(timer|alarm|wecker|minuterie|alarma|sveglia)/i.test(lower)) return false;
     if (/^(remind\s+me|create\s+reminder|set\s+a\s+reminder|erinnere\s+mich|rappelle-moi|recuérdame)/i.test(lower)) return false;
     if (/^(take\s+a\s+note|save\s+note|write\s+this\s+down|note\s+down|notiz|note:)/i.test(lower)) return false;
-    if (/^(call|dial|phone|ring|anrufen|appeler|llamar)\s+/i.test(lower)) return false;
-    if (/(email|message|schreibe|écris|escribe|scrivi|napisz)\s+/i.test(lower) && /(wife|frau|épouse|esposa|emily|sarah|david|celine|alex)/i.test(lower)) return false;
-    if (/love|liebe|aime|amo|kocham/i.test(lower) && /wife|frau|épouse|esposa|emily/i.test(lower)) return false;
+    if (/(email|message|schreibe|écris|escribe|scrivi|napisz)\s+/i.test(lower) && /(wife|frau|épouse|esposa|celine|sarah|david|alex)/i.test(lower)) return false;
+    if (/love|liebe|aime|amo|kocham/i.test(lower) && /wife|frau|épouse|esposa|celine/i.test(lower)) return false;
     if (/(book|schedule|vereinbare|planen|planifier|programar|prenota)\s+([\w\s]+\s+)?(appointment|termin|meeting|reunión|appuntamento|spotkanie)/i.test(lower)) return false;
+    if (/^(call|dial|phone|ring)\s+/i.test(lower)) return false;
 
     // Multilingual question words & conversational prefixes
     const questionPrefixes = [
@@ -598,15 +599,27 @@ export class IntelligentAdvisor {
       };
     }
 
-    // Contact Inquiries & Directory
+    // Family & Contact Directory Inquiries
+    if (/who\s+is\s+celine|tell\s+me\s+about\s+celine/i.test(lower)) {
+      return {
+        title: 'Executive Family Contact: Celine Loeuille',
+        category: 'Communication',
+        spokenResponse: "Celine Loeuille is your wife and partner (celine.loeuille@gmail.com).",
+        summary: "Celine Loeuille — Wife and Partner (celine.loeuille@gmail.com).",
+        keyInsights: ['Key family contact and partner.'],
+        actionSteps: ['Say "Send Celine an email" or "Check calendar with Celine".'],
+        language: 'en'
+      };
+    }
+
     if (/who\s+is\s+sarah|tell\s+me\s+about\s+sarah/i.test(lower)) {
       return {
         title: 'Executive Contact: Sarah Chen',
         category: 'Communication',
-        spokenResponse: "Sarah Chen is your Head of Growth at Innovate Group (sarah.chen@innovate.co). She leads growth marketing and enterprise partnerships.",
+        spokenResponse: "Sarah Chen is your Head of Growth at Innovate Group (sarah.chen@innovate.co).",
         summary: "Sarah Chen — Head of Growth at Innovate Group (sarah.chen@innovate.co).",
-        keyInsights: ['Key contact for growth metrics and client partnership initiatives.'],
-        actionSteps: ['Say "Send Sarah an email" or "Call Sarah" to initiate contact.'],
+        keyInsights: ['Contact directory inquiry.'],
+        actionSteps: [],
         language: 'en'
       };
     }
@@ -931,6 +944,455 @@ export class IntelligentAdvisor {
       };
     }
 
+    // Quantum Cryptography & Post-Quantum Security
+    if (/(?:quantum\s+cryptography|quantum\s+computing|post-quantum|quantum\s+encryption|kyber|dilithium|shor)/i.test(lower)) {
+      return {
+        title: 'Quantum Cryptography & Post-Quantum Security',
+        category: 'Tech/Dev',
+        spokenResponse: "Post-quantum cryptography relies on mathematical lattice structures like ML-KEM (Kyber) and ML-DSA (Dilithium) to resist Shor's algorithm on future fault-tolerant quantum computers. Quantum key distribution (QKD) leverages quantum mechanics like Heisenberg's uncertainty principle for provable eavesdropping detection.",
+        summary: "Post-Quantum Cryptography & QKD Overview: NIST-standardized lattice cryptography (Kyber/Dilithium) and quantum photon polarization key exchange.",
+        keyInsights: [
+          'NIST Standardization: ML-KEM (Kyber) for encryption; ML-DSA (Dilithium) for digital signatures',
+          "Quantum Resistance: Hard mathematical lattice problems replace vulnerable RSA/ECC discrete logarithms",
+          "QKD Principle: Quantum state measurement fundamentally alters photons, revealing intercept attempts"
+        ],
+        actionSteps: ['Assess cryptographic asset inventories and plan migration to hybrid post-quantum cipher suites.'],
+        language: 'en'
+      };
+    }
+
+    // AI Governance, Safety & EU AI Act Framework
+    if (/(?:ai\s+governance|governance\s+and\s+safety|ai\s+act|ai\s+safety|ai\s+risk|agent\s+governance|model\s+alignment)/i.test(lower)) {
+      return {
+        title: 'Executive AI Governance & Safety Framework',
+        category: 'Business & Strategy',
+        spokenResponse: "Executive AI governance requires a risk-tiered operating model: establishing guardrails and alignment checks for autonomous agents, implementing strict audit logging, maintaining human-in-the-loop oversight for high-impact decisions, and complying with the EU AI Act classification tiers.",
+        summary: "AI Governance Architecture: Multi-tiered risk classification, continuous agent telemetry, deterministic guardrails, and compliance with European regulatory standards.",
+        keyInsights: [
+          'Risk Tiering: Categorize models from minimal risk to high-risk systemic frontier systems',
+          'Telemetry & Auditability: Trace all autonomous tool calls and decision branches across layers',
+          'Human-in-the-Loop: Enforce explicit confirmation protocols for critical financial or destructive operations'
+        ],
+        actionSteps: ['Establish an executive AI governance policy and monitor autonomous agent execution logs.'],
+        language: 'en'
+      };
+    }
+
+    // =========================================================================
+    // FINANCIAL MARKETS, CRYPTOCURRENCY & ECONOMIC INTELLIGENCE
+    // =========================================================================
+
+    // Bitcoin & Cryptocurrency
+    if (/\b(?:btc|bitcoin|satoshi|crypto|cryptocurrency)\b/i.test(lower)) {
+      return {
+        title: 'Cryptocurrency Intelligence: Bitcoin (BTC)',
+        category: 'Finance',
+        spokenResponse: "Bitcoin is the world's premier decentralized cryptocurrency created by Satoshi Nakamoto in 2009. It operates on proof-of-work consensus with a fixed supply cap of 21 million coins, currently trading around $64,250 USD.",
+        summary: "Bitcoin (BTC) Overview: 21M fixed supply, SHA-256 PoW, 4-year halving cycle, trading around $64,250 USD / €58,950 EUR.",
+        keyInsights: [
+          'Fixed Supply: Hard-capped at 21,000,000 BTC, providing programmatic scarcity.',
+          'Institutional Adoption: Spot ETFs and corporate treasury allocations solidify BTC as digital gold.'
+        ],
+        actionSteps: ['Ask for the live BTC price quote or market trend analysis.'],
+        language: 'en'
+      };
+    }
+
+    // Ethereum & Smart Contracts
+    if (/\b(?:eth|ethereum|ether|smart\s+contracts|defi)\b/i.test(lower)) {
+      return {
+        title: 'Blockchain Technology: Ethereum (ETH)',
+        category: 'Finance',
+        spokenResponse: "Ethereum is the leading decentralized, open-source blockchain with smart contract functionality, powering decentralized finance, NFTs, and Layer 2 rollups, currently trading around $3,480 USD.",
+        summary: "Ethereum (ETH): Proof-of-Stake smart contract platform supporting EVM rollups and global DeFi ecosystems.",
+        keyInsights: ['EVM (Ethereum Virtual Machine) standardizes decentralized computing', 'EIP-1559 burns base gas fees during periods of network activity'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Gold & Commodities
+    if (/\b(?:gold|gold\s+price|price\s+of\s+gold|precious\s+metals)\b/i.test(lower)) {
+      return {
+        title: 'Commodities: Gold (XAU/USD)',
+        category: 'Finance',
+        spokenResponse: "Gold is holding strong near historic highs around $2,510 USD per troy ounce, serving as a primary global hedge against inflation and currency debasement.",
+        summary: "Gold (XAU/USD): Trading near $2,510 USD / €2,300 EUR per troy ounce.",
+        keyInsights: ['Central banks continue aggressive gold reserve accumulation', 'Acts as premier store of value and geopolitical safe haven'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Foreign Exchange (EUR/USD, FX)
+    if (/\b(?:eur\s*usd|exchange\s+rate|forex|euro\s+dollar|dollar\s+to\s+euro)\b/i.test(lower)) {
+      return {
+        title: 'Foreign Exchange: EUR/USD',
+        category: 'Finance',
+        spokenResponse: "The Euro to US Dollar exchange rate is currently trading around 1.09, balancing central bank interest rate differentials between the ECB and Federal Reserve.",
+        summary: "EUR/USD Forex Rate: ~1.0905.",
+        keyInsights: ['Key currency pair representing over 20% of global daily FX volume'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Stock Market & S&P 500
+    if (/\b(?:s&p\s*500|stock\s+market|nasdaq|dow\s+jones)\b/i.test(lower)) {
+      return {
+        title: 'Equities: S&P 500 Market Index',
+        category: 'Finance',
+        spokenResponse: "The S&P 500 index tracks 500 leading US public companies, currently trading near 5,630 points with strength driven by technology and enterprise AI momentum.",
+        summary: "S&P 500 Index: ~5,630 points.",
+        keyInsights: ['Market-cap weighted index representing ~80% of US equity value'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // =========================================================================
+    // ENCYCLOPEDIC, SCIENTIFIC & CURIOSITY KNOWLEDGE BASE
+    // =========================================================================
+
+    // =========================================================================
+    // RESIDENCE, GEOGRAPHIC MEMORY & TRANSIT PLANNING
+    // =========================================================================
+
+    // Where do I live / Home Residence
+    if (/where\s+(?:do|did)\s+i\s+live|where\s+is\s+my\s+(?:home|house|residence)|where\s+do\s+we\s+live|où\s+est-ce\s+que\s+j'habite|wo\s+wohne\s+ich|dónde\s+vivo/i.test(lower)) {
+      const homeLoc = memoryGraph.getHomeLocation();
+      return {
+        title: 'Executive Residence: ' + homeLoc,
+        category: 'General',
+        spokenResponse: `You live in ${homeLoc}, just outside Brussels in Flemish Brabant next to the Sonian Forest.`,
+        summary: `Primary Residence: ${homeLoc}. Adjacent to Brussels and the Sonian Forest (Zoniënwoud). Commuter stations: Hoeilaart & Groenendaal.`,
+        keyInsights: [
+          'Postcode: 1560 (Hoeilaart, Flemish Brabant, Belgium)',
+          'Commuter Rail: S8 / S81 S-Train direct to Brussels-Luxembourg & Central'
+        ],
+        actionSteps: ['Ask for transit directions into Brussels or local weather.'],
+        language: 'en'
+      };
+    }
+
+    // How to get to Brussels / Commute from Hoeilaart
+    if (/how\s+(?:should|do|can)\s+i\s+get\s+to\s+brussels|how\s+to\s+get\s+to\s+brussels|directions\s+to\s+brussels|comment\s+aller\s+[aà]\s+bruxelles|commute\s+to\s+brussels/i.test(lower)) {
+      return {
+        title: 'Commute Options: Hoeilaart (1560) ➔ Brussels',
+        category: 'General',
+        spokenResponse: "From Hoeilaart, the fastest route into Brussels is via the S8 or S81 commuter train from Hoeilaart or Groenendaal station to Brussels-Luxembourg (18 minutes) or Brussels-Central (22 minutes). By car, take the E411 or Chaussée de La Hulpe (N275) into the European Quarter (about 20 to 30 minutes).",
+        summary: "Hoeilaart (1560) to Brussels Commute: S8 train (18-22 min) or E411/N275 highway (20-30 min).",
+        keyInsights: [
+          'S8 S-Train: Departs Hoeilaart / Groenendaal every 30 min (18 min to Brussels-Luxembourg)',
+          'Road: E411 / Chaussée de La Hulpe into European Quarter (20-30 min depending on peak traffic)'
+        ],
+        actionSteps: ['Say "Check my schedule in Brussels" or "What is the weather in Brussels?"'],
+        language: 'en'
+      };
+    }
+
+    // Location & Situational Positioning
+    if (/where\s+am\s+i|where\s+are\s+we|what\s+city\s+is\s+this|current\s+location|my\s+location|où\s+suis-je|wo\s+bin\s+ich|dónde\s+estoy/i.test(lower)) {
+      return {
+        title: 'Current Executive Location',
+        category: 'General',
+        spokenResponse: "Based on your network connection, you are in the Brussels metropolitan area near Hoeilaart (CET / UTC+1).",
+        summary: "Location: Brussels / Hoeilaart region (CET / UTC+1).",
+        keyInsights: ['Timezone: Europe/Brussels (CET)', 'Home Residence: Hoeilaart (1560, Belgium)'],
+        actionSteps: ['Ask for the local weather or upcoming meetings.'],
+        language: 'en'
+      };
+    }
+
+    // Avian Biology: Bird Flight Speeds
+    if (/how\s+fast\s+(?:does\s+)?a\s+bird\s+fly|speed\s+of\s+(?:a\s+)?bird|fastest\s+bird|bird\s+speed|vitesse\s+d['’]un\s+oiseau|wie\s+schnell\s+fliegt\s+ein\s+vogel/i.test(lower)) {
+      return {
+        title: 'Avian Biology: Bird Flight Speeds',
+        category: 'General',
+        spokenResponse: "Most birds cruise between 30 and 50 km/h (20 to 30 mph). The fastest bird in level flight is the Common Swift at 111 km/h (69 mph), while the Peregrine Falcon reaches over 380 km/h (240 mph) during high-speed hunting dives!",
+        summary: "Flight dynamics: Normal cruise (30-50 km/h), Common Swift (111 km/h level flight), Peregrine Falcon (389 km/h hunting dive).",
+        keyInsights: ['Peregrine Falcon: Fastest animal on Earth in a dive (389 km/h)', 'Common Swift: Fastest bird in sustained level flight (111 km/h)'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Ocean Biology: Fish Population & Marine Life
+    if (/how\s+many\s+fish\s+(?:are\s+)?in\s+the\s+ocean|fish\s+in\s+the\s+ocean|poissons\s+dans\s+l['’]océan|fische\s+im\s+ozean|peces\s+en\s+el\s+oc[eé]ano/i.test(lower)) {
+      return {
+        title: 'Marine Biology: Ocean Fish Populations',
+        category: 'General',
+        spokenResponse: "Marine scientists estimate there are approximately 3.5 trillion fish in the world's oceans, representing over 33,000 documented species across diverse marine ecosystems.",
+        summary: "Global fish census: Approx. 3.5 trillion fish across 33,000+ recognized species.",
+        keyInsights: ['Covers 71% of Earth\'s surface', 'Mesopelagic bristlemouths are the most abundant vertebrate on Earth'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Animal Kingdom Speed Champions
+    if (/fastest\s+animal|animal\s+le\s+plus\s+rapide|schnellste\s+tier|animal\s+m[aá]s\s+r[aá]pido/i.test(lower)) {
+      return {
+        title: 'Zoology: Fastest Animals on Earth',
+        category: 'General',
+        spokenResponse: "On land, the Cheetah is the fastest animal reaching 120 km/h (75 mph). In the sky, the Peregrine Falcon dives at over 380 km/h (240 mph), and in the ocean, the Black Marlin swims at up to 130 km/h (80 mph).",
+        summary: "Speed records across land (Cheetah 120 km/h), air (Peregrine Falcon 389 km/h), and sea (Black Marlin 130 km/h).",
+        keyInsights: ['Cheetah: 0 to 100 km/h in 3 seconds', 'Peregrine Falcon: High-altitude gravitational dive acceleration'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Sky Physics & Atmospheric Science
+    if (/why\s+is\s+the\s+sky\s+blue|pourquoi\s+le\s+ciel\s+est\s+bleu|warum\s+ist\s+der\s+himmel\s+blau|por\s+qu[eé]\s+el\s+cielo\s+es\s+azul/i.test(lower)) {
+      return {
+        title: 'Atmospheric Physics: Why the Sky is Blue',
+        category: 'General',
+        spokenResponse: "The sky is blue because of Rayleigh scattering. Earth's atmospheric gases scatter shorter, blue wavelengths of sunlight in all directions far more than longer red and yellow wavelengths.",
+        summary: "Rayleigh Scattering: Sunlight is scattered by atmospheric molecules; shorter blue wavelengths scatter 10x more efficiently than red.",
+        keyInsights: ['Sunlight contains all rainbow spectrum wavelengths', 'Sunsets appear red/orange because blue light has already been scattered away over longer atmospheric paths'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Space & Astronomy: The Moon
+    if (/how\s+far\s+is\s+the\s+moon|distance\s+to\s+the\s+moon|distance\s+de\s+la\s+lune|wie\s+weit\s+ist\s+der\s+mond|distancia\s+a\s+la\s+luna/i.test(lower)) {
+      return {
+        title: 'Astronomy: Distance to the Moon',
+        category: 'General',
+        spokenResponse: "The Moon is an average distance of 384,400 kilometers (238,855 miles) from Earth, which is roughly 30 Earth diameters away.",
+        summary: "Orbital distance: Average 384,400 km (Perigee: 363,300 km, Apogee: 405,500 km).",
+        keyInsights: ['Light travel time: ~1.28 seconds', 'All other 7 planets could fit end-to-end between Earth and the Moon'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Space & Astronomy: The Sun
+    if (/how\s+far\s+is\s+the\s+sun|distance\s+to\s+the\s+sun|distance\s+du\s+soleil/i.test(lower)) {
+      return {
+        title: 'Astronomy: Distance to the Sun',
+        category: 'General',
+        spokenResponse: "The Sun is approximately 149.6 million kilometers (93 million miles) from Earth, defined as 1 Astronomical Unit. Sunlight takes about 8 minutes and 20 seconds to reach us.",
+        summary: "1 Astronomical Unit (AU) = 149,597,870.7 km.",
+        keyInsights: ['Photons take 8 min 20 sec to travel from the Sun to Earth', 'Solar core fusion produces 3.8 x 10^26 watts of power'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Solar System: Planets
+    if (/how\s+many\s+planets|planets\s+in\s+(?:the\s+)?solar\s+system|planètes\s+du\s+système\s+solaire|planeten\s+im\s+sonnensystem/i.test(lower)) {
+      return {
+        title: 'Astronomy: Solar System Planets',
+        category: 'General',
+        spokenResponse: "There are 8 recognized planets in our solar system: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, and Neptune, alongside dwarf planets such as Pluto and Ceres.",
+        summary: "8 Planets: 4 terrestrial inner planets and 4 outer gas/ice giants.",
+        keyInsights: ['Terrestrial: Mercury, Venus, Earth, Mars', 'Gas & Ice Giants: Jupiter, Saturn, Uranus, Neptune'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Physics: Speed of Light
+    if (/speed\s+of\s+light|vitesse\s+de\s+la\s+lumi[eè]re|lichtgeschwindigkeit|velocidad\s+de\s+la\s+luz/i.test(lower)) {
+      return {
+        title: 'Fundamental Physics: Speed of Light',
+        category: 'General',
+        spokenResponse: "The speed of light in a vacuum is exactly 299,792,458 meters per second, or about 300,000 kilometers per second (186,282 miles per second).",
+        summary: "Universal physical constant (c) = 299,792,458 m/s.",
+        keyInsights: ['Nothing with rest mass can accelerate to or exceed c', 'Light circles Earth\'s equator 7.5 times in one second'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Geography: Capital of Australia
+    if (/capital\s+of\s+australia|capitale\s+de\s+l['’]australie|hauptstadt\s+von\s+australien|capital\s+de\s+australia/i.test(lower)) {
+      return {
+        title: 'World Geography: Capital of Australia',
+        category: 'General',
+        spokenResponse: "The capital of Australia is Canberra. It was selected as a purpose-built capital in 1908 as a compromise between Sydney and Melbourne.",
+        summary: "Capital: Canberra (Australian Capital Territory).",
+        keyInsights: ['Founded: 1913 as the planned national capital', 'Largest inland city in Australia'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Geography: Capital of Canada
+    if (/capital\s+of\s+canada|capitale\s+du\s+canada|hauptstadt\s+von\s+kanada|capital\s+de\s+canad[aá]/i.test(lower)) {
+      return {
+        title: 'World Geography: Capital of Canada',
+        category: 'General',
+        spokenResponse: "The capital of Canada is Ottawa, located in the province of Ontario on the border with Quebec.",
+        summary: "Capital: Ottawa, Ontario.",
+        keyInsights: ['Selected by Queen Victoria in 1857', 'Home to Parliament Hill and the National Gallery'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Geography: Highest Mountain
+    if (/highest\s+mountain|mount\s+everest|plus\s+haute\s+montagne|höchste\s+berg|monta[ñn]a\s+m[aá]s\s+alta/i.test(lower)) {
+      return {
+        title: 'Geography: Mount Everest',
+        category: 'General',
+        spokenResponse: "Mount Everest is the highest mountain on Earth above sea level, standing at 8,848.86 meters (29,031.7 feet) in the Himalayas on the border of Nepal and China.",
+        summary: "Mount Everest: 8,848.86 m (29,031.7 ft).",
+        keyInsights: ['Known as Sagarmatha in Nepali and Chomolungma in Tibetan', 'First officially summited by Edmund Hillary and Tenzing Norgay in 1953'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Literature: Shakespeare / Hamlet
+    if (/who\s+wrote\s+hamlet|qui\s+a\s+[eé]crit\s+hamlet|wer\s+schrieb\s+hamlet|qui[eé]n\s+escribi[oó]\s+hamlet/i.test(lower)) {
+      return {
+        title: 'Literature: William Shakespeare\'s Hamlet',
+        category: 'General',
+        spokenResponse: "William Shakespeare wrote the tragedy Hamlet around 1600. It explores themes of treachery, revenge, and morality, featuring the famous soliloquy 'To be, or not to be'.",
+        summary: "The Tragedy of Hamlet, Prince of Denmark by William Shakespeare (c. 1599–1601).",
+        keyInsights: ['Shakespeare\'s longest play', 'One of the most quoted and analyzed works in world literature'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Art: Mona Lisa
+    if (/who\s+painted\s+(?:the\s+)?mona\s+lisa|mona\s+lisa|la\s+joconde|qui\s+a\s+peint\s+la\s+joconde/i.test(lower)) {
+      return {
+        title: 'Art History: Leonardo da Vinci\'s Mona Lisa',
+        category: 'General',
+        spokenResponse: "Leonardo da Vinci painted the Mona Lisa (La Joconde) between 1503 and 1519. It is permanently exhibited at the Louvre Museum in Paris.",
+        summary: "Masterpiece by Leonardo da Vinci painted during the Italian Renaissance.",
+        keyInsights: ['Depicts Lisa Gherardini, wife of Francesco del Giocondo', 'Famous for subtle sfumato technique and enigmatic expression'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // History: Eiffel Tower
+    if (/when\s+was\s+the\s+eiffel\s+tower\s+built|tour\s+eiffel|eiffelturm|torre\s+eiffel/i.test(lower)) {
+      return {
+        title: 'Architecture & History: The Eiffel Tower',
+        category: 'General',
+        spokenResponse: "The Eiffel Tower in Paris was designed by Gustave Eiffel and completed on March 31, 1889, for the 1889 Exposition Universelle celebrating the French Revolution centennial.",
+        summary: "Constructed 1887–1889 in Paris, France (Height: 330 meters).",
+        keyInsights: ['World\'s tallest man-made structure until 1930', 'Constructed from puddle iron with 2.5 million rivets'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Anatomy: Bones in Human Body
+    if (/how\s+many\s+bones\s+(?:in\s+the\s+human\s+body|do\s+humans\s+have)|combien\s+d['’]os\s+dans\s+le\s+corps|wie\s+viele\s+knochen|cu[aá]ntos\s+huesos/i.test(lower)) {
+      return {
+        title: 'Human Anatomy: Skeletal System',
+        category: 'General',
+        spokenResponse: "An adult human body has 206 bones. Infants are born with approximately 270 bones, many of which fuse together during childhood development.",
+        summary: "Adult skeleton: 206 bones (Axial skeleton: 80 bones, Appendicular skeleton: 126 bones).",
+        keyInsights: ['Femur (thighbone) is the longest and strongest bone', 'Stapes in the middle ear is the smallest bone (3 mm)'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Prehistory: Dinosaurs
+    if (/dinosaur|dinosaure|dinosaurier|t-rex|tyrannosaurus/i.test(lower)) {
+      return {
+        title: 'Paleontology: The Age of Dinosaurs',
+        category: 'General',
+        spokenResponse: "Dinosaurs dominated Earth for over 160 million years throughout the Mesozoic Era before going extinct 66 million years ago after an asteroid impact. Modern birds are their direct living descendants!",
+        summary: "Mesozoic Era (Triassic, Jurassic, Cretaceous periods: 252 to 66 million years ago).",
+        keyInsights: ['Extinction: Chicxulub asteroid impact in the Yucatán Peninsula', 'Avian lineage survived as modern birds'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Technology: Artificial Intelligence
+    if (/how\s+does\s+ai\s+work|what\s+is\s+ai|comment\s+fonctionne\s+l['’]ia|wie\s+funktioniert\s+ki|c[oó]mo\s+funciona\s+la\s+ia/i.test(lower)) {
+      return {
+        title: 'Computer Science: How Artificial Intelligence Works',
+        category: 'Tech/Dev',
+        spokenResponse: "Modern AI works using artificial neural networks trained on vast datasets. By adjusting billions of parameters through gradient descent, models learn patterns to understand natural language, reason logically, and generate solutions.",
+        summary: "Neural network architectures, transformer self-attention, and statistical pattern optimization.",
+        keyInsights: ['Transformer attention mechanisms allow models to understand long-range context', 'Reinforcement Learning with Human Feedback (RLHF) aligns AI behavior'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Technology: Quantum Computing
+    if (/quantum\s+computer|quantum\s+computing|ordinateur\s+quantique|quantencomputer|computaci[oó]n\s+cu[aá]ntica/i.test(lower)) {
+      return {
+        title: 'Quantum Computing: Principles and Architecture',
+        category: 'Tech/Dev',
+        spokenResponse: "Quantum computers use quantum bits (qubits) that leverage superposition and entanglement to evaluate complex multidimensional problem spaces simultaneously, far outpacing classical supercomputers for cryptography, molecular simulation, and optimization.",
+        summary: "Qubits operating in superposition (0 and 1 simultaneously) with quantum entanglement.",
+        keyInsights: ['Key applications: Drug discovery, financial modeling, and post-quantum encryption', 'Requires ultra-cold cryogenic cooling near absolute zero'],
+        actionSteps: [],
+        language: 'en'
+      };
+    }
+
+    // Generic Travel, Arrival & Movement Intelligence
+    const travelVerbMatch = /(?:is\s+|'s\s+)?\b(coming\s+back(?:\s+home)?|coming\s+home|coming|returning|flying\s+in|flying|arriving|traveling|heading|landing|visiting)\b/i.exec(text);
+    if (travelVerbMatch && /(?:from|to|in|into|at|home|back)/i.test(text)) {
+      const isDeparting = /traveling\s+to|heading\s+to|flying\s+to|leaving\s+for/i.test(text);
+      let person = 'Alexander';
+      if (/daughter|elizabeth|eleonore|angelina/i.test(lower)) {
+        if (/eleonore/i.test(lower)) person = 'Eleonore';
+        else if (/angelina/i.test(lower)) person = 'Angelina';
+        else person = 'Elizabeth';
+      } else if (/wife|celine/i.test(lower)) {
+        person = 'Celine';
+      } else {
+        const beforeVerb = text.substring(0, travelVerbMatch.index).trim();
+        const customNameMatch = beforeVerb.match(/(?:my\s+)?(?:son|colleague|partner|client|friend|brother|sister)?\s*([A-Z][a-z]+|[a-z]+)$/i);
+        if (customNameMatch && customNameMatch[1] && !/^(my|the|a|who|where|when|is|what)$/i.test(customNameMatch[1])) {
+          person = customNameMatch[1].charAt(0).toUpperCase() + customNameMatch[1].slice(1);
+        }
+      }
+
+      let place = '';
+      const afterVerb = text.substring(travelVerbMatch.index + travelVerbMatch[0].length).trim();
+      const locMatch = afterVerb.match(/(?:from|to|in|into|at)\s+([a-zA-Z\s,.-]+?)(?:\s+(?:tomorrow|today|tonight|next\s+week|soon|for|on|\.|\?|$))/i) ||
+                       afterVerb.match(/(?:from|to|in|into|at)\s+([a-zA-Z]+)/i);
+      if (locMatch && locMatch[1]) {
+        const raw = locMatch[1].replace(/^(?:the|a)\s+/i, '').trim();
+        if (raw.length > 2 && !/^(?:brussels|home|airport)$/i.test(raw)) {
+          place = raw.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        }
+      }
+      if (!place) {
+        const matchedKnown = text.match(/\b(senegal|tokyo|london|paris|madrid|singapore|berlin|sydney|new york|rome|zurich)\b/i);
+        if (matchedKnown) place = matchedKnown[1].charAt(0).toUpperCase() + matchedKnown[1].slice(1).toLowerCase();
+      }
+
+      const spoken = isDeparting
+        ? (place ? `Understood, Andrew. ${person} is traveling to ${place}. Would you like me to add this trip to your calendar, prepare a travel briefing, or send ${person} a note?` : `Understood, Andrew. Would you like me to log ${person}'s travel on your calendar?`)
+        : (place ? `That's wonderful news, Andrew! ${person} is returning from ${place}. Would you like me to draft a welcome note to ${person}, check arrival details into Brussels, or block out time on your calendar?` : `That's great news about ${person}! Would you like me to send an email, block time on your calendar, or help prepare for their arrival?`);
+
+      return {
+        title: `Travel Intelligence: ${person} ${isDeparting ? '➔ ' + (place || 'Trip') : (place ? 'from ' + place : 'Arrival')}`,
+        category: 'General',
+        spokenResponse: spoken,
+        summary: `${person} travel coordination (${place || 'trip'}).`,
+        keyInsights: [
+          `Subject: ${person}`,
+          `Route: ${isDeparting ? 'Brussels ➔ ' + place : place + ' ➔ Brussels'}`
+        ],
+        actionSteps: [
+          `Say "Send an email to ${person}" to draft a note.`,
+          `Say "Add to calendar" to block arrival time.`
+        ],
+        language: 'en'
+      };
+    }
+
     // Natural Conversational Intelligence Fallback
     const cleanTopic = text
       .replace(/^(what\s+is|what\s+are|how\s+do\s+i|how\s+can\s+we|why\s+is|why\s+are|explain|tell\s+me\s+about|give\s+me\s+advice\s+on|can\s+you\s+explain|what\s+do\s+you\s+think\s+about|thoughts\s+on)\s+/i, '')
@@ -938,9 +1400,9 @@ export class IntelligentAdvisor {
       .trim();
     const capitalizedTopic = cleanTopic ? cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1) : 'Conversation';
 
-    let naturalSpoken = `I'm with you, Andrew. Tell me what you'd like me to look into, draft, or organize for you next.`;
+    let naturalSpoken = `I'm listening, Andrew. Tell me more, or let me know if you'd like me to draft a note, update your calendar, or look into any details for you.`;
     if (cleanTopic.length > 2) {
-      naturalSpoken = `I understand your point regarding ${cleanTopic}. How would you like us to proceed?`;
+      naturalSpoken = `Understood, Andrew. Would you like me to take a note of this, draft an email, check your schedule, or research anything specific regarding "${cleanTopic}"?`;
     }
 
     return {
@@ -950,7 +1412,7 @@ export class IntelligentAdvisor {
       summary: `Conversational thought on "${text}".`,
       keyInsights: [
         `Active conversation turn recorded.`,
-        `Ready to execute follow-up actions (email, calendar, search, or workflow).`
+        `Ready to execute follow-up actions (email, calendar, tasks, or research).`
       ],
       actionSteps: [
         `Speak your next command or ask a follow-up question.`
