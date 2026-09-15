@@ -110,13 +110,27 @@
 - [x] **[P0] Sovereign Offline STT Fallback Engine (EVE-V2-084):** Local client-side speech decoding adapter for resilient offline operation (`offlineSttService.ts`).
 - [x] **[P0] WebAudio Frequency Spectrum & Waveform Renderer (EVE-V2-085):** Real-time multi-band FFT frequency extraction and canvas waveform rendering (`audioVisualizerService.ts`).
 - [x] **[P1] Ambient Mini-Pill Live Waveform Integration (EVE-V2-086):** Embedded responsive waveform canvas in the floating heads-up pill (`AmbientMiniPill.tsx`).
-
+ 
 ## ✅ SPRINT 31: Autonomous Executive Email Triage & ActionCard Drafter Engine
 *Objective: Deliver sovereign local email classification, priority triage, spoken briefing synthesis, and 1-click ActionCard draft replies.*
 
 - [x] **[P0] Autonomous Executive Email Triage Service (EVE-V2-087):** Priority grading (urgent, high, normal, low), action-required detection, and conversational spoken briefings (`emailTriageService.ts`).
 - [x] **[P0] 1-Click ActionCard Reply Drafter (EVE-V2-088):** High-agency ActionCard staging for instant executive approval and customizable dispatch (`emailTriageService.ts`).
 - [x] **[P1] Email Triage ReAct Tools Dispatcher (EVE-V2-089):** Deterministic tool dispatch registration for `triage_executive_inbox` and `stage_email_reply_card` (`toolDispatcher.ts`).
+
+## ✅ SPRINT 32: Studio-Grade Neural Speech Engine (Microsoft Edge Neural TTS Integration)
+*Objective: Eliminate robotic browser synthesizers by deploying zero-cost, human-sounding conversational female neural audio streaming.*
+
+- [x] **[P0] Edge Neural TTS Streaming Service (EVE-V2-090):** Zero-key, studio-fidelity speech synthesis engine delivering warm conversational female audio via `en-US-AvaMultilingualNeural` / `en-US-AriaNeural` (`edgeTTS.ts`).
+- [x] **[P0] Backend Neural Audio Streaming Route (EVE-V2-091):** High-speed Express endpoint `POST /api/tts/neural` streaming base64 MP3 audio packets (`server/index.ts`).
+- [x] **[P1] Unified Audio Playback Pipeline with Zero-Delay Fallback (EVE-V2-092):** Seamless frontend audio streaming in `nativeTts.ts` with transparent failover to calibrated local female personas (`nativeTts.ts`).
+
+## 📋 SPRINT 33 (PHASE 2 BACKLOG): Enterprise Scale Speech & Custom Studio Voice Clones
+*Objective: Provide commercial scaling tiers for high-concurrency production deployments, ultra-low-latency bidirectional streaming, and bespoke executive voice cloning.*
+
+- [ ] **[P1] Cartesia Sonic & ElevenLabs Turbo v2.5 Integration (EVE-V2-093):** Sub-100ms ultra-fast neural streaming adapter with emotional prosody modulation and custom cloned executive voices.
+- [ ] **[P1] Gemini 2.0 Flash Multimodal Live Bidirectional WebSocket (EVE-V2-094):** Full-duplex audio-in / audio-out streaming socket bypassing intermediate STT/TTS layers.
+- [ ] **[P2] Kokoro-82M In-Browser Wasm Offline Neural Synthesis (EVE-V2-095):** Zero-server client-side WebGPU/Wasm neural audio generation running 100% offline inside the PWA sandbox.
 
 ---
 

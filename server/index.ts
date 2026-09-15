@@ -15,6 +15,7 @@ import { skillRegistry } from './skillRegistry';
 import { dialogueEngine } from './dialogueEngine';
 import { bigQueryService } from './bigqueryService';
 import { googleTTS } from './googleTTS';
+import { edgeTTS } from './edgeTTS';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -589,6 +590,29 @@ app.post('/api/tts/journey', async (req, res) => {
     success: true,
     audioBase64: audioRes.audioBase64,
     mimeType: audioRes.mimeType
+  });
+});
+
+// =========================================================================
+// MICROSOFT EDGE NEURAL STUDIO TTS ENDPOINT (FREE ZERO-KEY STUDIO VOICE)
+// =========================================================================
+app.post('/api/tts/neural', async (req, res) => {
+  const { text, voice, rateDelta } = req.body;
+  if (!text) {
+    return res.status(400).json({ error: 'Text is required for neural TTS synthesis' });
+  }
+
+  const result = await edgeTTS.synthesize(text, voice || 'en-US-AvaMultilingualNeural', rateDelta || 0.02);
+  if (!result) {
+    return res.status(500).json({ error: 'Neural TTS synthesis failed' });
+  }
+
+  res.json({
+    success: true,
+    audioBase64: result.audioBase64,
+    mimeType: result.mimeType,
+    voice: result.voice,
+    durationMs: result.durationMs
   });
 });
 

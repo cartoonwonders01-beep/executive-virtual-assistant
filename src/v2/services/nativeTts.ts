@@ -196,44 +196,14 @@ class NativeTtsService {
     if (openAiKey && !openAiKey.includes('placeholder')) {
       try {
         this.isSpeakingState = true;
-        telemetry.log('tts_start', { provider: 'openai_tts', voice: openAiVoice, length: text.length });
         const res = await fetch('https://api.openai.com/v1/audio/speech', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAiKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            model: 'tts-1',
-            voice: openAiVoice,
-            input: text,
-            speed: this.speechRate
-          })
+          headers: { 'Authorization': `Bearer ${openAiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: 'tts-1', voice: openAiVoice, input: text, speed: this.speechRate })
         });
-
         if (res.ok) {
           const blob = await res.blob();
-          const audioUrl = URL.createObjectURL(blob);
-          const audio = new Audio(audioUrl);
-          this.activeAudio = audio;
-
-          audio.onended = () => {
-            this.isSpeakingState = false;
-            this.lastSpokenEndedTs = Date.now();
-            this.activeAudio = null;
-            URL.revokeObjectURL(audioUrl);
-            telemetry.log('tts_end', { provider: 'openai_tts' });
-            if (onFinish) onFinish();
-          };
-          audio.onerror = () => {
-            this.isSpeakingState = false;
-            this.lastSpokenEndedTs = Date.now();
-            this.activeAudio = null;
-            URL.revokeObjectURL(audioUrl);
-            this.fallbackBrowserSpeak(text, onFinish);
-          };
-
-          await audio.play();
+          await this.playAudioElement(URL.createObjectURL(blob), 'openai_tts', onFinish, () => this.fallbackBrowserSpeak(text, onFinish));
           return;
         }
       } catch (e) {
@@ -241,7 +211,43 @@ class NativeTtsService {
       }
     }
 
+    try {
+      this.isSpeakingState = true;
+      const res = await fetch('/api/tts/neural', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice: 'en-US-AvaMultilingualNeural', rateDelta: this.speechRate - 1.0 })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.audioBase64) {
+          await this.playAudioElement(`data:audio/mp3;base64,${data.audioBase64}`, 'edge_neural', onFinish, () => this.fallbackBrowserSpeak(text, onFinish));
+          return;
+        }
+      }
+    } catch {}
+
     this.fallbackBrowserSpeak(text, onFinish);
+  }
+
+  private async playAudioElement(src: string, provider: string, onFinish?: () => void, onError?: () => void) {
+    const audio = new Audio(src);
+    this.activeAudio = audio;
+    telemetry.log('tts_start', { provider });
+    audio.onended = () => {
+      this.isSpeakingState = false;
+      this.lastSpokenEndedTs = Date.now();
+      this.activeAudio = null;
+      if (src.startsWith('blob:')) URL.revokeObjectURL(src);
+      if (onFinish) onFinish();
+    };
+    audio.onerror = () => {
+      this.isSpeakingState = false;
+      this.activeAudio = null;
+      if (src.startsWith('blob:')) URL.revokeObjectURL(src);
+      if (onError) onError();
+    };
+    await audio.play();
   }
 
   private fallbackBrowserSpeak(text: string, onFinish?: () => void) {
@@ -276,9 +282,7 @@ class NativeTtsService {
       if (onFinish) onFinish();
     };
 
-    try {
-      this.synth.resume();
-    } catch {}
+    try { this.synth.resume(); } catch {}
     this.synth.speak(utterance);
   }
 
