@@ -6,10 +6,12 @@
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
-// Fix for ESM __dirname
+// Fix for ESM __dirname and require
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
 
 export interface BigQueryVoiceMemoRecord {
   memo_id: string;

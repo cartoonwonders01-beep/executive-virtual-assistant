@@ -52,7 +52,7 @@ export class EdgeTTSService {
       execFile(
         this.binaryPath,
         ['--voice', voice, '--rate', rateArg, '--text', cleanText, '--write-media', tempFile],
-        { timeout: 8000 },
+        { timeout: 25000 },
         (err) => {
           if (err) {
             console.warn('[EDGE_TTS] Synthesis execution notice:', err.message);

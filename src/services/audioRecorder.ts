@@ -17,6 +17,15 @@ export function isVerbalStopCommand(text: string): boolean {
     /\b(?:stop listening|stop talking|be quiet|shut up|arrête-toi|tais-toi)\b/i.test(lower);
 }
 
+// Semantic End-of-Turn & Incomplete Utterance Detector
+export function isUtteranceSyntacticallyIncomplete(text: string): boolean {
+  if (!text) return false;
+  const trimmed = text.trim();
+  if (/[.!?]$/.test(trimmed)) return false;
+  const danglingPattern = /\b(and|or|but|because|if|then|when|while|although|to|for|of|with|in|at|by|from|about|into|through|after|before|that|which|who|whom|whose|as|than|so|since|until|unless|is|are|was|were|am|will|shall|would|should|could|can|may|might)\s*$/i;
+  return danglingPattern.test(trimmed);
+}
+
 export interface AudioRecorderConfig {
   onAudioLevel: (level: number) => void;
   onRecordingComplete: (blob: Blob, mimeType: string, liveTranscript?: string) => void;
@@ -312,7 +321,9 @@ export class AudioRecorderService {
       return true;
     } catch (err: any) {
       console.error('Failed to start audio recording:', err);
-      config.onError(err?.message || 'Microphone access denied or unsupported');
+      if (config && typeof config.onError === 'function') {
+        config.onError(err?.message || 'Microphone access denied or unsupported');
+      }
       this.cleanup();
       return false;
     }
@@ -396,7 +407,9 @@ export class AudioRecorderService {
   private cleanupAudioMonitoring(): void {
     this.currentAudioLevel = 0;
     if (this.animFrameId) {
-      cancelAnimationFrame(this.animFrameId);
+      if (typeof cancelAnimationFrame !== 'undefined') {
+        cancelAnimationFrame(this.animFrameId);
+      }
       this.animFrameId = null;
     }
     if (this.speechFinishTimer) {

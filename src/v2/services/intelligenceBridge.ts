@@ -102,7 +102,7 @@ class IntelligenceBridge {
     const profileSnippet = executiveProfile.getSystemPromptSnippet();
 
     // 2. Deep Semantic Recall: Retrieve top relevant memories across all past sessions
-    const recalledItems = eveVectorStore.search(transcript, 5);
+    const recalledItems = eveVectorStore.search(resolvedTranscript, 5);
     const contextSnippet = recalledItems.length > 0
       ? "EPISODIC HISTORICAL RECALL (Matched from Past Sessions):\n" + 
         recalledItems.map(r => `• [${r.item.type.toUpperCase()}] ${r.item.text}`).join('\n')
@@ -133,55 +133,34 @@ Respond ONLY with valid JSON:
 
         const recentMessages = this.history.slice(-16).map(h => ({ role: h.role, content: h.content }));
         const userContent = imageFrame 
-          ? `${transcript}\n\n[ATTACHED SCREEN/DOCUMENT SNAPSHOT: ${imageFrame.slice(0, 48)}...]` 
-          : transcript;
+          ? `${resolvedTranscript}\n\n[ATTACHED SCREEN/DOCUMENT SNAPSHOT: ${imageFrame.slice(0, 48)}...]` 
+          : resolvedTranscript;
         const messages = [{ role: 'system', content: systemPrompt }, ...recentMessages, { role: 'user', content: userContent }];
 
         const reqHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
         if (!useEdgeProxy && groqApiKey) reqHeaders['Authorization'] = `Bearer ${groqApiKey}`;
 
-        if (streamCallbacks) {
-          const streamedRaw = await streamingAudioPipeline.streamSSE(
-            targetEndpoint,
-            useEdgeProxy ? '' : groqApiKey,
-            { model: 'llama-3.3-70b-versatile', messages, response_format: { type: 'json_object' }, temperature: 0.4 },
-            streamCallbacks
-          );
+        const aiRes = await fetch(targetEndpoint, {
+          method: 'POST',
+          headers: reqHeaders,
+          body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages, response_format: { type: 'json_object' }, temperature: 0.4 })
+        });
 
-          try {
-            const parsed = JSON.parse(streamedRaw);
-            this.applyParsedPayload(parsed, transcript, isScribeMode);
-            responseText = parsed.response || streamedRaw;
-            actionCard = parsed.action_card?.title ? {
-              id: 'act-' + Date.now(),
-              type: parsed.action_card.type || (parsed.intent === 'CALENDAR' ? 'calendar' : 'task'),
-              title: parsed.action_card.title,
-              subtitle: parsed.action_card.subtitle,
-              dateStr: parsed.action_card.dateStr
-            } : undefined;
-          } catch {
-            responseText = streamedRaw.trim();
+        if (aiRes.ok) {
+          const data = await aiRes.json();
+          const parsed = JSON.parse(data.choices[0].message.content);
+          this.applyParsedPayload(parsed, resolvedTranscript, parsed.intent === 'SCRIBE');
+          responseText = parsed.response || responseText;
+          if (streamCallbacks?.onToken) {
+            streamCallbacks.onToken(responseText, responseText);
           }
-        } else {
-          const aiRes = await fetch(targetEndpoint, {
-            method: 'POST',
-            headers: reqHeaders,
-            body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages, response_format: { type: 'json_object' }, temperature: 0.4 })
-          });
-
-          if (aiRes.ok) {
-            const data = await aiRes.json();
-            const parsed = JSON.parse(data.choices[0].message.content);
-            this.applyParsedPayload(parsed, transcript, parsed.intent === 'SCRIBE');
-            responseText = parsed.response || responseText;
-            actionCard = parsed.action_card?.title ? {
-              id: 'act-' + Date.now(),
-              type: parsed.action_card.type || (parsed.intent === 'CALENDAR' ? 'calendar' : 'task'),
-              title: parsed.action_card.title,
-              subtitle: parsed.action_card.subtitle,
-              dateStr: parsed.action_card.dateStr
-            } : undefined;
-          }
+          actionCard = parsed.action_card?.title ? {
+            id: 'act-' + Date.now(),
+            type: parsed.action_card.type || (parsed.intent === 'CALENDAR' ? 'calendar' : 'task'),
+            title: parsed.action_card.title,
+            subtitle: parsed.action_card.subtitle,
+            dateStr: parsed.action_card.dateStr
+          } : undefined;
         }
       } catch (err) {
         telemetry.log('error', { source: 'GroqLLM', message: String(err) });
@@ -192,7 +171,7 @@ Respond ONLY with valid JSON:
     if (!responseText.trim()) {
       try {
         const historyDialogue = this.history.slice(-10).map((h, idx) => ({ id: `hist-${idx}-${h.timestamp}`, speaker: (h.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant', text: h.content, timestamp: new Date(h.timestamp).toISOString() }));
-        const cortexRes = await CortexDialogueEngine.getInstance().reasonAndAct(transcript, historyDialogue);
+        const cortexRes = await CortexDialogueEngine.getInstance().reasonAndAct(resolvedTranscript, historyDialogue);
         if (cortexRes?.spokenResponse && !cortexRes.spokenResponse.includes("noted that in my local brain")) {
           responseText = cortexRes.spokenResponse;
         }

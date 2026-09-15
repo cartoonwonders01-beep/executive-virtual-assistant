@@ -46,16 +46,14 @@ export default function EveV2App() {
     if (!textToProcess.trim()) return;
     setIsProcessing(true);
     try {
-      let isStreaming = false;
       const aiResponse = await intelligenceBridge.handleUtterance(textToProcess, audioBlob, {
         onToken: (_tok, fullAcc) => {
-          isStreaming = true;
           setResponse(fullAcc);
         }
       }, imageFrame);
       setResponse(aiResponse.responseText);
       setActionCard(aiResponse.actionCard || null);
-      if (!isStreaming) nativeTts.speak(aiResponse.responseText);
+      if (aiResponse.responseText) nativeTts.speak(aiResponse.responseText);
     } catch (err) {
       telemetry.log('error', { source: 'Processing', error: String(err) });
     } finally {
