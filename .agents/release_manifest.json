@@ -1,9 +1,9 @@
 {
-  "project": "Eve-Virtual-Assistant",
-  "version": "v2.5.0",
-  "generatedAt": "2026-09-15T06:30:40.075Z",
-  "totalFiles": 107,
-  "manifestHash": "d5a1bcab5537fbef96ce26428e7ce69b837973b506868f03916ab50477767795",
+  "project": "virtual-assistant",
+  "version": "v2.5.1",
+  "generatedAt": "2026-09-15T06:35:40.909Z",
+  "totalFiles": 111,
+  "manifestHash": "2bf89e217a31b9f5814ff80c085cca0ead1148b069921a3432fedb78e491ba5d",
   "files": {
     "src/App.tsx": "a2ec0e46ad36186c5dcb7402969e3ee982567f16f97a77180142711363eaf1aa",
     "src/components/ActionCardEditor.tsx": "13e78de79883e85622786330159e95226fc0a121577c7ccd21730a1219c940a3",
@@ -85,6 +85,7 @@
     "src/v2/services/auricBridge.ts": "7d662405cfc4c8cb8547fcb5affc93834b152765b5976d3e3ad464e644eca9df",
     "src/v2/services/briefingEngine.ts": "9aa2a40c1b6064e7dc9e65b85c133527952cd395d2d29ec14dc56ba39f655162",
     "src/v2/services/dualProcessCortex.ts": "2351fb64ebf012711b243cf2281ab89ccbb15a4a633443fd6b73db2e5f8c57dc",
+    "src/v2/services/emailTriageService.ts": "9da0df23a99eec8f4720c0fc1d882766e51d7c8a806918e4df3b5e27ed5a7965",
     "src/v2/services/ephemeralGrantManager.ts": "119b827cb2b36409220c4a2b74acaaca157281095af73128ba4e28abc052b707",
     "src/v2/services/hotkeyService.ts": "dfc40184725aca0ef75a3b939d8a9dc7fbc98fa22190e5d5bc9fc3199a22b5ed",
     "src/v2/services/intelligenceBridge.ts": "07f49687a470ca315f56268748890a09d164e3c1719a9c3f46290438089b8022",
@@ -107,9 +108,12 @@
     "src/v2/workers/embeddingWorker.ts": "adab19589393eb44d343a93ed48c9359bf6bcb5e0141386d6dfc4b1418827a74",
     "src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
     ".agents/PROJECT_GOAL.md": "67dfde98589710d27ff929923ee3334d29d888a1e12627cf79f96a82ae92e407",
-    ".agents/SPRINT_BACKLOG.md": "46750b3d749d840e3ffbeff2181b932fde5d896867b0a8a28156529780a59ef3",
+    ".agents/SPRINT_BACKLOG.md": "ad02998ca0037c4bc1781c037b175aba6642c251a60cfbd6e760ba0db598b33f",
     ".agents/rules/sandbox_execution.md": "cd7512e94e3d1709e5f46c7817a24925a2ee377850d591f19d12843d255e2f95",
-    "package.json": "dce4f627b6d1d94028f0c8adebd3edfba73fa61cd6cf7641d7f9e85a85ebb4e2",
+    ".agents/visual_audit/Desktop-Chrome.png": "8026a3b2b3bdb5dceafe9aaf59fce6e7c515d3db21a883002a3f40cca142ec3c",
+    ".agents/visual_audit/Mobile-Chrome.png": "a08d125ca22b37cae696f91ded29adf1806fa6d53b6b73c42e57f8b6d78e8f57",
+    ".agents/visual_audit/Tablet-Chrome.png": "56cf1e57bfa4550fd2800c8274126e6d8bee6d013b8d55b70f30be22b9bcbac9",
+    "package.json": "4f0c675356c03eb06b1d0e325803383290bee0080305526af4ef1aedf2b8daaa",
     "wrangler.toml": "7d937adbc563ca62f69494aa86ff894c3d824b43441c84f68a4573f771f1c028",
     "index.html": "cc354e9a9099467139d1f15495c76afd54b0e4f099427e4b366b4506791f832e"
   }

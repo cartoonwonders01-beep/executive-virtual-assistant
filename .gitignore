@@ -40,3 +40,7 @@ uploads/*
 # Cloudflare Wrangler Cache
 .wrangler/
 
+# Playwright Test Outputs
+test-results/
+playwright-report/
+

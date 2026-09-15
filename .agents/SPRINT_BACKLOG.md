@@ -111,6 +111,13 @@
 - [x] **[P0] WebAudio Frequency Spectrum & Waveform Renderer (EVE-V2-085):** Real-time multi-band FFT frequency extraction and canvas waveform rendering (`audioVisualizerService.ts`).
 - [x] **[P1] Ambient Mini-Pill Live Waveform Integration (EVE-V2-086):** Embedded responsive waveform canvas in the floating heads-up pill (`AmbientMiniPill.tsx`).
 
+## ✅ SPRINT 31: Autonomous Executive Email Triage & ActionCard Drafter Engine
+*Objective: Deliver sovereign local email classification, priority triage, spoken briefing synthesis, and 1-click ActionCard draft replies.*
+
+- [x] **[P0] Autonomous Executive Email Triage Service (EVE-V2-087):** Priority grading (urgent, high, normal, low), action-required detection, and conversational spoken briefings (`emailTriageService.ts`).
+- [x] **[P0] 1-Click ActionCard Reply Drafter (EVE-V2-088):** High-agency ActionCard staging for instant executive approval and customizable dispatch (`emailTriageService.ts`).
+- [x] **[P1] Email Triage ReAct Tools Dispatcher (EVE-V2-089):** Deterministic tool dispatch registration for `triage_executive_inbox` and `stage_email_reply_card` (`toolDispatcher.ts`).
+
 ---
 
 ## ✅ COMPLETED SPRINTS

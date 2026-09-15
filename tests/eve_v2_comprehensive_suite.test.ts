@@ -22,6 +22,7 @@ import { voiceCadenceService } from '../src/v2/services/voiceCadenceService';
 import { loopbackBridge } from '../src/v2/services/loopbackBridge';
 import { audioVisualizerService } from '../src/v2/services/audioVisualizerService';
 import { offlineSttService } from '../src/v2/services/offlineSttService';
+import { emailTriageService } from '../src/v2/services/emailTriageService';
 
 describe('Eve v2 Comprehensive Service Suite', () => {
   describe('Batch #8: Phonetic Text Cleaner (cleanTextForSpeech)', () => {
@@ -1151,7 +1152,65 @@ describe('Eve v2 Comprehensive Service Suite', () => {
       expect(result.confidence).toBeGreaterThan(0.8);
     });
   });
+
+  describe('Sprint 31: Autonomous Executive Email Triage & ActionCard Drafter Engine', () => {
+    it('triages inbox and detects urgent emails requiring action', async () => {
+      const summary = await emailTriageService.triageInbox();
+      expect(summary.total).toBeGreaterThanOrEqual(3);
+      expect(summary.urgentCount).toBe(1);
+      expect(summary.actionRequiredCount).toBe(1);
+      expect(summary.spokenBriefing).toContain('urgent email requiring sign-off');
+    });
+
+    it('filters inbox by priority levels accurately', async () => {
+      const urgentOnly = await emailTriageService.triageInbox('urgent');
+      expect(urgentOnly.messages.every(m => m.priority === 'urgent')).toBe(true);
+
+      const highAndAbove = await emailTriageService.triageInbox('high');
+      expect(highAndAbove.messages.every(m => m.priority === 'urgent' || m.priority === 'high')).toBe(true);
+    });
+
+    it('stages an executive reply ActionCard with suggested draft', () => {
+      const msg = emailTriageService.getInbox()[0];
+      const card = emailTriageService.stageEmailActionCard(msg);
+
+      expect(card.id).toBe(`act-email-${msg.id}`);
+      expect(card.title).toContain('Sarah Jenkins');
+      expect(card.subtitle).toContain('Q4 genomics milestone');
+      expect(card.details?.some(d => d.includes('Draft:'))).toBe(true);
+    });
+
+    it('supports custom reply overrides in staged action cards', () => {
+      const msg = emailTriageService.getInbox()[0];
+      const card = emailTriageService.stageEmailActionCard(msg, 'Approved, authorization is granted.');
+
+      expect(card.details?.some(d => d.includes('Approved, authorization is granted.'))).toBe(true);
+    });
+
+    it('executes triage_executive_inbox tool via toolDispatcher', async () => {
+      const result = await toolDispatcher.executeTool({
+        name: 'triage_executive_inbox',
+        arguments: { priorityFilter: 'urgent' }
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.tool).toBe('triage_executive_inbox');
+      expect(result.result.urgentCount).toBe(1);
+    });
+
+    it('executes stage_email_reply_card tool via toolDispatcher', async () => {
+      const result = await toolDispatcher.executeTool({
+        name: 'stage_email_reply_card',
+        arguments: { messageId: 'msg-001', customReply: 'Will review this morning.' }
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.tool).toBe('stage_email_reply_card');
+      expect(result.result.card.title).toContain('Sarah Jenkins');
+    });
+  });
 });
+
 
 
 

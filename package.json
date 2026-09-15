@@ -1,7 +1,7 @@
 {
   "name": "virtual-assistant",
   "private": true,
-  "version": "2.5.0",
+  "version": "2.5.1",
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
@@ -47,6 +47,7 @@
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/multer": "^1.4.12",
