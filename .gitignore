@@ -39,6 +39,8 @@ uploads/*
 
 # Cloudflare Wrangler Cache
 .wrangler/
+_worker.bundle/
+_worker.bundle
 
 # Playwright Test Outputs
 test-results/
